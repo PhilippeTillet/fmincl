@@ -16,16 +16,16 @@ namespace fmincl{
         class step_computer{
         private:
             double zoom(double alo, double phi_alo, double ahi, double phi_ahi, INTERPOLATOR const & interpolator, TERMINATION const & termination
-                        ,viennacl::vector<double> & xi, viennacl::vector<double> const & x, viennacl::vector<double> const & p, viennacl::vector<double> * g){
+                        ,viennacl::vector<double> & xi, viennacl::vector<double> const & x, viennacl::vector<double> const & p, viennacl::vector<double> & g) const{
                 double aj, phi_aj, dphi_aj;
                 aj = interpolator(alo,phi_alo,ahi,phi_ahi);
                 xi = x + aj*p;
-                phi_aj = fun_(xi);
+                phi_aj = fun_(xi, NULL);
                 if(!termination.sufficient_decrease(aj,phi_aj) || phi_aj >= phi_alo){
                     ahi = aj;
                 }
                 else{
-                    fun_(xi, g);
+                    fun_(xi, &g);
                     dphi_aj = viennacl::linalg::inner_prod(g,p);
                     if(termination.curvature(dphi_aj))
                         return aj;
@@ -49,17 +49,16 @@ namespace fmincl{
                 INTERPOLATOR interpolator(phi_0, dphi_0);
                 TERMINATION termination(phi_0, dphi_0);
                 double amax = 2;
-                unsigned int max_i = 10;
                 viennacl::vector<double> gi(dim);
                 viennacl::vector<double> xi(dim);
                 double phi_ai, dphi_ai;
-                while(1){
+                for(unsigned int i = 1 ; i<10 ; ++i){
                     xi = x + ai*p;
-                    phi_ai = fun_(xi);
+                    phi_ai = fun_(xi, NULL);
 
                     //Tests sufficient decrease
                     if(!termination.sufficient_decrease(ai, phi_ai) || (i>1 && phi_ai >= phi_aim1))
-                        return zoom(aim1,phi_aim1, ai, phi_ai, x, p, &gi);
+                        return zoom(aim1,phi_aim1, ai, phi_ai, interpolator, termination,xi, x, p, gi);
                     fun_(xi, &gi);
                     dphi_ai = viennacl::linalg::inner_prod(gi,p);
 
@@ -67,7 +66,7 @@ namespace fmincl{
                     if(termination.curvature(dphi_ai))
                         return ai;
                     if(dphi_ai>=0)
-                        return zoom(ai, phi_ai, aim1, phi_aim1, interpolator, x, p &gi);
+                        return zoom(ai, phi_ai, aim1, phi_aim1, interpolator, termination,xi, x, p, gi);
 
                     //Updates states
                     aim1 = ai;
@@ -84,3 +83,5 @@ namespace fmincl{
     }
 
 }
+
+#endif

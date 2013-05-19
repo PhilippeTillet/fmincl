@@ -8,6 +8,8 @@ set(VERSION_MINOR 0)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+find_package(OpenCL QUIET REQUIRED)
+include_directories(${OPENCL_INCLUDE_DIRS})
 
 # User options
 option(BUILD_TESTING "Build the tests " ON)
