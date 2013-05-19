@@ -12,33 +12,36 @@ namespace fmincl{
         namespace interpolator{
 
 
-            class cubic{
-            public:
-                cubic(double const & phi_0, double const & dphi_0) : phi_0_(phi_0), dphi_0_(dphi_0){ }
-                double operator()(double a0, double phi_a0, double a1, double phi_a1) const {
-                    double x = phi_a1 - phi_0_ - dphi_0_*a1;
-                    double y = phi_a0 - phi_0_ - dphi_0_*a0;
-                    double norm = 1/(a0*a0*a1*a1*(a1-a0));
-                    double a = 1/norm * (pow(a0,2)* x - pow(a1,2)*y);
-                    double b = 1/norm * (-pow(a0,3)*x + pow(a1,3)*y);
-                    double res = (-b + sqrt(pow(b,2) - 3*a*dphi_0_))/(3*a);
-                    return res;
+            inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb){
+                double eps = 1e-3;
+                double bma = b - a;
+                double fab = (fb - fa)/bma;
+                double d1 = dfa + dfb - 3*fab;
+                double delta = pow(d1,2) - dfa*dfb;
+                if(delta>=0){
+                    double x;
+                    double d2 = std::sqrt(delta);
+                    double faab = (fab - dfa)/bma;
+                    double faabb = (dfb - 2*fab + dfa)/pow(bma,2);
+                    if(std::abs(faab)<eps){
+                        if(std::abs(faabb)<eps)
+                            x=a;
+                        else
+                            x= a - dfa/(2*faab);
+                    }
+                    else{
+                        x = b - bma*(dfb + d2 - d1)/(dfb - dfa + 2*d2);
+                    }
+                    x = std::max(a,std::min(x,b));
+                    return x;
                 }
-            private:
-                double const & phi_0_;
-                double const & dphi_0_;
-            };
+                if(fa <= fb)
+                    return a;
+                return b;
+            }
 
-            class quadratic{
-            public:
-                quadratic(double const & phi_0, double const & dphi_0) : phi_0_(phi_0), dphi_0_(dphi_0){ }
-                double operator()(double a0, double phi_a0){
-                    double res = - dphi_0_*pow(a0,2)/(2*(phi_a0 - phi_0_ - dphi_0_*a0));
-                }
-            private:
-                double const & phi_0_;
-                double const & dphi_0_;
-            };
+
+
 
             inline void safeguard(double const & aim1, double & ai, double eps=1e-4){
                 if(std::abs(ai - aim1) < eps)
