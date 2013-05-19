@@ -78,10 +78,10 @@ namespace fmincl{
                     aim1 = ai;
                     phi_aim1 = phi_ai;
                     dphi_aim1 = dphi_ai;
-
-                    ai = 0.5*(aim1+amax);
+                    ai = 1.4*ai;
+                    if(ai>amax || ai<1e-4)
+                        return amax;
                 }
-                std::cout << "failed" << std::endl;
             }
         private:
             FUN const & fun_;
