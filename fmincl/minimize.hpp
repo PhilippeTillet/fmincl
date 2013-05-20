@@ -32,7 +32,7 @@ namespace fmincl{
                 pk = -gk;
                 dphi_0 = - viennacl::linalg::norm_2(gk);
             }
-            initial_alpha = 1;
+            initial_alpha = (i==0)?1:2*diff/dphi_0;
             std::pair<double, bool> search_res = compute_step(valk,dphi_0,initial_alpha,x,pk);
             if(search_res.second) break;
             x = x + search_res.first*pk;
