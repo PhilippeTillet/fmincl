@@ -15,7 +15,7 @@ namespace fmincl{
         template<class FUN>
         class step_computer{
         private:
-            double zoom(double alo, double ahi, strong_wolf_powell const & termination, viennacl::vector<double> const & x, viennacl::vector<double> const & p) const{
+            std::pair<double, bool> zoom(double alo, double ahi, strong_wolf_powell const & termination, viennacl::vector<double> const & x, viennacl::vector<double> const & p) const{
                 viennacl::vector<double> xi(x.size());
                 viennacl::vector<double> grad(x.size());
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
@@ -27,6 +27,10 @@ namespace fmincl{
                         aj = interpolator::cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
                     else
                         aj = interpolator::cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
+                    if(aj==alo || aj==ahi){
+                        std::cerr << "Numeric failure in line search" << std::endl;
+                        return std::make_pair(ahi,true);
+                    }
                     xi = x + aj*p; viennacl::ocl::get_queue().finish(); phi_aj = fun_(xi, NULL);
                     if(!termination.sufficient_decrease(aj,phi_aj) || phi_aj >= phi_alo){
                         ahi = aj;
@@ -34,7 +38,7 @@ namespace fmincl{
                     else{
                         phi_aj = fun_(xi, &grad); dphi_aj = viennacl::linalg::inner_prod(grad,p);
                         if(termination.curvature(dphi_aj))
-                            return aj;
+                            return std::make_pair(aj, false);
                         if(dphi_aj*(ahi - alo) >= 0)
                             ahi = alo;
                         alo = aj;
@@ -44,7 +48,7 @@ namespace fmincl{
 
         public:
             step_computer(FUN const & fun) : fun_(fun){ }
-            double operator()(double phi_0
+            std::pair<double, bool> operator()(double phi_0
                               , double dphi_0
                               , double ai
                               , viennacl::vector<double> const & x
@@ -70,7 +74,7 @@ namespace fmincl{
 
                     //Tests curvature
                     if(termination.curvature(dphi_ai))
-                        return ai;
+                        return std::make_pair(ai, false);
                     if(dphi_ai>=0)
                         return zoom(ai, aim1, termination, x, p);
 
@@ -80,8 +84,9 @@ namespace fmincl{
                     dphi_aim1 = dphi_ai;
                     ai = 1.4*ai;
                     if(ai>amax || ai<1e-4)
-                        return amax;
+                        return std::make_pair(amax,false);
                 }
+                return std::make_pair(amax,true);
             }
         private:
             FUN const & fun_;

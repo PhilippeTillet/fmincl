@@ -1,0 +1,5 @@
+foreach(PROG cg)
+    add_executable(${PROG}-test ${PROG}.cpp)
+    target_link_libraries(${PROG}-test ${OPENCL_LIBRARIES})
+    add_test(${PROG}-test ${PROG}-test)
+endforeach(PROG)
