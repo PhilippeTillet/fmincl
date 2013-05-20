@@ -11,10 +11,9 @@ namespace fmincl{
 
     template<class FUN>
     viennacl::vector<double> minimize(FUN const & fun, viennacl::vector<double> const & x0){
-        double tol = 1e-4;
         std::cout << "Start at : " << x0 << std::endl;
         viennacl::vector<double> x = x0;
-        unsigned int max_iter = 200;
+        unsigned int max_iter = 2000;
         unsigned int dim = x.size();
         viennacl::vector<double> gk(dim);
         viennacl::vector<double> gkm1(dim);
