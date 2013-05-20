@@ -21,17 +21,16 @@ namespace fmincl{
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
                 double aj, phi_aj, dphi_aj;
                 while(1){
-                    xi = x + alo*p; viennacl::ocl::get_queue().finish(); phi_alo = fun_(xi, &grad); dphi_alo = viennacl::linalg::inner_prod(grad,p);
-                    xi = x + ahi*p; viennacl::ocl::get_queue().finish(); phi_ahi = fun_(xi, &grad); dphi_ahi = viennacl::linalg::inner_prod(grad,p);
+                    xi = x + alo*p; viennacl::backend::finish(); phi_alo = fun_(xi, &grad); dphi_alo = viennacl::linalg::inner_prod(grad,p);
+                    xi = x + ahi*p; viennacl::backend::finish(); phi_ahi = fun_(xi, &grad); dphi_ahi = viennacl::linalg::inner_prod(grad,p);
                     if(alo < ahi)
                         aj = interpolator::cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
                     else
                         aj = interpolator::cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
                     if(aj==alo || aj==ahi){
-                        std::cerr << "Numeric failure in line search" << std::endl;
                         return std::make_pair(ahi,true);
                     }
-                    xi = x + aj*p; viennacl::ocl::get_queue().finish(); phi_aj = fun_(xi, NULL);
+                    xi = x + aj*p; viennacl::backend::finish(); phi_aj = fun_(xi, NULL);
                     if(!termination.sufficient_decrease(aj,phi_aj) || phi_aj >= phi_alo){
                         ahi = aj;
                     }
@@ -54,6 +53,7 @@ namespace fmincl{
                               , viennacl::vector<double> const & x
                               , viennacl::vector<double> const & p) const{
                 size_t dim = x.size();
+                double rho = 1.4;
                 double aim1 = 0;
                 double phi_aim1 = phi_0;
                 double dphi_aim1 = dphi_0;
@@ -62,7 +62,7 @@ namespace fmincl{
                 viennacl::vector<double> gi(dim);
                 viennacl::vector<double> xi(dim);
                 double phi_ai, dphi_ai;
-                for(unsigned int i = 1 ; i<10 ; ++i){
+                for(unsigned int i = 1 ; i<200; ++i){
                     xi = x + ai*p;
                     phi_ai = fun_(xi, NULL);
 
@@ -71,7 +71,6 @@ namespace fmincl{
                         return zoom(aim1, ai, termination, x, p);
                     fun_(xi, &gi);
                     dphi_ai = viennacl::linalg::inner_prod(gi,p);
-
                     //Tests curvature
                     if(termination.curvature(dphi_ai))
                         return std::make_pair(ai, false);
@@ -82,11 +81,11 @@ namespace fmincl{
                     aim1 = ai;
                     phi_aim1 = phi_ai;
                     dphi_aim1 = dphi_ai;
-                    ai = 1.4*ai;
-                    if(ai>amax || ai<1e-4)
-                        return std::make_pair(amax,false);
+                    ai = rho*ai;
+                    if(ai>amax)
+                        return std::make_pair(amax,true);
                 }
-                return std::make_pair(amax,true);
+                return std::make_pair(amax,false);
             }
         private:
             FUN const & fun_;

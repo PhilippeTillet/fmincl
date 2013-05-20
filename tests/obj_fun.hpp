@@ -21,7 +21,7 @@ struct rosenbrock{
         unsigned int dim = x.size();
         std::vector<ScalarType> x_cpu(dim);
         viennacl::copy(x, x_cpu);
-        viennacl::ocl::get_queue().finish();
+        viennacl::backend::finish();
         for(unsigned int i=0 ; i<dim-1;++i){
             res = res + 100*(pow(x_cpu[i+1] - x_cpu[i]*x_cpu[i],2)) + pow(1 - x_cpu[i],2);
         }
@@ -36,7 +36,7 @@ struct rosenbrock{
             }
             grad_cpu[dim-1] = 200*(x_cpu[dim-1]-x_cpu[dim-2]*x_cpu[dim-2]);
             viennacl::copy(grad_cpu, *grad);
-            viennacl::ocl::get_queue().finish();
+            viennacl::backend::finish();
         }
         return res;
 

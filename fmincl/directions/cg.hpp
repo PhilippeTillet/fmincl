@@ -30,12 +30,12 @@ namespace fmincl{
         class cg{
             public:
               void operator()(viennacl::vector<double> & pk, viennacl::vector<double> const & gk, viennacl::vector<double> const * gkm1 = NULL){
-                  if(gkm1==NULL || restart_()){
+                  if(gkm1==NULL || restart_())
                       pk = -gk;
-                  }
                   else{
                     viennacl::scalar<double> beta = compute_beta_(gk, *gkm1);
-                    pk = -gk + beta*pk;
+                    viennacl::backend::finish();
+                     pk = -gk + beta*pk;
                   }
               }
             private:
