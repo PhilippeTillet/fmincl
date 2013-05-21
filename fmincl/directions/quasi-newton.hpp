@@ -26,21 +26,21 @@ namespace fmincl{
                     viennacl::vector<double> skm1 = xk_ - xkm1_;
                     viennacl::vector<double> ykm1 = gk_ - gkm1_;
 
-                    viennacl::scalar<double> rho = viennacl::linalg::inner_prod(skm1,ykm1);
+                    viennacl::scalar<double> ipsy = viennacl::linalg::inner_prod(skm1,ykm1);
 
-                    if(is_first_update_=true){
+                    if(is_first_update_==true){
                         viennacl::scalar<double> nykm1 = viennacl::linalg::inner_prod(ykm1,ykm1);
-                        viennacl::scalar<double> scale = rho/nykm1;
+                        viennacl::scalar<double> scale = ipsy/nykm1;
                         Hk = viennacl::identity_matrix<double>(gk_.size());
                         Hk *= scale;
                         is_first_update_=false;
                     }
 
-                    viennacl::scalar<double> rho2 = rho*rho;
+                    viennacl::scalar<double> ipsy2 = ipsy*ipsy;
                     viennacl::vector<double> Hkm1ykm1 = viennacl::linalg::prod(Hk,ykm1);
                     viennacl::scalar<double> ip = viennacl::linalg::inner_prod(ykm1,Hkm1ykm1);
-                    viennacl::scalar<double> alpha = (rho+ip)/rho2;
-                    viennacl::scalar<double> beta = viennacl::scalar<double>(1)/rho;
+                    viennacl::scalar<double> alpha = (ipsy+ip)/ipsy2;
+                    viennacl::scalar<double> beta = viennacl::scalar<double>(-1)/ipsy;
 
                     Hk += alpha*viennacl::linalg::outer_prod(skm1,skm1);
                     Hk += beta*viennacl::linalg::outer_prod(Hkm1ykm1,skm1);
