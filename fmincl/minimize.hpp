@@ -19,7 +19,9 @@ namespace fmincl{
         viennacl::vector<double> gk(dim);
         viennacl::vector<double> pk(dim);
         double valk, valkm1, diff, dphi_0, initial_alpha;
-        //direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir(pk,gk);
+//        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir(pk,gk);
+//        line_search::strong_wolfe_powell<FUN> strong_wolfe_powell_step(fun, valk, dphi_0, 1e-4, 0.1);
+
         direction::quasi_newton update_dir(pk, x, gk);
         line_search::strong_wolfe_powell<FUN> strong_wolfe_powell_step(fun, valk, dphi_0, 1e-4, 0.9);
         for(unsigned int i=0 ; i < max_iter ; ++i){
