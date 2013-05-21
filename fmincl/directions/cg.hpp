@@ -29,16 +29,21 @@ namespace fmincl{
         template<class BETA_POLICY = tags::polak_ribiere, class RESTART_POLICY = tags::no_restart>
         class cg{
             public:
-              void operator()(viennacl::vector<double> & pk, viennacl::vector<double> const & gk, viennacl::vector<double> const * gkm1 = NULL){
-                  if(gkm1==NULL || restart_())
-                      pk = -gk;
+              cg(viennacl::vector<double> & pk, viennacl::vector<double> const & gk) : pk_(pk), gk_(gk){ }
+              void operator()(){
+                  if(gkm1_.empty() || restart_())
+                      pk_ = -gk_;
                   else{
-                    viennacl::scalar<double> beta = compute_beta_(gk, *gkm1);
-                    viennacl::backend::finish();
-                     pk = -gk + beta*pk;
+                    viennacl::scalar<double> beta = compute_beta_(gk_, gkm1_);
+                     pk_ = -gk_ + beta*pk_;
                   }
+                  gkm1_ = gk_;
               }
+
             private:
+              viennacl::vector<double> & pk_;
+              viennacl::vector<double> const & gk_;
+              viennacl::vector<double> gkm1_;
               BETA_POLICY compute_beta_;
               RESTART_POLICY restart_;
         };

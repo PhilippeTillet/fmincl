@@ -3,8 +3,6 @@
 
 #include <cmath>
 
-#include "utils.hpp"
-
 namespace fmincl{
 
     namespace line_search{

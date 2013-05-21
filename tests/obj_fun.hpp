@@ -16,7 +16,13 @@ struct quad_fun{
 
 template<class ScalarType>
 struct rosenbrock{
+    rosenbrock(){
+        f_eval = 0;
+        df_eval = 0;
+    }
+
     ScalarType operator()(viennacl::vector<ScalarType> const & x, viennacl::vector<ScalarType> * grad) const {
+        f_eval++;
         ScalarType res=0;
         unsigned int dim = x.size();
         std::vector<ScalarType> x_cpu(dim);
@@ -26,6 +32,7 @@ struct rosenbrock{
             res = res + 100*(pow(x_cpu[i+1] - x_cpu[i]*x_cpu[i],2)) + pow(1 - x_cpu[i],2);
         }
         if(grad){
+            df_eval++;
             std::vector<ScalarType> grad_cpu(dim);
             grad_cpu[0] = -400*x_cpu[0]*(x_cpu[1] - pow(x_cpu[0],2)) - 2*(1 - x_cpu[0]);
             for(unsigned int i=1 ; i<dim-1 ; ++i){
@@ -39,8 +46,10 @@ struct rosenbrock{
             viennacl::backend::finish();
         }
         return res;
-
     }
+
+    mutable unsigned int f_eval;
+    mutable unsigned int df_eval;
 };
 
 #endif

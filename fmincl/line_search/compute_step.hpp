@@ -5,17 +5,15 @@
 #include <viennacl/linalg/inner_prod.hpp>
 
 #include "interpolate.hpp"
-#include "termination.hpp"
-#include "utils.hpp"
 
 namespace fmincl{
 
     namespace line_search{
 
         template<class FUN>
-        class step_computer{
+        class strong_wolfe_powell{
         private:
-            std::pair<double, bool> zoom(double alo, double ahi, strong_wolf_powell const & termination, viennacl::vector<double> const & x, viennacl::vector<double> const & p) const{
+            std::pair<double, bool> zoom(double alo, double ahi, viennacl::vector<double> const & x, viennacl::vector<double> const & p) const{
                 viennacl::vector<double> xi(x.size());
                 viennacl::vector<double> grad(x.size());
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
@@ -31,12 +29,12 @@ namespace fmincl{
                         return std::make_pair(ahi,true);
                     }
                     xi = x + aj*p; viennacl::backend::finish(); phi_aj = fun_(xi, NULL);
-                    if(!termination.sufficient_decrease(aj,phi_aj) || phi_aj >= phi_alo){
+                    if(!sufficient_decrease(aj,phi_aj) || phi_aj >= phi_alo){
                         ahi = aj;
                     }
                     else{
                         phi_aj = fun_(xi, &grad); dphi_aj = viennacl::linalg::inner_prod(grad,p);
-                        if(termination.curvature(dphi_aj))
+                        if(curvature(dphi_aj))
                             return std::make_pair(aj, false);
                         if(dphi_aj*(ahi - alo) >= 0)
                             ahi = alo;
@@ -45,20 +43,25 @@ namespace fmincl{
                 }
             }
 
-        public:
-            step_computer(FUN const & fun) : fun_(fun){ }
-            std::pair<double, bool> operator()(double phi_0
-                              , double dphi_0
-                              , double ai
+            bool sufficient_decrease(double ai, double phi_ai) const {
+                return phi_ai <= (phi_0_ + c1_*ai*dphi_0_);
+            }
+            bool curvature(double dphi_ai) const{
+                return std::abs(dphi_ai) <= c2_*std::abs(dphi_0_);
+            }
+
+        public:            
+            strong_wolfe_powell(FUN const & fun, double const & phi_0, double const & dphi_0, double c1, double c2) : fun_(fun), phi_0_(phi_0), dphi_0_(dphi_0), c1_(c1), c2_(c2){ }
+
+            std::pair<double, bool> operator()(double ai
                               , viennacl::vector<double> const & x
                               , viennacl::vector<double> const & p) const{
                 size_t dim = x.size();
                 double rho = 1.4;
                 double aim1 = 0;
-                double phi_aim1 = phi_0;
-                double dphi_aim1 = dphi_0;
-                strong_wolf_powell termination(phi_0, dphi_0);
-                double amax = 2;
+                double phi_aim1 = phi_0_;
+                double dphi_aim1 = dphi_0_;
+                double amax = 5;
                 viennacl::vector<double> gi(dim);
                 viennacl::vector<double> xi(dim);
                 double phi_ai, dphi_ai;
@@ -67,15 +70,15 @@ namespace fmincl{
                     phi_ai = fun_(xi, NULL);
 
                     //Tests sufficient decrease
-                    if(!termination.sufficient_decrease(ai, phi_ai) || (i>1 && phi_ai >= phi_aim1))
-                        return zoom(aim1, ai, termination, x, p);
+                    if(!sufficient_decrease(ai, phi_ai) || (i>1 && phi_ai >= phi_aim1))
+                        return zoom(aim1, ai,  x, p);
                     fun_(xi, &gi);
                     dphi_ai = viennacl::linalg::inner_prod(gi,p);
                     //Tests curvature
-                    if(termination.curvature(dphi_ai))
+                    if(curvature(dphi_ai))
                         return std::make_pair(ai, false);
                     if(dphi_ai>=0)
-                        return zoom(ai, aim1, termination, x, p);
+                        return zoom(ai, aim1, x, p);
 
                     //Updates states
                     aim1 = ai;
@@ -89,6 +92,10 @@ namespace fmincl{
             }
         private:
             FUN const & fun_;
+            double const & phi_0_;
+            double const & dphi_0_;
+            double c1_;
+            double c2_;
         };
 
     }
