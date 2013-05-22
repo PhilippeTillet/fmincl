@@ -17,6 +17,7 @@
 #include "fmincl/directions/cg.hpp"
 #include "fmincl/directions/quasi-newton.hpp"
 #include "fmincl/line_search/compute_step.hpp"
+#include "fmincl/line_search/phi_fun.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -34,11 +35,12 @@ namespace fmincl{
         unsigned int iter=0;
         detail::state_ref state(iter, x, valk, valkm1, gk, dphi_0, pk);
 
-//        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
-//        line_search::strong_wolfe_powell<FUN> step(1e-4, 0.1);
+        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
+        line_search::strong_wolfe_powell step(1e-4, 0.1, 1.4);
+        line_search::phi_fun<FUN> phi(fun, state);
 
-        direction::quasi_newton update_dir;
-        line_search::strong_wolfe_powell step(1e-4, 0.9,2);
+//        direction::quasi_newton update_dir;
+//        line_search::strong_wolfe_powell step(1e-4, 0.8,1.4);
 
         for( ; iter < max_iter ; ++iter){
             valk = fun(x, &gk);
@@ -49,9 +51,9 @@ namespace fmincl{
             dphi_0 = viennacl::linalg::inner_prod(pk,gk);
             if(dphi_0>0){
                 pk = -gk;
-                dphi_0 = - viennacl::linalg::norm_2(gk);
+                dphi_0 = - viennacl::linalg::inner_prod(gk,gk);
             }
-            std::pair<double, bool> search_res = step(fun,state);
+            std::pair<double, bool> search_res = step(phi,state);
             if(search_res.second) break;
             x = x + search_res.first*pk;
             valkm1 = valk;

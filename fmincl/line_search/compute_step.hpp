@@ -23,15 +23,15 @@ namespace fmincl{
 
         class strong_wolfe_powell {
         private:
-            template<class FUN>
-            std::pair<double, bool> zoom(double alo, double ahi, FUN const & fun, detail::state_ref & state) const{
+            template<class PHI>
+            std::pair<double, bool> zoom(double alo, double ahi, PHI & fun, detail::state_ref & state) const{
                 viennacl::vector<double> xi(state.x.size());
                 viennacl::vector<double> grad(state.x.size());
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
                 double aj, phi_aj, dphi_aj;
                 while(1){
-                    xi = state.x + alo*state.p; viennacl::backend::finish(); phi_alo = fun(xi, &grad); dphi_alo = viennacl::linalg::inner_prod(grad,state.p);
-                    xi = state.x + ahi*state.p; viennacl::backend::finish(); phi_ahi = fun(xi, &grad); dphi_ahi = viennacl::linalg::inner_prod(grad,state.p);
+                    fun.set_alpha(alo); viennacl::backend::finish(); phi_alo = fun(&grad); dphi_alo = viennacl::linalg::inner_prod(grad,state.p);
+                    fun.set_alpha(ahi); viennacl::backend::finish(); phi_ahi = fun(&grad); dphi_ahi = viennacl::linalg::inner_prod(grad,state.p);
                     if(alo < ahi)
                         aj = interpolator::cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
                     else
@@ -39,12 +39,12 @@ namespace fmincl{
                     if(aj==alo || aj==ahi){
                         return std::make_pair(ahi,true);
                     }
-                    xi = state.x + aj*state.p; viennacl::backend::finish(); phi_aj = fun(xi, NULL);
+                    fun.set_alpha(aj); viennacl::backend::finish(); phi_aj = fun(NULL);
                     if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
                         ahi = aj;
                     }
                     else{
-                        phi_aj = fun(xi, &grad); dphi_aj = viennacl::linalg::inner_prod(grad,state.p);
+                        phi_aj = fun(&grad); dphi_aj = viennacl::linalg::inner_prod(grad,state.p);
                         if(curvature(dphi_aj, state))
                             return std::make_pair(aj, false);
                         if(dphi_aj*(ahi - alo) >= 0)
@@ -64,8 +64,8 @@ namespace fmincl{
         public:            
             strong_wolfe_powell(double c1, double c2, double rho) :  c1_(c1), c2_(c2), rho_(rho){ }
 
-            template<class FUN>
-            std::pair<double, bool> operator()(FUN const & fun, detail::state_ref & state) const{
+            template<class PHI>
+            std::pair<double, bool> operator()(PHI & fun, detail::state_ref & state) const{
                 size_t dim = state.x.size();
                 double aim1 = 0;
                 double diff = state.val - state.valm1;
@@ -77,13 +77,14 @@ namespace fmincl{
                 viennacl::vector<double> xi(dim);
                 double phi_ai, dphi_ai;
                 for(unsigned int i = 1 ; i<200; ++i){
-                    xi = state.x + ai*state.p;
-                    phi_ai = fun(xi, NULL);
+                    fun.set_alpha(ai);
+                    phi_ai = fun(NULL);
 
                     //Tests sufficient decrease
                     if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
                         return zoom(aim1, ai, fun, state);
-                    fun(xi, &gi);
+
+                    fun(&gi);
                     dphi_ai = viennacl::linalg::inner_prod(gi,state.p);
                     //Tests curvature
                     if(curvature(dphi_ai, state))
