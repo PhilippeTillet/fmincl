@@ -1,3 +1,13 @@
+/* ===========================
+ *
+ * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
+ *
+ * FMinCL - Unconstrained Function Minimization on OpenCL
+ *
+ * License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+
 //#define VIENNACL_WITH_OPENCL
 
 #include <cstdlib>
