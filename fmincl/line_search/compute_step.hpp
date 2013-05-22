@@ -30,8 +30,8 @@ namespace fmincl{
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
                 double aj, phi_aj, dphi_aj;
                 while(1){
-                    fun.set_alpha(alo); viennacl::backend::finish(); phi_alo = fun(&grad); dphi_alo = viennacl::linalg::inner_prod(grad,state.p);
-                    fun.set_alpha(ahi); viennacl::backend::finish(); phi_ahi = fun(&grad); dphi_ahi = viennacl::linalg::inner_prod(grad,state.p);
+                    phi_alo = fun(alo, &dphi_alo);
+                    phi_ahi = fun(ahi, &dphi_ahi);
                     if(alo < ahi)
                         aj = interpolator::cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
                     else
@@ -39,12 +39,12 @@ namespace fmincl{
                     if(aj==alo || aj==ahi){
                         return std::make_pair(ahi,true);
                     }
-                    fun.set_alpha(aj); viennacl::backend::finish(); phi_aj = fun(NULL);
+                    phi_aj = fun(aj, NULL);
                     if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
                         ahi = aj;
                     }
                     else{
-                        phi_aj = fun(&grad); dphi_aj = viennacl::linalg::inner_prod(grad,state.p);
+                        phi_aj = fun(aj, &dphi_aj);
                         if(curvature(dphi_aj, state))
                             return std::make_pair(aj, false);
                         if(dphi_aj*(ahi - alo) >= 0)
@@ -74,18 +74,16 @@ namespace fmincl{
                 double dphi_aim1 = state.dphi_0;
                 double amax = 5;
                 viennacl::vector<double> gi(dim);
-                viennacl::vector<double> xi(dim);
                 double phi_ai, dphi_ai;
                 for(unsigned int i = 1 ; i<200; ++i){
-                    fun.set_alpha(ai);
-                    phi_ai = fun(NULL);
+                    phi_ai = fun(ai, NULL);
 
                     //Tests sufficient decrease
                     if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
                         return zoom(aim1, ai, fun, state);
 
-                    fun(&gi);
-                    dphi_ai = viennacl::linalg::inner_prod(gi,state.p);
+                    fun(ai, &dphi_ai);
+
                     //Tests curvature
                     if(curvature(dphi_ai, state))
                         return std::make_pair(ai, false);
