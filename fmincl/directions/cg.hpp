@@ -5,6 +5,8 @@
 #include <viennacl/vector.hpp>
 #include <viennacl/linalg/inner_prod.hpp>
 
+#include "fmincl/utils.hpp"
+
 namespace fmincl{
 
     namespace direction{
@@ -29,20 +31,17 @@ namespace fmincl{
         template<class BETA_POLICY = tags::polak_ribiere, class RESTART_POLICY = tags::no_restart>
         class cg{
             public:
-              cg(viennacl::vector<double> & pk, viennacl::vector<double> const & gk) : pk_(pk), gk_(gk){ }
-              void operator()(){
+              void operator()(detail::state_ref & state){
                   if(gkm1_.empty() || restart_())
-                      pk_ = -gk_;
+                      state.p = -state.g;
                   else{
-                    viennacl::scalar<double> beta = compute_beta_(gk_, gkm1_);
-                     pk_ = -gk_ + beta*pk_;
+                    viennacl::scalar<double> beta = compute_beta_(state.g, gkm1_);
+                    state.p = -state.g + beta* state.p;
                   }
-                  gkm1_ = gk_;
+                  gkm1_ = state.g;
               }
 
             private:
-              viennacl::vector<double> & pk_;
-              viennacl::vector<double> const & gk_;
               viennacl::vector<double> gkm1_;
               BETA_POLICY compute_beta_;
               RESTART_POLICY restart_;
