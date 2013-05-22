@@ -1,3 +1,13 @@
+/* ===========================
+ *
+ * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
+ *
+ * FMinCL - Unconstrained Function Minimization on OpenCL
+ *
+ * License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+
 #ifndef FMINCL_CHECK_GRAD_HPP_
 #define FMINCL_CHECK_GRAD_HPP_
 

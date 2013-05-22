@@ -1,3 +1,13 @@
+/* ===========================
+ *
+ * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
+ *
+ * FMinCL - Unconstrained Function Minimization on OpenCL
+ *
+ * License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+
 #ifndef FMINCL_MINIMIZE_HPP_
 #define FMINCL_MINIMIZE_HPP_
 
@@ -23,11 +33,12 @@ namespace fmincl{
         double valk, valkm1, diff, dphi_0;
         unsigned int iter=0;
         detail::state_ref state(iter, x, valk, valkm1, gk, dphi_0, pk);
+
 //        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
-//        line_search::strong_wolfe_powell<FUN> step(fun, 1e-4, 0.1);
+//        line_search::strong_wolfe_powell<FUN> step(1e-4, 0.1);
 
         direction::quasi_newton update_dir;
-        line_search::strong_wolfe_powell<FUN> step(fun, 1e-4, 0.9);
+        line_search::strong_wolfe_powell step(1e-4, 0.9,2);
 
         for( ; iter < max_iter ; ++iter){
             valk = fun(x, &gk);
@@ -40,7 +51,7 @@ namespace fmincl{
                 pk = -gk;
                 dphi_0 = - viennacl::linalg::norm_2(gk);
             }
-            std::pair<double, bool> search_res = step(state);
+            std::pair<double, bool> search_res = step(fun,state);
             if(search_res.second) break;
             x = x + search_res.first*pk;
             valkm1 = valk;

@@ -1,3 +1,13 @@
+/* ===========================
+ *
+ * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
+ *
+ * FMinCL - Unconstrained Function Minimization on OpenCL
+ *
+ * License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+
 #ifndef FMINCL_UTILS_HPP
 #define FMINCL_UTILS_HPP
 
@@ -19,6 +29,19 @@ namespace fmincl{
             double & dphi_0;
             viennacl::vector<double> & p;
         };
+
+
+        class direction_base{
+        public:
+            virtual void operator()(detail::state_ref & state) = 0;
+        };
+
+        class compute_step_base{
+        public:
+            virtual void operator()(detail::state_ref & state) = 0;
+        };
+
+
 
     }
 
