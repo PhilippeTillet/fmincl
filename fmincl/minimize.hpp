@@ -17,7 +17,6 @@
 #include "fmincl/directions/cg.hpp"
 #include "fmincl/directions/quasi-newton.hpp"
 #include "fmincl/line_search/compute_step.hpp"
-#include "fmincl/line_search/phi_fun.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -41,8 +40,6 @@ namespace fmincl{
         direction::quasi_newton update_dir;
         line_search::strong_wolfe_powell step(1e-4, 0.9,1.4);
 
-        line_search::phi_fun<FUN> phi(fun, state);
-
         for( ; iter < max_iter ; ++iter){
             valk = fun(x, &gk);
             if(iter>0) std::cout << "iter " << iter << " | cost : " << valk << std::endl;
@@ -54,7 +51,7 @@ namespace fmincl{
                 pk = -gk;
                 dphi_0 = - viennacl::linalg::inner_prod(gk,gk);
             }
-            std::pair<double, bool> search_res = step(phi,state);
+            std::pair<double, bool> search_res = step(fun, state);
             if(search_res.second) break;
             x = x + search_res.first*pk;
             valkm1 = valk;

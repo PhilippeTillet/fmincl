@@ -23,8 +23,34 @@ namespace fmincl{
 
         class strong_wolfe_powell {
         private:
+
+            template<class FUN>
+            class phi_fun{
+            public:
+                phi_fun(FUN const & fun, detail::state_ref const & state) : fun_(fun), state_(state), x_(state_.x.size()), g_(state_.x.size()){ }
+
+                double operator()(double alpha, double * dphi) {
+                    if(alpha != alpha_){
+                        alpha_ = alpha;
+                        x_ = state_.x + alpha_*state_.p;
+                    }
+                    if(dphi){
+                        double res = fun_(x_,&g_);
+                        *dphi = viennacl::linalg::inner_prod(g_,state_.p);
+                        return res;
+                    }
+                    return fun_(x_, NULL);
+                }
+            private:
+                FUN const & fun_;
+                detail::state_ref const & state_;
+                double alpha_;
+                viennacl::vector<double> x_;
+                viennacl::vector<double> g_;
+            };
+
             template<class PHI>
-            std::pair<double, bool> zoom(double alo, double ahi, PHI & phi, detail::state_ref & state) const{
+            std::pair<double, bool> zoom(PHI & phi, double alo, double ahi, detail::state_ref & state) const{
                 double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
                 double aj, phi_aj, dphi_aj;
                 while(1){
@@ -62,10 +88,9 @@ namespace fmincl{
         public:            
             strong_wolfe_powell(double c1, double c2, double rho) :  c1_(c1), c2_(c2), rho_(rho){ }
 
-            template<class PHI>
-            std::pair<double, bool> operator()(PHI & phi, detail::state_ref & state) const{
-                phi.reset();
-                size_t dim = state.x.size();
+            template<class FUN>
+            std::pair<double, bool> operator()(FUN const & fun, detail::state_ref & state) const{
+                phi_fun<FUN> phi(fun, state);
                 double aim1 = 0;
                 double diff = state.val - state.valm1;
                 double ai = (state.iter==0)?1:std::min(1.0d,1.01*2*diff/state.dphi_0);
@@ -73,12 +98,12 @@ namespace fmincl{
                 double dphi_aim1 = state.dphi_0;
                 double amax = 5;
                 double phi_ai, dphi_ai;
-                for(unsigned int i = 1 ; i<200; ++i){
+                for(unsigned int i = 1 ; i<20; ++i){
                     phi_ai = phi(ai, NULL);
 
                     //Tests sufficient decrease
                     if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
-                        return zoom(aim1, ai, phi, state);
+                        return zoom(phi, aim1, ai, state);
 
                     phi(ai, &dphi_ai);
 
@@ -86,7 +111,7 @@ namespace fmincl{
                     if(curvature(dphi_ai, state))
                         return std::make_pair(ai, false);
                     if(dphi_ai>=0)
-                        return zoom(ai, aim1, phi, state);
+                        return zoom(phi, ai, aim1, state);
 
                     //Updates states
                     aim1 = ai;
@@ -96,7 +121,7 @@ namespace fmincl{
                     if(ai>amax)
                         return std::make_pair(amax,true);
                 }
-                return std::make_pair(amax,false);
+                return std::make_pair(amax,true);
             }
         private:
             double c1_;
