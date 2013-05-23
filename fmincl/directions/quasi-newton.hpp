@@ -24,13 +24,16 @@ namespace fmincl{
 
     namespace direction{
 
+        struct quasi_newton_tag{
 
-        class quasi_newton{
+        };
+
+        template<class QUASI_NEWTON_TAG>
+        class quasi_newton : public detail::direction_base{
         public:
             quasi_newton() : is_first_update_(true){
 
             }
-
 
             void operator()(detail::state_ref & state){
                 if(gkm1_.empty()){
@@ -75,6 +78,15 @@ namespace fmincl{
             viennacl::vector<double> gkm1_;
             viennacl::matrix<double> Hk;
             bool is_first_update_;
+        };
+
+    }
+
+    namespace result_of{
+
+        template<>
+        struct tag_to_direction< direction::quasi_newton_tag >{
+            typedef fmincl::direction::quasi_newton< direction::quasi_newton_tag > type;
         };
 
     }

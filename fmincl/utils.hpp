@@ -30,15 +30,14 @@ namespace fmincl{
             viennacl::vector<double> & p;
         };
 
-
         class direction_base{
         public:
             virtual void operator()(detail::state_ref & state) = 0;
         };
 
-        class compute_step_base{
+        class line_search_base{
         public:
-            virtual void operator()(detail::state_ref & state) = 0;
+            virtual std::pair<double, bool> operator()(detail::state_ref & state) = 0;
         };
 
 
