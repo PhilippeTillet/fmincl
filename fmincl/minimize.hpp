@@ -35,10 +35,10 @@ namespace fmincl{
         detail::state_ref state(iter, x, valk, valkm1, gk, dphi_0, pk);
 
 //        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
-//        line_search::strong_wolfe_powell step(1e-4, 0.1, 1.4);
+//        line_search::strong_wolfe_powell step(fun, line_search::strong_wolfe_powell_tag(1e-4, 0.1,1.4));
 
         direction::quasi_newton update_dir;
-        line_search::strong_wolfe_powell step(1e-4, 0.9,1.4);
+        line_search::strong_wolfe_powell<FUN> step(fun, line_search::strong_wolfe_powell_tag(1e-4, 0.9,1.4));
 
         for( ; iter < max_iter ; ++iter){
             valk = fun(x, &gk);
@@ -51,7 +51,7 @@ namespace fmincl{
                 pk = -gk;
                 dphi_0 = - viennacl::linalg::inner_prod(gk,gk);
             }
-            std::pair<double, bool> search_res = step(fun, state);
+            std::pair<double, bool> search_res = step(state);
             if(search_res.second) break;
             x = x + search_res.first*pk;
             valkm1 = valk;
