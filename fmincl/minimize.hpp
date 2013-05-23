@@ -35,12 +35,13 @@ namespace fmincl{
         unsigned int iter=0;
         detail::state_ref state(iter, x, valk, valkm1, gk, dphi_0, pk);
 
-        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
-        line_search::strong_wolfe_powell step(1e-4, 0.1, 1.4);
-        line_search::phi_fun<FUN> phi(fun, state);
+//        direction::cg<direction::tags::polak_ribiere,direction::tags::no_restart> update_dir;
+//        line_search::strong_wolfe_powell step(1e-4, 0.1, 1.4);
 
-//        direction::quasi_newton update_dir;
-//        line_search::strong_wolfe_powell step(1e-4, 0.8,1.4);
+        direction::quasi_newton update_dir;
+        line_search::strong_wolfe_powell step(1e-4, 0.9,1.4);
+
+        line_search::phi_fun<FUN> phi(fun, state);
 
         for( ; iter < max_iter ; ++iter){
             valk = fun(x, &gk);

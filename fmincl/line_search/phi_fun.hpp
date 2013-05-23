@@ -24,13 +24,19 @@ namespace fmincl{
         template<class Fun>
         class phi_fun{
         public:
-            phi_fun(Fun const & fun, detail::state_ref const & state) : fun_(fun), state_(state), x_(state_.x.size()), g_(state_.x.size()){
+            phi_fun(Fun const & fun, detail::state_ref const & state) : fun_(fun), reset_(true), state_(state), x_(state_.x.size()), g_(state_.x.size()){
 
             }
+
+            void reset(){
+                reset_ = true;
+            }
+
             double operator()(double alpha, double * dphi) {
-                if(alpha != alpha_){
+                if(alpha != alpha_ || reset_){
                     alpha_ = alpha;
                     x_ = state_.x + alpha_*state_.p;
+                    reset_ = false;
                 }
                 if(dphi){
                     double res = fun_(x_,&g_);
@@ -43,6 +49,7 @@ namespace fmincl{
             Fun const & fun_;
             detail::state_ref const & state_;
             double alpha_;
+            bool reset_;
             viennacl::vector<double> x_;
             viennacl::vector<double> g_;
         };
