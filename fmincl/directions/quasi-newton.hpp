@@ -30,20 +30,20 @@ namespace fmincl{
 
             }
 
-            void operator()(detail::state_ref & state){
+            void operator()(detail::state & state){
                 if(gkm1_.empty()){
-                    state.p = -state.g;
+                    state.p() = -state.g();
                 }
                 else{
-                    viennacl::vector<double> skm1 = state.x - xkm1_;
-                    viennacl::vector<double> ykm1 = state.g - gkm1_;
+                    viennacl::vector<double> skm1 = state.x() - xkm1_;
+                    viennacl::vector<double> ykm1 = state.g() - gkm1_;
 
 
                     if(is_first_update_==true){
                         viennacl::scalar<double> ipsy = viennacl::linalg::inner_prod(skm1,ykm1);
                         viennacl::scalar<double> nykm1 = viennacl::linalg::inner_prod(ykm1,ykm1);
                         viennacl::scalar<double> scale = ipsy/nykm1;
-                        Hk = viennacl::identity_matrix<double>(state.g.size());
+                        Hk = viennacl::identity_matrix<double>(state.dim());
                         Hk *= 1;
                         is_first_update_=false;
                     }
@@ -59,13 +59,13 @@ namespace fmincl{
                     Hk += rho*viennacl::linalg::outer_prod(skm1,skm1);
 
 
-                    viennacl::vector<double> tmp = viennacl::linalg::prod(Hk,state.g);
-                    state.p = -tmp;
+                    viennacl::vector<double> tmp = viennacl::linalg::prod(Hk,state.g());
+                    state.p() = -tmp;
                 }
 
 
-                xkm1_ = state.x;
-                gkm1_ = state.g;
+                xkm1_ = state.x();
+                gkm1_ = state.g();
             }
 
         private:

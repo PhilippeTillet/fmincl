@@ -29,33 +29,63 @@ namespace fmincl{
             Fun const & fun_;
         };
 
-        struct state_ref{
-            state_ref(unsigned int & _iter, viennacl::vector<double> & _xk, double & _valk, double & _valkm1
-                        , viennacl::vector<double> & _gk, double & _dphi_0
-                        , viennacl::vector<double> & _pk
-                        , function_wrapper const & _fun) : iter(_iter), x(_xk), val(_valk), valm1(_valkm1), g(_gk), dphi_0(_dphi_0), p(_pk), fun(_fun){ }
-            unsigned int & iter;
-            viennacl::vector<double> & x;
-            double & val;
-            double & valm1;
-            viennacl::vector<double> & g;
-            double & dphi_0;
-            viennacl::vector<double> & p;
-            function_wrapper const & fun;
+        class state{
+        public:
+            state(viennacl::vector<double> const & x0, detail::function_wrapper const & fun) : fun_(fun), iter_(0), dim_(x0.size()), x_(x0), g_(dim_), p_(dim_){
+
+            }
+
+            detail::function_wrapper const & fun() { return fun_; }
+            unsigned int & iter() { return iter_; }
+            unsigned int & dim() { return dim_; }
+            viennacl::vector<double> & x() { return x_; }
+            viennacl::vector<double> & g() { return g_; }
+            viennacl::vector<double> & p() { return p_; }
+            double & val() { return valk_; }
+            double & valm1() { return valkm1_; }
+            double & diff() { return diff_; }
+            double & dphi_0() { return dphi_0_; }
+
+        private:
+            detail::function_wrapper const & fun_;
+            unsigned int iter_;
+            unsigned int dim_;
+            viennacl::vector<double> x_;
+            viennacl::vector<double> g_;
+            viennacl::vector<double> p_;
+            double valk_;
+            double valkm1_;
+            double diff_;
+            double dphi_0_;
         };
 
         class direction_base{
         public:
-            virtual void operator()(detail::state_ref & state) = 0;
+            virtual void operator()(detail::state & state) = 0;
         };
 
         class line_search_base{
         public:
-            virtual std::pair<double, bool> operator()(detail::state_ref & state) = 0;
+            virtual std::pair<double, bool> operator()(detail::state & state, double a_init) = 0;
         };
 
+    }
 
-
+    template<class FUN>
+    void check_grad(FUN const & fun, viennacl::vector<double> const & x0){
+        unsigned int dim = x0.size();
+        viennacl::vector<double> x(x0);
+        viennacl::vector<double> fgrad(dim);
+        viennacl::vector<double> numgrad(dim);
+        double eps = 1e-8;
+        fun(x,&fgrad);
+        for(unsigned int i=0 ; i < dim ; ++i){
+            double old = x(i);
+            x(i) = old-eps; double vleft = fun(x,NULL);
+            x(i) = old+eps; double vright = fun(x,NULL);
+            numgrad(i) = (vright-vleft)/(2*eps);
+        }
+        std::cout << numgrad - fgrad << std::endl;
     }
 
 

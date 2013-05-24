@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include "viennacl/vector.hpp"
 #include "fmincl/minimize.hpp"
-#include "fmincl/check_grad.hpp"
+#include "fmincl/utils.hpp"
 #include "obj_fun.hpp"
 
 typedef double NumericT;
@@ -26,8 +26,10 @@ int main(){
     //fmincl::check_grad(fun,X0);
 
     fmincl::optimization_options options;
+
     options.direction = fmincl::direction::cg<fmincl::direction::polak_ribiere, fmincl::direction::no_restart>();
     options.line_search = fmincl::line_search::strong_wolfe_powell(1e-4,0.1,1.4);
+    options.max_iter = 2000;
 
     viennacl::vector<NumericT> X =  fmincl::minimize(fun,X0, options);
 

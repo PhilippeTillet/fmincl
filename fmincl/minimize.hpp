@@ -21,50 +21,44 @@
 
 namespace fmincl{
 
-    template<class RETURN_TYPE, class Type>
+    template<class Type>
     class proxy{
     public:
         template<class U>
         proxy & operator=(U const & u){ ptr = new U(u); }
-        RETURN_TYPE operator()(detail::state_ref & state) const { return (*ptr)(state); }
+        Type & get() const { return *ptr ; }
     private:
         Type * ptr;
     };
 
     struct optimization_options{
-        proxy<void, detail::direction_base> direction;
-        proxy<std::pair<double, bool>, detail::line_search_base> line_search;
+        proxy<detail::direction_base> direction;
+        proxy<detail::line_search_base> line_search;
+        unsigned int max_iter;
     };
 
     template<class Fun>
-    viennacl::vector<double> minimize(Fun const & fun, viennacl::vector<double> const & x0, optimization_options const & options){
-        detail::function_wrapper_impl<Fun> wrapper(fun);
-        std::cout << "Start at : " << x0 << std::endl;
-        viennacl::vector<double> x = x0;
-        unsigned int max_iter = 2000;
-        unsigned int dim = x.size();
-        viennacl::vector<double> gk(dim);
-        viennacl::vector<double> pk(dim);
-        double valk, valkm1, diff, dphi_0;
-        unsigned int iter=0;
-        detail::state_ref state(iter, x, valk, valkm1, gk, dphi_0, pk, wrapper);
-        for( ; iter < max_iter ; ++iter){
-            valk = wrapper(x, &gk);
-            if(iter>0) std::cout << "iter " << iter << " | cost : " << valk << std::endl;
-            diff = (valk-valkm1);
+    viennacl::vector<double> minimize(Fun const & user_fun, viennacl::vector<double> const & x0, optimization_options const & options){
+        detail::function_wrapper_impl<Fun> fun(user_fun);
+        detail::state state(x0, fun);
+        for( ; state.iter() < options.max_iter ; ++state.iter()){
+            state.val() = state.fun()(state.x(), &state.g());
+            if(state.iter()>0) std::cout << "iter " << state.iter() << " | cost : " << state.val() << std::endl;
+            state.diff() = (state.val()-state.valm1());
             viennacl::backend::finish();
-            options.direction(state);
-            dphi_0 = viennacl::linalg::inner_prod(pk,gk);
-            if(dphi_0>0){
-                pk = -gk;
-                dphi_0 = - viennacl::linalg::inner_prod(gk,gk);
+            options.direction.get()(state);
+            state.dphi_0() = viennacl::linalg::inner_prod(state.p(),state.g());
+            if(state.dphi_0()>0){
+                state.p() = -state.g();
+                state.dphi_0() = - viennacl::linalg::inner_prod(state.g(), state.g());
             }
-            std::pair<double, bool> search_res = options.line_search(state);
+            double ai = (state.iter()==0)?1:std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
+            std::pair<double, bool> search_res = options.line_search.get()(state, ai);
             if(search_res.second) break;
-            x = x + search_res.first*pk;
-            valkm1 = valk;
+            state.x() = state.x() + search_res.first*state.p();
+            state.valm1() = state.val();
         }
-        return x;
+        return state.x();
     }
 
 }

@@ -40,14 +40,14 @@ namespace fmincl{
         class cg : public detail::direction_base{
             public:
               cg() { }
-              void operator()(detail::state_ref & state){
+              void operator()(detail::state & state){
                   if(gkm1_.empty() || restart())
-                      state.p = -state.g;
+                      state.p() = -state.g();
                   else{
-                    viennacl::scalar<double> beta = compute_beta(state.g, gkm1_);
-                    state.p = -state.g + beta* state.p;
+                      viennacl::scalar<double> beta = compute_beta(state.g(), gkm1_);
+                      state.p() = -state.g() + beta* state.p();
                   }
-                  gkm1_ = state.g;
+                  gkm1_ = state.g();
               }
 
             private:
