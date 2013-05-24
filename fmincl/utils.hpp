@@ -17,10 +17,23 @@ namespace fmincl{
 
     namespace detail{
 
+        struct function_wrapper{
+            virtual double operator()(viennacl::vector<double> const & x, viennacl::vector<double> * grad) const = 0;
+        };
+
+        template<class Fun>
+        struct function_wrapper_impl : function_wrapper{
+            function_wrapper_impl(Fun const & fun) : fun_(fun){ }
+            double operator()(viennacl::vector<double> const & x, viennacl::vector<double> * grad) const { return fun_(x, grad); }
+        private:
+            Fun const & fun_;
+        };
+
         struct state_ref{
             state_ref(unsigned int & _iter, viennacl::vector<double> & _xk, double & _valk, double & _valkm1
                         , viennacl::vector<double> & _gk, double & _dphi_0
-                        , viennacl::vector<double> & _pk) : iter(_iter), x(_xk), val(_valk), valm1(_valkm1), g(_gk), dphi_0(_dphi_0), p(_pk){ }
+                        , viennacl::vector<double> & _pk
+                        , function_wrapper const & _fun) : iter(_iter), x(_xk), val(_valk), valm1(_valkm1), g(_gk), dphi_0(_dphi_0), p(_pk), fun(_fun){ }
             unsigned int & iter;
             viennacl::vector<double> & x;
             double & val;
@@ -28,6 +41,7 @@ namespace fmincl{
             viennacl::vector<double> & g;
             double & dphi_0;
             viennacl::vector<double> & p;
+            function_wrapper const & fun;
         };
 
         class direction_base{

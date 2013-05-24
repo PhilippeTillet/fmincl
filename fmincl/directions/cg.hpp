@@ -15,7 +15,6 @@
 #include <viennacl/vector.hpp>
 #include <viennacl/linalg/inner_prod.hpp>
 
-#include "fmincl/forwards.h"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -36,22 +35,16 @@ namespace fmincl{
             }
         };
 
+
         template<class BETA_POLICY = polak_ribiere, class RESTART_POLICY = no_restart>
-        struct cg_tag{
-            BETA_POLICY compute_beta;
-            RESTART_POLICY restart;
-        };
-
-
-        template<class TAG>
         class cg : public detail::direction_base{
             public:
-              cg(TAG const & tag) : tag_(tag){ }
+              cg() { }
               void operator()(detail::state_ref & state){
-                  if(gkm1_.empty() || tag_.restart())
+                  if(gkm1_.empty() || restart())
                       state.p = -state.g;
                   else{
-                    viennacl::scalar<double> beta = tag_.compute_beta(state.g, gkm1_);
+                    viennacl::scalar<double> beta = compute_beta(state.g, gkm1_);
                     state.p = -state.g + beta* state.p;
                   }
                   gkm1_ = state.g;
@@ -59,18 +52,8 @@ namespace fmincl{
 
             private:
               viennacl::vector<double> gkm1_;
-              TAG tag_;
-        };
-
-
-
-    }
-
-    namespace result_of{
-
-        template<class BETA_POLICY, class RESTART_POLICY>
-        struct tag_to_direction< direction::cg_tag<BETA_POLICY, RESTART_POLICY> >{
-            typedef fmincl::direction::cg< direction::cg_tag<BETA_POLICY, RESTART_POLICY> > type;
+              BETA_POLICY compute_beta;
+              RESTART_POLICY restart;
         };
 
     }

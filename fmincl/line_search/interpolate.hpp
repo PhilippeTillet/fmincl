@@ -54,13 +54,6 @@ namespace fmincl{
             }
 
 
-
-
-            inline void safeguard(double const & aim1, double & ai, double eps=1e-4){
-                if(std::abs(ai - aim1) < eps)
-                    ai = 0.5*aim1;
-            }
-
         }
 
     }
