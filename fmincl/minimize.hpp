@@ -14,9 +14,8 @@
 #include <viennacl/vector.hpp>
 #include <viennacl/linalg/inner_prod.hpp>
 #include <viennacl/linalg/norm_2.hpp>
-#include "fmincl/directions/cg.hpp"
-#include "fmincl/directions/quasi-newton.hpp"
-#include "fmincl/line_search/strong_wolfe_powell.hpp"
+#include "fmincl/directions.hpp"
+#include "fmincl/line_search.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -34,6 +33,7 @@ namespace fmincl{
     struct optimization_options{
         proxy<detail::direction_base> direction;
         proxy<detail::line_search_base> line_search;
+        proxy<detail::verbosity_base> verbosity;
         unsigned int max_iter;
     };
 

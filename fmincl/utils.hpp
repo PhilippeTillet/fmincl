@@ -64,6 +64,11 @@ namespace fmincl{
             virtual void operator()(detail::state & state) = 0;
         };
 
+        class verbosity_base{
+        public:
+            virtual void operator()(detail::state & state) = 0;
+        };
+
         class line_search_base{
         public:
             virtual std::pair<double, bool> operator()(detail::state & state, double a_init) = 0;
