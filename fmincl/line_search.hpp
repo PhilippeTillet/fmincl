@@ -18,6 +18,16 @@
 
 namespace fmincl{
 
+namespace detail{
+
+class line_search_base{
+public:
+    virtual std::pair<double, bool> operator()(detail::state & state, double a_init) = 0;
+};
+
+}
+
+
 /* =========================== *
  * CUBIC INTERPOLATION
  * ===========================*/

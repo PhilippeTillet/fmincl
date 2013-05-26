@@ -18,13 +18,23 @@ namespace fmincl{
     namespace detail{
 
         struct function_wrapper{
+            function_wrapper() : n_value_calc_(0), n_derivative_calc_(0){ }
             virtual double operator()(viennacl::vector<double> const & x, viennacl::vector<double> * grad) const = 0;
+            unsigned int n_value_calc() const { return n_value_calc_; }
+            unsigned int n_derivative_calc() const { return n_derivative_calc_; }
+        protected:
+            mutable unsigned int n_value_calc_;
+            mutable unsigned int n_derivative_calc_;
         };
 
         template<class Fun>
         struct function_wrapper_impl : function_wrapper{
             function_wrapper_impl(Fun const & fun) : fun_(fun){ }
-            double operator()(viennacl::vector<double> const & x, viennacl::vector<double> * grad) const { return fun_(x, grad); }
+            double operator()(viennacl::vector<double> const & x, viennacl::vector<double> * grad) const {
+                ++n_value_calc_;
+                if(grad) ++n_derivative_calc_;
+                return fun_(x, grad);
+            }
         private:
             Fun const & fun_;
         };
@@ -59,21 +69,19 @@ namespace fmincl{
             double dphi_0_;
         };
 
-        class direction_base{
-        public:
-            virtual void operator()(detail::state & state) = 0;
-        };
 
-        class verbosity_base{
-        public:
-            virtual void operator()(detail::state & state) = 0;
-        };
+    }
 
-        class line_search_base{
-        public:
-            virtual std::pair<double, bool> operator()(detail::state & state, double a_init) = 0;
-        };
+    namespace utils{
 
+    inline void print_infos(unsigned int verbosity_level, detail::state & state){
+        if(verbosity_level == 0)
+            return;
+        assert(verbosity_level < 3 && "Invalid verbosity level");
+        std::cout << "iter " << state.iter() << " | cost : " << state.val() ;
+        if(verbosity_level > 1)
+            std::cout << "| NVal : " << state.fun().n_value_calc() << " | NDer : " << state.fun().n_derivative_calc();
+        std::cout << std::endl;
     }
 
     template<class FUN>
@@ -92,6 +100,9 @@ namespace fmincl{
         }
         std::cout << numgrad - fgrad << std::endl;
     }
+
+    }
+
 
 
 }

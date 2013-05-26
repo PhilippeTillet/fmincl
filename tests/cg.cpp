@@ -30,13 +30,13 @@ int main(){
 
     options.direction = fmincl::cg<fmincl::polak_ribiere, fmincl::no_restart>();
     options.line_search = fmincl::strong_wolfe_powell(1e-3,0.05,1.4);
-
 //    options.direction = fmincl::direction::quasi_newton<fmincl::direction::bfgs>();
 //    options.line_search = fmincl::line_search::strong_wolfe_powell(1e-4,0.9,1.4);
+
     options.max_iter = 2000;
+    options.verbosity_level = 2;
 
     viennacl::vector<NumericT> X =  fmincl::minimize(fun,X0, options);
 
     std::cout << "Minimum : " << X << std::endl;
-    std::cout << fun.f_eval << " " << fun.df_eval << std::endl;
 }

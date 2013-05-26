@@ -20,6 +20,14 @@
 
 namespace fmincl{
 
+namespace detail{
+
+class direction_base{
+public:
+    virtual void operator()(detail::state & state) = 0;
+};
+
+}
 
 /* =========================== *
  * CONJUGATE GRADIENTS

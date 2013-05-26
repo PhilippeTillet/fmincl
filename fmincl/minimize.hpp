@@ -33,7 +33,7 @@ namespace fmincl{
     struct optimization_options{
         proxy<detail::direction_base> direction;
         proxy<detail::line_search_base> line_search;
-        proxy<detail::verbosity_base> verbosity;
+        unsigned int verbosity_level;
         unsigned int max_iter;
     };
 
@@ -43,7 +43,7 @@ namespace fmincl{
         detail::state state(x0, fun);
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             state.val() = state.fun()(state.x(), &state.g());
-            if(state.iter()>0) std::cout << "iter " << state.iter() << " | cost : " << state.val() << std::endl;
+            utils::print_infos(options.verbosity_level, state);
             state.diff() = (state.val()-state.valm1());
             viennacl::backend::finish();
             options.direction.get()(state);
