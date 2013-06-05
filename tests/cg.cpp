@@ -18,7 +18,7 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 100;
+static const int dim = 10;
 
 int main(){
     rosenbrock<NumericT> fun;
@@ -28,10 +28,10 @@ int main(){
 
     fmincl::optimization_options options;
 
-    options.direction = fmincl::cg<fmincl::polak_ribiere, fmincl::no_restart>();
-    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.1,1.4);
-//    options.direction = fmincl::quasi_newton<fmincl::bfgs>();
-//    options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9,1.4);
+//    options.direction = fmincl::cg<fmincl::polak_ribiere, fmincl::no_restart>();
+//    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.1,1.4);
+    options.direction = fmincl::quasi_newton<fmincl::bfgs>();
+    options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9,1.4);
 
     options.max_iter = 2000;
     options.verbosity_level = 2;
