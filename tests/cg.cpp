@@ -8,7 +8,7 @@
  * ===========================*/
 
 
-#define FMINCL_WITH_EIGEN
+#define FMINCL_WITH_VIENNACL
 
 #include <cstdlib>
 #include "fmincl/backend.hpp"
@@ -16,7 +16,7 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 10;
+static const int dim = 100;
 
 int main(){
     rosenbrock<NumericT> fun;

@@ -54,7 +54,7 @@ namespace fmincl{
       return viennacl::traits::size2(M);
     }
     static size_t size(VECTOR_TYPE const & v){
-      return vennacl::traits::size(v);
+      return viennacl::traits::size(v);
     }
     static bool is_empty(VECTOR_TYPE const & v){
       return v.empty();
