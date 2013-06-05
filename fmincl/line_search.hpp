@@ -11,9 +11,7 @@
 #ifndef FMINCL_LINE_SEARCH_HPP_
 #define FMINCL_LINE_SEARCH_HPP_
 
-#include <viennacl/vector.hpp>
-#include <viennacl/linalg/inner_prod.hpp>
-
+#include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -76,16 +74,16 @@ private:
     class phi_fun{
     public:
         void reset() { reset_ = true; }
-        double operator()(detail::function_wrapper const & fun, viennacl::vector<double> const & x, double alpha, viennacl::vector<double> const & p, double * dphi) {
+        double operator()(detail::function_wrapper const & fun, backend::VECTOR_TYPE const & x, double alpha, backend::VECTOR_TYPE const & p, double * dphi) {
             if(alpha != alpha_ || reset_){
                 alpha_ = alpha;
                 x_ = x + alpha_*p;
                 reset_ = false;
             }
             if(dphi){
-                viennacl::vector<double> g(x.size());
+                backend::VECTOR_TYPE g(x.size());
                 double res = fun(x_,&g);
-                *dphi = viennacl::linalg::inner_prod(g,p);
+                *dphi = backend::inner_prod(g,p);
                 return res;
             }
             return fun(x_, NULL);
@@ -93,7 +91,7 @@ private:
     private:
         bool reset_;
         double alpha_;
-        viennacl::vector<double> x_;
+        backend::VECTOR_TYPE x_;
     };
 
     bool sufficient_decrease(double ai, double phi_ai, detail::state & state) const {
@@ -104,8 +102,8 @@ private:
     }
 
     std::pair<double, bool> zoom(double alo, double ahi, detail::state & state) const{
-        viennacl::vector<double> const & x = state.x();
-        viennacl::vector<double> const & p = state.p();
+        backend::VECTOR_TYPE const & x = state.x();
+        backend::VECTOR_TYPE const & p = state.p();
         double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
         double aj, phi_aj, dphi_aj;
         while(1){
@@ -146,8 +144,8 @@ public:
         double dphi_aim1 = state.dphi_0();
         double amax = 5;
         double phi_ai, dphi_ai;
-        viennacl::vector<double> const & x = state.x();
-        viennacl::vector<double> const & p = state.p();
+        backend::VECTOR_TYPE const & x = state.x();
+        backend::VECTOR_TYPE const & p = state.p();
         for(unsigned int i = 1 ; i<20; ++i){
             phi_ai = phi_(state.fun(), x, ai, p, NULL);
 

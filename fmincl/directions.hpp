@@ -11,11 +11,7 @@
 #ifndef FMINCL_DIRECTIONS_HPP_
 #define FMINCL_DIRECTIONS_HPP_
 
-#include <viennacl/scalar.hpp>
-#include <viennacl/vector.hpp>
-#include <viennacl/matrix.hpp>
-#include <viennacl/linalg/prod.hpp>
-
+#include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
@@ -34,9 +30,9 @@ public:
  * ===========================*/
 
 struct polak_ribiere{
-    viennacl::scalar<double> operator()(viennacl::vector<double> const & gk
-                                        , viennacl::vector<double> const & gkm1){
-        return viennacl::linalg::inner_prod(gk,  gk - gkm1)/viennacl::linalg::inner_prod(gkm1,gkm1);
+    backend::SCALAR_TYPE operator()(backend::VECTOR_TYPE const & gk
+                                        , backend::VECTOR_TYPE const & gkm1){
+        return backend::inner_prod(gk,  gk - gkm1)/backend::inner_prod(gkm1,gkm1);
     }
 };
 
@@ -55,14 +51,14 @@ public:
         if(gkm1_.empty() || restart())
             state.p() = -state.g();
         else{
-            viennacl::scalar<double> beta = compute_beta(state.g(), gkm1_);
+            backend::SCALAR_TYPE beta = compute_beta(state.g(), gkm1_);
             state.p() = -state.g() + beta* state.p();
         }
         gkm1_ = state.g();
     }
 
 private:
-    viennacl::vector<double> gkm1_;
+    backend::VECTOR_TYPE gkm1_;
     BETA_POLICY compute_beta;
     RESTART_POLICY restart;
 };
@@ -89,31 +85,33 @@ public:
             state.p() = -state.g();
         }
         else{
-            viennacl::vector<double> skm1 = state.x() - xkm1_;
-            viennacl::vector<double> ykm1 = state.g() - gkm1_;
+            backend::VECTOR_TYPE Hy(Hk.size1());
+            backend::VECTOR_TYPE tmp(Hk.size1());
+            backend::VECTOR_TYPE skm1 = state.x() - xkm1_;
+            backend::VECTOR_TYPE ykm1 = state.g() - gkm1_;
 
 
             if(is_first_update_==true){
-                viennacl::scalar<double> ipsy = viennacl::linalg::inner_prod(skm1,ykm1);
-                viennacl::scalar<double> nykm1 = viennacl::linalg::inner_prod(ykm1,ykm1);
-                viennacl::scalar<double> scale = ipsy/nykm1;
-                Hk = viennacl::identity_matrix<double>(state.dim());
+                backend::SCALAR_TYPE ipsy = backend::inner_prod(skm1,ykm1);
+                backend::SCALAR_TYPE nykm1 = backend::inner_prod(ykm1,ykm1);
+                backend::SCALAR_TYPE scale = ipsy/nykm1;
+                backend::set_to_identity(Hk, state.dim());
                 Hk *= 1;
                 is_first_update_=false;
             }
 
-            viennacl::scalar<double> rho = (double)(1)/viennacl::linalg::inner_prod(skm1,ykm1);
-            viennacl::scalar<double> rho2 = rho*rho;
-            viennacl::vector<double> Hy = viennacl::linalg::prod(Hk,ykm1);
-            viennacl::scalar<double> n2y = viennacl::linalg::inner_prod(ykm1,Hy);
+            backend::SCALAR_TYPE rho = (double)(1)/backend::inner_prod(skm1,ykm1);
+            backend::SCALAR_TYPE rho2 = rho*rho;
+            backend::prod(Hk, ykm1, Hy);
+            backend::SCALAR_TYPE n2y = backend::inner_prod(ykm1,Hy);
 
-            Hk -= rho*viennacl::linalg::outer_prod(Hy,skm1);
-            Hk -= rho*viennacl::linalg::outer_prod(skm1,Hy);
-            Hk += rho2*n2y*viennacl::linalg::outer_prod(skm1,skm1);
-            Hk += rho*viennacl::linalg::outer_prod(skm1,skm1);
+            backend::rank_2_update(-rho,Hy,skm1,Hk);
+            backend::rank_2_update(-rho,skm1,Hy,Hk);
+            backend::rank_2_update(rho2*n2y,skm1,skm1,Hk);
+            backend::rank_2_update(rho,skm1,skm1,Hk);
 
+            backend::prod(Hk,state.g(),tmp);
 
-            viennacl::vector<double> tmp = viennacl::linalg::prod(Hk,state.g());
             state.p() = -tmp;
         }
 
@@ -123,9 +121,9 @@ public:
     }
 
 private:
-    viennacl::vector<double> xkm1_;
-    viennacl::vector<double> gkm1_;
-    viennacl::matrix<double> Hk;
+    backend::VECTOR_TYPE xkm1_;
+    backend::VECTOR_TYPE gkm1_;
+    backend::MATRIX_TYPE Hk;
     bool is_first_update_;
 };
 

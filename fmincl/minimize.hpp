@@ -11,9 +11,8 @@
 #ifndef FMINCL_MINIMIZE_HPP_
 #define FMINCL_MINIMIZE_HPP_
 
-#include <viennacl/vector.hpp>
-#include <viennacl/linalg/inner_prod.hpp>
-#include <viennacl/linalg/norm_2.hpp>
+
+#include "fmincl/backend.hpp"
 #include "fmincl/directions.hpp"
 #include "fmincl/line_search.hpp"
 #include "fmincl/utils.hpp"
@@ -38,19 +37,18 @@ namespace fmincl{
     };
 
     template<class Fun>
-    viennacl::vector<double> minimize(Fun const & user_fun, viennacl::vector<double> const & x0, optimization_options const & options){
+    backend::VECTOR_TYPE minimize(Fun const & user_fun, backend::VECTOR_TYPE const & x0, optimization_options const & options){
         detail::function_wrapper_impl<Fun> fun(user_fun);
         detail::state state(x0, fun);
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             state.val() = state.fun()(state.x(), &state.g());
             utils::print_infos(options.verbosity_level, state);
             state.diff() = (state.val()-state.valm1());
-            viennacl::backend::finish();
             options.direction.get()(state);
-            state.dphi_0() = viennacl::linalg::inner_prod(state.p(),state.g());
+            state.dphi_0() = backend::inner_prod(state.p(),state.g());
             if(state.dphi_0()>0){
                 state.p() = -state.g();
-                state.dphi_0() = - viennacl::linalg::inner_prod(state.g(), state.g());
+                state.dphi_0() = - backend::inner_prod(state.g(), state.g());
             }
             double ai = (state.iter()==0)?1:std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             std::pair<double, bool> search_res = options.line_search.get()(state, ai);

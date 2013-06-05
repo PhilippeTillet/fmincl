@@ -8,13 +8,13 @@
  * ===========================*/
 
 
-//#define VIENNACL_WITH_OPENCL
-#define VIENNACL_DEBUG_ALL
+#define FMINCL_WITH_VIENNACL
 
 #include <cstdlib>
 #include "viennacl/vector.hpp"
 #include "fmincl/minimize.hpp"
 #include "fmincl/utils.hpp"
+#include "fmincl/directions.hpp"
 #include "obj_fun.hpp"
 
 typedef double NumericT;
@@ -29,9 +29,9 @@ int main(){
     fmincl::optimization_options options;
 
     options.direction = fmincl::cg<fmincl::polak_ribiere, fmincl::no_restart>();
-    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.05,1.4);
-//    options.direction = fmincl::direction::quasi_newton<fmincl::direction::bfgs>();
-//    options.line_search = fmincl::line_search::strong_wolfe_powell(1e-4,0.9,1.4);
+    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.1,1.4);
+//    options.direction = fmincl::quasi_newton<fmincl::bfgs>();
+//    options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9,1.4);
 
     options.max_iter = 2000;
     options.verbosity_level = 2;
