@@ -47,12 +47,26 @@ namespace fmincl{
     static void rank_2_update(SCALAR_TYPE const & alpha, VECTOR_TYPE const & x, VECTOR_TYPE const & y, MATRIX_TYPE & res){
       res+=alpha*viennacl::linalg::outer_prod(x,y);
     }
+    static size_t size1(MATRIX_TYPE const & M){
+      return viennacl::traits::size1(M);
+    }
+    static size_t size2(MATRIX_TYPE const & M){
+      return viennacl::traits::size2(M);
+    }
+    static size_t size(VECTOR_TYPE const & v){
+      return vennacl::traits::size(v);
+    }
+    static bool is_empty(VECTOR_TYPE const & v){
+      return v.empty();
+    }
 #endif
 
 #ifdef FMINCL_WITH_EIGEN
-    typedef VectorXd VECTOR_TYPE;
-    typedef MatrixXd MATRIX_TYPE
-    typedef double SCALAR_TYPE
+
+    typedef Eigen::VectorXd VECTOR_TYPE;
+    typedef Eigen::MatrixXd MATRIX_TYPE;
+    typedef double SCALAR_TYPE;
+
     static SCALAR_TYPE inner_prod(VECTOR_TYPE const & x, VECTOR_TYPE const & y){
       return x.dot(y);
     }
@@ -65,7 +79,20 @@ namespace fmincl{
     static void rank_2_update(SCALAR_TYPE const & alpha, VECTOR_TYPE const & x, VECTOR_TYPE const & y, MATRIX_TYPE & res){
       res+=alpha*x*y.transpose();
     }
+    static size_t size1(MATRIX_TYPE const & M){
+      return M.rows();
+    }
+    static size_t size2(MATRIX_TYPE const & M){
+      return M.cols();
+    }
+    static size_t size(VECTOR_TYPE const & v){
+      return v.size();
+    }
+    static bool is_empty(VECTOR_TYPE const & v){
+      return v.size()==0;
+    }
 #endif
+
   }
 
 }

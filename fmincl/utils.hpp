@@ -11,6 +11,8 @@
 #ifndef FMINCL_UTILS_HPP
 #define FMINCL_UTILS_HPP
 
+#include <iostream>
+
 #include "fmincl/backend.hpp"
 
 namespace fmincl{

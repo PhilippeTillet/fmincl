@@ -48,7 +48,7 @@ class cg : public detail::direction_base{
 public:
     cg() { }
     void operator()(detail::state & state){
-        if(gkm1_.empty() || restart())
+        if(backend::is_empty(gkm1_) || restart())
             state.p() = -state.g();
         else{
             backend::SCALAR_TYPE beta = compute_beta(state.g(), gkm1_);
@@ -81,7 +81,7 @@ public:
     }
 
     void operator()(detail::state & state){
-        if(gkm1_.empty()){
+        if(backend::is_empty(gkm1_)){
             state.p() = -state.g();
         }
         else{
@@ -100,7 +100,7 @@ public:
 
             backend::SCALAR_TYPE rho = (double)(1)/backend::inner_prod(skm1,ykm1);
             backend::SCALAR_TYPE rho2 = rho*rho;
-            backend::VECTOR_TYPE Hy(Hk.size1());
+            backend::VECTOR_TYPE Hy(backend::size1(Hk));
             backend::prod(Hk,ykm1,Hy);
             backend::SCALAR_TYPE n2y = backend::inner_prod(ykm1,Hy);
 
@@ -109,13 +109,11 @@ public:
             backend::rank_2_update(rho2*n2y,skm1,skm1,Hk);
             backend::rank_2_update(rho,skm1,skm1,Hk);
 
-            backend::VECTOR_TYPE tmp(Hk.size1());
+            backend::VECTOR_TYPE tmp(backend::size1(Hk));
             backend::prod(Hk,state.g(),tmp);
 
             state.p() = -tmp;
         }
-
-
         xkm1_ = state.x();
         gkm1_ = state.g();
     }

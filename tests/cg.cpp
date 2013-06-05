@@ -8,13 +8,11 @@
  * ===========================*/
 
 
-#define FMINCL_WITH_VIENNACL
+#define FMINCL_WITH_EIGEN
 
 #include <cstdlib>
-#include "viennacl/vector.hpp"
+#include "fmincl/backend.hpp"
 #include "fmincl/minimize.hpp"
-#include "fmincl/utils.hpp"
-#include "fmincl/directions.hpp"
 #include "obj_fun.hpp"
 
 typedef double NumericT;
@@ -23,7 +21,8 @@ static const int dim = 10;
 int main(){
     rosenbrock<NumericT> fun;
     srand(time(NULL));
-    viennacl::vector<NumericT> X0(dim); for(unsigned int i = 0 ; i < dim ; ++i) X0(i) = 0.01*(double)rand()/RAND_MAX;
+    fmincl::backend::VECTOR_TYPE X0(dim);
+    for(unsigned int i = 0 ; i < dim ; ++i) X0(i) = 0.01*(double)rand()/RAND_MAX;
     //fmincl::check_grad(fun,X0);
 
     fmincl::optimization_options options;
@@ -36,7 +35,7 @@ int main(){
     options.max_iter = 2000;
     options.verbosity_level = 2;
 
-    viennacl::vector<NumericT> X =  fmincl::minimize(fun,X0, options);
+    fmincl::backend::VECTOR_TYPE X =  fmincl::minimize(fun,X0, options);
 
     std::cout << "Minimum : " << X << std::endl;
 }
