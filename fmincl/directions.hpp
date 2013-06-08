@@ -98,16 +98,17 @@ public:
                 is_first_update_=false;
             }
 
-            backend::SCALAR_TYPE rho = (double)(1)/backend::inner_prod(skm1,ykm1);
-            backend::SCALAR_TYPE rho2 = rho*rho;
+            double ys = backend::inner_prod(skm1,ykm1);
             backend::VECTOR_TYPE Hy(backend::size1(Hk));
             backend::prod(Hk,ykm1,Hy);
-            backend::SCALAR_TYPE n2y = backend::inner_prod(ykm1,Hy);
-
-            backend::rank_2_update(-rho,Hy,skm1,Hk);
-            backend::rank_2_update(-rho,skm1,Hy,Hk);
-            backend::rank_2_update(rho2*n2y,skm1,skm1,Hk);
-            backend::rank_2_update(rho,skm1,skm1,Hk);
+            double yHy = backend::inner_prod(ykm1,Hy);
+            double gamma = ys/yHy;
+            backend::VECTOR_TYPE v(backend::size1(Hk));
+            v = std::sqrt(yHy)*(skm1/ys - Hy/yHy);
+            Hk = gamma*Hk;
+            backend::rank_2_update(-gamma/yHy,Hy,Hy,Hk);
+            backend::rank_2_update(gamma,v,v,Hk);
+            backend::rank_2_update(1/ys,skm1,skm1,Hk);
 
             backend::VECTOR_TYPE tmp(backend::size1(Hk));
             backend::prod(Hk,state.g(),tmp);
