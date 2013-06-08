@@ -8,7 +8,7 @@
  * ===========================*/
 
 
-#define FMINCL_WITH_VIENNACL
+#define FMINCL_WITH_EIGEN
 
 #include <cstdlib>
 #include "fmincl/backend.hpp"
@@ -16,7 +16,7 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 100;
+static const int dim = 2;
 
 int main(){
     rosenbrock<NumericT> fun;
@@ -37,5 +37,5 @@ int main(){
 
     fmincl::backend::VECTOR_TYPE X =  fmincl::minimize(fun,X0, options);
 
-    std::cout << "Minimum : " << X << std::endl;
+    //std::cout << "Minimum : " << X << std::endl;
 }

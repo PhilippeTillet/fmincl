@@ -146,14 +146,12 @@ public:
         double phi_ai, dphi_ai;
         backend::VECTOR_TYPE const & x = state.x();
         backend::VECTOR_TYPE const & p = state.p();
-        for(unsigned int i = 1 ; i<20; ++i){
-            phi_ai = phi_(state.fun(), x, ai, p, NULL);
+        for(unsigned int i = 1 ; i<5; ++i){
+            phi_ai = phi_(state.fun(), x, ai, p, &dphi_ai);
 
             //Tests sufficient decrease
             if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
                 return zoom(aim1, ai, state);
-
-            phi_(state.fun(), x, ai, p, &dphi_ai);
 
             //Tests curvature
             if(curvature(dphi_ai, state))

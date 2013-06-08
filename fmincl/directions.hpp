@@ -94,7 +94,7 @@ public:
                 backend::SCALAR_TYPE nykm1 = backend::inner_prod(ykm1,ykm1);
                 backend::SCALAR_TYPE scale = ipsy/nykm1;
                 backend::set_to_identity(Hk, state.dim());
-                Hk *= 1;
+                Hk *= scale;
                 is_first_update_=false;
             }
 
