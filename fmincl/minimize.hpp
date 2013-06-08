@@ -40,8 +40,8 @@ namespace fmincl{
     backend::VECTOR_TYPE minimize(Fun const & user_fun, backend::VECTOR_TYPE const & x0, optimization_options const & options){
         detail::function_wrapper_impl<Fun> fun(user_fun);
         detail::state state(x0, fun);
+        state.val() = state.fun()(state.x(), &state.g());
         for( ; state.iter() < options.max_iter ; ++state.iter()){
-            state.val() = state.fun()(state.x(), &state.g());
             utils::print_infos(options.verbosity_level, state);
             state.diff() = (state.val()-state.valm1());
             options.direction.get()(state);
@@ -52,10 +52,16 @@ namespace fmincl{
             }
 //            double ai = (state.iter()==0)?0.02:std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             double ai = (state.iter()==0)?std::min(1.0d,1/state.g().array().abs().sum()):1;
-            std::pair<double, bool> search_res = options.line_search.get()(state, ai);
-            if(search_res.second) break;
-            state.x() = state.x() + search_res.first*state.p();
+            detail::line_search_result search_res = options.line_search.get()(state, ai);
+
+            if(search_res.has_failed) break;
+
             state.valm1() = state.val();
+            state.x() = search_res.best_x;
+            state.val() = search_res.best_f;
+            state.g() = search_res.best_g;
+
+
         }
         return state.x();
     }
