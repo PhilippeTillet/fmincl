@@ -46,36 +46,15 @@ namespace fmincl{
 
 
   inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb){
-    double eps = 1e-3;
-    double bma = b - a;
-    double fab = (fb - fa)/bma;
-    double d1 = dfa + dfb - 3*fab;
+    double d1 = dfa + dfb - 3*(fa - fb)/(a-b);
     double delta = pow(d1,2) - dfa*dfb;
-    if(delta>=0){
-      double x;
-      double d2 = std::sqrt(delta);
-      double faab = (fab - dfa)/bma;
-      double faabb = (dfb - 2*fab + dfa)/pow(bma,2);
-      if(std::abs(faabb)<eps){
-        if(std::abs(faab)<eps)
-          x=a;
-        else
-          x= a - dfa/(2*faab);
-      }
-      else{
-        x = b - bma*(dfb + d2 - d1)/(dfb - dfa + 2*d2);
-      }
-      x = std::max(a,std::min(x,b));
-      double fx = (x-a)*(dfa + (x-a)*(faab + (x-b)*faabb));
-      if(fa <= fb && fa <= fx)
-        return a;
-      if(fb <= fx)
-        return b;
-      return x;
-    }
-    if(fa <= fb)
-      return a;
-    return b;
+    if(delta<0)
+      return (a+b)/2;
+    double d2 = std::sqrt(delta);
+    double x = b - (b - a)*((dfb + d2 - d1)/(dfb - dfa + 2*d2));
+    if(isnan(x))
+      return (a+b)/2;
+    return std::min(std::max(x,a),b);
   }
 
   /* =========================== *
@@ -130,10 +109,12 @@ namespace fmincl{
             aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
           else
             aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
+//          std::cout << alo << " " << aj << " " << ahi << " " << std::flush;
           if(aj==alo || aj==ahi){
             return detail::line_search_result(true,phi_ahi,phi_.x(),g);
           }
           phi_aj = phi_(state.fun(), x, aj, p, g, NULL);
+//          std::cout << phi_alo << " " << phi_ahi << " " << phi_aj << std::endl;
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;
           }
@@ -163,9 +144,8 @@ namespace fmincl{
         backend::VECTOR_TYPE const & x = state.x();
         backend::VECTOR_TYPE & g = state.g();
         backend::VECTOR_TYPE const & p = state.p();
-        for(unsigned int i = 1 ; i<5; ++i){
+        for(unsigned int i = 1 ; i<20; ++i){
           phi_ai = phi_(state.fun(), x, ai, p, g, &dphi_ai);
-
           //Tests sufficient decrease
           if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
             return zoom(aim1, ai, state);
