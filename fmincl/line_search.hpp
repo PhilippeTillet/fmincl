@@ -86,34 +86,38 @@ namespace fmincl{
         return std::abs(dphi_ai) <= c2_*std::abs(state.dphi_0());
       }
 
-      detail::line_search_result zoom(double alo, double ahi, detail::state & state) const{
-        backend::VECTOR_TYPE x = state.x();
+      detail::line_search_result zoom(double alo, double phi_alo, double dphi_alo, double ahi, double phi_ahi, double dphi_ahi, detail::state & state) const{
+        unsigned int dim = state.dim();
         backend::VECTOR_TYPE x0 = state.x();
-        backend::VECTOR_TYPE  g = state.g();
+        backend::VECTOR_TYPE xlo(dim), xhi(dim), xj(dim);
+        backend::VECTOR_TYPE  glo(dim), ghi(dim), gj(dim);
         backend::VECTOR_TYPE const & p = state.p();
-        double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
         double aj, phi_aj, dphi_aj;
         while(1){
-          phi_alo = phi_(state.fun(), x, x0, alo, p, g, &dphi_alo);
-          phi_ahi = phi_(state.fun(), x, x0, ahi, p, g, &dphi_ahi);
           if(alo < ahi)
             aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
           else
             aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
           if(aj==alo || aj==ahi){
-            return detail::line_search_result(true, phi_ahi, x,g);
+            return detail::line_search_result(true, phi_ahi, xhi, ghi);
           }
-          phi_aj = phi_(state.fun(), x, x0, aj, p, g, NULL);
+          phi_aj = phi_(state.fun(), xj, x0, aj, p, gj, &dphi_aj);
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;
+            phi_ahi = phi_aj;
+            dphi_ahi = dphi_aj;
           }
           else{
-            phi_aj = phi_(state.fun(), x, x0, aj, p, g, &dphi_aj);
             if(curvature(dphi_aj, state))
-              return detail::line_search_result(false, phi_aj, x, g);
-            if(dphi_aj*(ahi - alo) >= 0)
+              return detail::line_search_result(false, phi_aj, xj, gj);
+            if(dphi_aj*(ahi - alo) >= 0){
               ahi = alo;
+              phi_ahi = phi_alo;
+              dphi_ahi = dphi_alo;
+            }
             alo = aj;
+            phi_alo = phi_aj;
+            dphi_alo = dphi_aj;
           }
         }
       }
@@ -137,13 +141,13 @@ namespace fmincl{
 
           //Tests sufficient decrease
           if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
-            return zoom(aim1, ai, state);
+            return zoom(aim1, phi_aim1, dphi_aim1, ai, phi_ai, dphi_ai, state);
 
           //Tests curvature
           if(curvature(dphi_ai, state))
             return detail::line_search_result(false,phi_ai,x,g);
           if(dphi_ai>=0)
-            return zoom(ai, aim1, state);
+            return zoom(ai, phi_ai, dphi_ai, aim1, phi_aim1, dphi_aim1, state);
 
           //Updates states
           double old_ai = ai;
