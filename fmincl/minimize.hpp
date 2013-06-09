@@ -68,6 +68,9 @@ namespace fmincl{
             state.val() = search_res.best_f;
             state.g() = search_res.best_g;
 
+            if(std::abs(state.val() - state.valm1()) < 1e-6)
+              break;
+
 
 
         }
