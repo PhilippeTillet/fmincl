@@ -69,27 +69,14 @@ namespace fmincl{
     private:
       class phi_fun{
         public:
-          void reset() { reset_ = true; }
-          double operator()(detail::function_wrapper const & fun, backend::VECTOR_TYPE const & x, double alpha, backend::VECTOR_TYPE const & p, backend::VECTOR_TYPE & grad, double * dphi) {
-            if(alpha != alpha_ || reset_){
-              alpha_ = alpha;
-              x_ = x + alpha_*p;
-              reset_ = false;
-            }
-            double res = fun(x_,&grad);
+          double operator()(detail::function_wrapper const & fun, backend::VECTOR_TYPE & x, backend::VECTOR_TYPE const & x0, double alpha, backend::VECTOR_TYPE const & p, backend::VECTOR_TYPE & grad, double * dphi) {
+            x = x0 + alpha*p;
+            double res = fun(x,&grad);
             if(dphi){
               *dphi = backend::inner_prod(grad,p);
             }
             return res;
           }
-          backend::VECTOR_TYPE const & x(){
-            return x_;
-          }
-
-        private:
-          bool reset_;
-          double alpha_;
-          backend::VECTOR_TYPE x_;
       };
 
       bool sufficient_decrease(double ai, double phi_ai, detail::state & state) const {
@@ -100,29 +87,30 @@ namespace fmincl{
       }
 
       detail::line_search_result zoom(double alo, double ahi, detail::state & state) const{
-        backend::VECTOR_TYPE const & x = state.x();
-        backend::VECTOR_TYPE  & g = state.g();
+        backend::VECTOR_TYPE x = state.x();
+        backend::VECTOR_TYPE x0 = state.x();
+        backend::VECTOR_TYPE  g = state.g();
         backend::VECTOR_TYPE const & p = state.p();
         double phi_alo, phi_ahi, dphi_alo, dphi_ahi;
         double aj, phi_aj, dphi_aj;
         while(1){
-          phi_alo = phi_(state.fun(), x, alo, p, g, &dphi_alo);
-          phi_ahi = phi_(state.fun(), x, ahi, p, g, &dphi_ahi);
+          phi_alo = phi_(state.fun(), x, x0, alo, p, g, &dphi_alo);
+          phi_ahi = phi_(state.fun(), x, x0, ahi, p, g, &dphi_ahi);
           if(alo < ahi)
             aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
           else
             aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
           if(aj==alo || aj==ahi){
-            return detail::line_search_result(true,phi_ahi,phi_.x(),g);
+            return detail::line_search_result(true, phi_ahi, x,g);
           }
-          phi_aj = phi_(state.fun(), x, aj, p, g, NULL);
+          phi_aj = phi_(state.fun(), x, x0, aj, p, g, NULL);
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;
           }
           else{
-            phi_aj = phi_(state.fun(), x, aj, p, g, &dphi_aj);
+            phi_aj = phi_(state.fun(), x, x0, aj, p, g, &dphi_aj);
             if(curvature(dphi_aj, state))
-              return detail::line_search_result(false, phi_aj, phi_.x(), g);
+              return detail::line_search_result(false, phi_aj, x, g);
             if(dphi_aj*(ahi - alo) >= 0)
               ahi = alo;
             alo = aj;
@@ -136,16 +124,16 @@ namespace fmincl{
       strong_wolfe_powell(double c1, double c2) :  c1_(c1), c2_(c2) { }
 
       detail::line_search_result operator()(detail::state & state, double ai) {
-        phi_.reset();
         double aim1 = 0;
         double phi_aim1 = state.val();
         double dphi_aim1 = state.dphi_0();
         double phi_ai, dphi_ai;
-        backend::VECTOR_TYPE const & x = state.x();
-        backend::VECTOR_TYPE & g = state.g();
+        backend::VECTOR_TYPE x = state.x();
+        backend::VECTOR_TYPE x0 = state.x();
+        backend::VECTOR_TYPE g = state.g();
         backend::VECTOR_TYPE const & p = state.p();
         for(unsigned int i = 1 ; i<20; ++i){
-          phi_ai = phi_(state.fun(), x, ai, p, g, &dphi_ai);
+          phi_ai = phi_(state.fun(), x, x0, ai, p, g, &dphi_ai);
 
           //Tests sufficient decrease
           if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
@@ -153,7 +141,7 @@ namespace fmincl{
 
           //Tests curvature
           if(curvature(dphi_ai, state))
-            return detail::line_search_result(false,phi_ai,phi_.x(),g);
+            return detail::line_search_result(false,phi_ai,x,g);
           if(dphi_ai>=0)
             return zoom(ai, aim1, state);
 
@@ -171,7 +159,7 @@ namespace fmincl{
           phi_aim1 = old_phi_ai;
           dphi_aim1 = old_dphi_ai;
         }
-        return detail::line_search_result(true,phi_ai,phi_.x(),g);
+        return detail::line_search_result(true,phi_ai,x,g);
       }
     private:
       double c1_;
