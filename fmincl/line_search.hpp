@@ -53,7 +53,7 @@ namespace fmincl{
     double x = b - (b - a)*((dfb + d2 - d1)/(dfb - dfa + 2*d2));
     if(isnan(x))
       return (xmin+xmax)/2;
-    return std::min(std::max(x,xmin+0.1*(xmax-xmin)),xmax-0.1*(xmax-xmin));
+    return std::min(std::max(x,xmin),xmax);
   }
 
   inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb){
@@ -89,18 +89,21 @@ namespace fmincl{
       detail::line_search_result zoom(double alo, double phi_alo, double dphi_alo, double ahi, double phi_ahi, double dphi_ahi, detail::state & state) const{
         unsigned int dim = state.dim();
         backend::VECTOR_TYPE x0 = state.x();
-        backend::VECTOR_TYPE xlo(dim), xhi(dim), xj(dim);
-        backend::VECTOR_TYPE  glo(dim), ghi(dim), gj(dim);
+        backend::VECTOR_TYPE xj(dim);
+        backend::VECTOR_TYPE gj(dim);
         backend::VECTOR_TYPE const & p = state.p();
+        double eps = 1e-4;
         double aj, phi_aj, dphi_aj;
         while(1){
+          double xmin = std::min(alo,ahi);
+          double xmax = std::max(alo,ahi);
           if(alo < ahi)
-            aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
+            aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
           else
-            aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
-          if(aj==alo || aj==ahi){
-            return detail::line_search_result(true, phi_ahi, xhi, ghi);
-          }
+            aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
+          if( (aj - xmin)<eps || (xmax - aj) < eps)
+            return detail::line_search_result(true, phi_aj, xj, gj);
+          aj = std::min(std::max(aj,xmin+0.1*(xmax-xmin)),xmax-0.1*(xmax-xmin));
           phi_aj = phi_(state.fun(), xj, x0, aj, p, gj, &dphi_aj);
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;
