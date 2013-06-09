@@ -28,9 +28,9 @@ int main(){
     fmincl::optimization_options options;
 
 //    options.direction = fmincl::cg<fmincl::polak_ribiere, fmincl::no_restart>();
-//    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.1,1.4);
+//    options.line_search = fmincl::strong_wolfe_powell(1e-3,0.1);
     options.direction = fmincl::quasi_newton<fmincl::bfgs>();
-    options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9,1.4);
+    options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9);
 
     options.max_iter = 2000;
     options.verbosity_level = 2;

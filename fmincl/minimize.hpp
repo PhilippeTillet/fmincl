@@ -50,13 +50,14 @@ namespace fmincl{
                 state.p() = -state.g();
                 state.dphi_0() = - backend::inner_prod(state.g(), state.g());
             }
+
             double ai;
             if(state.iter()==0){
               ai = std::min(1.0d,1/state.g().array().abs().sum());
             }
             else{
-              ai = 1;
-//              std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
+//              ai = 1;
+              ai = std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             }
             detail::line_search_result search_res = options.line_search.get()(state, ai);
 

@@ -44,17 +44,20 @@ namespace fmincl{
  * CUBIC INTERPOLATION
  * ===========================*/
 
-
-  inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb){
+  inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb, double xmin, double xmax){
     double d1 = dfa + dfb - 3*(fa - fb)/(a-b);
     double delta = pow(d1,2) - dfa*dfb;
     if(delta<0)
-      return (a+b)/2;
+      return (xmin+xmax)/2;
     double d2 = std::sqrt(delta);
     double x = b - (b - a)*((dfb + d2 - d1)/(dfb - dfa + 2*d2));
     if(isnan(x))
-      return (a+b)/2;
-    return std::min(std::max(x,a),b);
+      return (xmin+xmax)/2;
+    return std::min(std::max(x,xmin+0.1*(xmax-xmin)),xmax-0.1*(xmax-xmin));
+  }
+
+  inline double cubicmin(double a,double b, double fa, double fb, double dfa, double dfb){
+    return cubicmin(a,b,fa,fb,dfa,dfb,std::min(a,b), std::max(a,b));
   }
 
   /* =========================== *
@@ -109,12 +112,10 @@ namespace fmincl{
             aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi);
           else
             aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo);
-//          std::cout << alo << " " << aj << " " << ahi << " " << std::flush;
           if(aj==alo || aj==ahi){
             return detail::line_search_result(true,phi_ahi,phi_.x(),g);
           }
           phi_aj = phi_(state.fun(), x, aj, p, g, NULL);
-//          std::cout << phi_alo << " " << phi_ahi << " " << phi_aj << std::endl;
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;
           }
@@ -132,20 +133,20 @@ namespace fmincl{
 
 
     public:
-      strong_wolfe_powell(double c1, double c2, double rho) :  c1_(c1), c2_(c2), rho_(rho) { }
+      strong_wolfe_powell(double c1, double c2) :  c1_(c1), c2_(c2) { }
 
       detail::line_search_result operator()(detail::state & state, double ai) {
         phi_.reset();
         double aim1 = 0;
         double phi_aim1 = state.val();
         double dphi_aim1 = state.dphi_0();
-        double amax = 5;
         double phi_ai, dphi_ai;
         backend::VECTOR_TYPE const & x = state.x();
         backend::VECTOR_TYPE & g = state.g();
         backend::VECTOR_TYPE const & p = state.p();
         for(unsigned int i = 1 ; i<20; ++i){
           phi_ai = phi_(state.fun(), x, ai, p, g, &dphi_ai);
+
           //Tests sufficient decrease
           if(!sufficient_decrease(ai, phi_ai, state) || (i>1 && phi_ai >= phi_aim1))
             return zoom(aim1, ai, state);
@@ -157,13 +158,18 @@ namespace fmincl{
             return zoom(ai, aim1, state);
 
           //Updates states
-          aim1 = ai;
-          phi_aim1 = phi_ai;
-          dphi_aim1 = dphi_ai;
-          ai = rho_*ai;
-          if(ai>amax){
-            return detail::line_search_result(true,phi_ai,phi_.x(),g);
-          }
+          double old_ai = ai;
+          double old_phi_ai = phi_ai;
+          double old_dphi_ai = dphi_ai;
+
+          //Cubic extrapolation to chose a new value of ai
+          double xmin = ai + 0.01*(ai-aim1);
+          double xmax = 10*ai;
+          ai = cubicmin(aim1,ai,phi_aim1,phi_ai,dphi_aim1,dphi_ai,xmin,xmax);
+
+          aim1 = old_ai;
+          phi_aim1 = old_phi_ai;
+          dphi_aim1 = old_dphi_ai;
         }
         return detail::line_search_result(true,phi_ai,phi_.x(),g);
       }
