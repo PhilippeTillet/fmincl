@@ -61,7 +61,7 @@ namespace fmincl{
             }
             detail::line_search_result search_res = options.line_search.get()(state, ai);
 
-            if(search_res.has_failed) break;
+            if(search_res.best_f>state.val()) break;
 
             state.valm1() = state.val();
             state.x() = search_res.best_x;
