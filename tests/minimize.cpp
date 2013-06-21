@@ -7,9 +7,6 @@
  * License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-
-#define FMINCL_WITH_EIGEN
-
 #include <cstdlib>
 #include "fmincl/backend.hpp"
 #include "fmincl/minimize.hpp"

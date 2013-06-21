@@ -21,6 +21,7 @@
 #include "viennacl/vector.hpp"
 #include "viennacl/linalg/inner_prod.hpp"
 #include "viennacl/linalg/prod.hpp"
+#include "viennacl/generator/custom_operation.hpp"
 #endif
 
 #ifdef FMINCL_WITH_EIGEN
@@ -37,6 +38,16 @@ namespace fmincl{
     typedef double SCALAR_TYPE;
     static SCALAR_TYPE inner_prod(VECTOR_TYPE const & x, VECTOR_TYPE const & y){
       return viennacl::linalg::inner_prod(x,y);
+    }
+    static SCALAR_TYPE abs_sum(VECTOR_TYPE const & x){
+      viennacl::generator::custom_operation op;
+      viennacl::scalar<SCALAR_TYPE> s(0);
+      typedef viennacl::generator::scalar<SCALAR_TYPE> scal;
+      typedef viennacl::generator::vector<SCALAR_TYPE> vec;
+      op.add(scal(s)=viennacl::generator::reduce<viennacl::generator::add_type>(viennacl::generator::fabs(vec(x))));
+      op.execute();
+      viennacl::backend::finish();
+      return s;
     }
     static void set_to_identity(MATRIX_TYPE & M, unsigned int n){
       M = viennacl::identity_matrix<SCALAR_TYPE>(n);
@@ -66,7 +77,9 @@ namespace fmincl{
     typedef Eigen::VectorXd VECTOR_TYPE;
     typedef Eigen::MatrixXd MATRIX_TYPE;
     typedef double SCALAR_TYPE;
-
+    static SCALAR_TYPE abs_sum(VECTOR_TYPE const & x){
+      return x.array().abs().sum();
+    }
     static SCALAR_TYPE inner_prod(VECTOR_TYPE const & x, VECTOR_TYPE const & y){
       return x.dot(y);
     }

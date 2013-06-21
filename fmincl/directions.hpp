@@ -85,30 +85,30 @@ public:
             state.p() = -state.g();
         }
         else{
-            backend::VECTOR_TYPE skm1 = state.x() - xkm1_;
-            backend::VECTOR_TYPE ykm1 = state.g() - gkm1_;
+            backend::VECTOR_TYPE s = state.x() - xkm1_;
+            backend::VECTOR_TYPE y = state.g() - gkm1_;
 
 
             if(is_first_update_==true){
-                backend::SCALAR_TYPE ipsy = backend::inner_prod(skm1,ykm1);
-                backend::SCALAR_TYPE nykm1 = backend::inner_prod(ykm1,ykm1);
+                backend::SCALAR_TYPE ipsy = backend::inner_prod(s,y);
+                backend::SCALAR_TYPE nykm1 = backend::inner_prod(y,y);
                 backend::SCALAR_TYPE scale = ipsy/nykm1;
                 backend::set_to_identity(Hk, state.dim());
                 Hk *= scale;
                 is_first_update_=false;
             }
 
-            double ys = backend::inner_prod(skm1,ykm1);
+            double ys = backend::inner_prod(s,y);
             backend::VECTOR_TYPE Hy(backend::size1(Hk));
-            backend::prod(Hk,ykm1,Hy);
-            double yHy = backend::inner_prod(ykm1,Hy);
+            backend::prod(Hk,y,Hy);
+            double yHy = backend::inner_prod(y,Hy);
             double gamma = ys/yHy;
             backend::VECTOR_TYPE v(backend::size1(Hk));
-            v = std::sqrt(yHy)*(skm1/ys - Hy/yHy);
+            v = std::sqrt(yHy)*(s/ys - Hy/yHy);
             Hk = gamma*Hk;
             backend::rank_2_update(-gamma/yHy,Hy,Hy,Hk);
             backend::rank_2_update(gamma,v,v,Hk);
-            backend::rank_2_update(1/ys,skm1,skm1,Hk);
+            backend::rank_2_update(1/ys,s,s,Hk);
 
             backend::VECTOR_TYPE tmp(backend::size1(Hk));
             backend::prod(Hk,state.g(),tmp);

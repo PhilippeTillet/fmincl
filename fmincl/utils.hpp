@@ -82,7 +82,7 @@ namespace fmincl{
         assert(verbosity_level < 3 && "Invalid verbosity level");
         std::cout << "iter " << state.iter() << " | cost : " << state.val() ;
         if(verbosity_level > 1)
-            std::cout << "| NVal : " << state.fun().n_value_calc() << " | NDer : " << state.fun().n_derivative_calc();
+            std::cout << "| NVal : " << state.fun().n_value_calc();
         std::cout << std::endl;
     }
 

@@ -53,7 +53,7 @@ namespace fmincl{
 
             double ai;
             if(state.iter()==0){
-              ai = std::min(1.0d,1/state.g().array().abs().sum());
+              ai = std::min(1.0d,1/backend::abs_sum(state.g()));
             }
             else{
 //              ai = 1;
