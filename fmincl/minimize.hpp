@@ -19,25 +19,29 @@
 
 namespace fmincl{
 
-    template<class Type>
-    class proxy{
-    public:
-        template<class U>
-        proxy & operator=(U const & u){ ptr = new U(u); }
-        Type & get() const { return *ptr ; }
-    private:
-        Type * ptr;
-    };
-
     struct optimization_options{
-        proxy<detail::direction_base> direction;
-        proxy<detail::line_search_base> line_search;
+        optimization_options(unsigned int verbosity = 0
+                            , unsigned int iter = 512) : verbosity_level(verbosity), max_iter(iter){ }
+        mutable tools::shared_ptr<detail::direction_base> direction;
+        mutable tools::shared_ptr<detail::line_search_base> line_search;
         unsigned int verbosity_level;
         unsigned int max_iter;
     };
 
+    void fill_default_direction_line_search(optimization_options const & options){
+      if(options.direction==NULL)
+        options.direction = new quasi_newton();
+      if(options.line_search==NULL){
+        if(dynamic_cast<quasi_newton*>(options.direction.get()))
+          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.9);
+        else
+          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.1);
+      }
+    }
+
     template<class Fun>
     backend::VECTOR_TYPE minimize(Fun const & user_fun, backend::VECTOR_TYPE const & x0, optimization_options const & options){
+        fill_default_direction_line_search(options);
         detail::function_wrapper_impl<Fun> fun(user_fun);
         detail::state state(x0, fun);
         state.val() = state.fun()(state.x(), &state.g());
@@ -49,7 +53,7 @@ namespace fmincl{
               state.dphi_0() = backend::inner_prod(state.p(),state.g());
             }
             else{
-              options.direction.get()(state);
+              (*options.direction.get())(state);
               state.dphi_0() = backend::inner_prod(state.p(),state.g());
               if(state.dphi_0()>0){
                   state.p() = -state.g();
@@ -62,10 +66,12 @@ namespace fmincl{
               ai = std::min(1.0d,1/backend::abs_sum(state.g()));
             }
             else{
-//              ai = 1;
-              ai = std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
+              if(dynamic_cast<quasi_newton*>(options.direction.get()))
+                ai = 1;
+              else
+                ai = std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             }
-            detail::line_search_result search_res = options.line_search.get()(state, ai);
+            detail::line_search_result search_res = (*options.line_search.get())(state, ai);
 
             if(search_res.best_f>state.val()) break;
 
