@@ -13,7 +13,7 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 2;
+static const int dim = 10;
 
 int main(){
     rosenbrock<NumericT> fun;
@@ -29,7 +29,7 @@ int main(){
     options.direction = fmincl::quasi_newton<fmincl::bfgs>();
     options.line_search = fmincl::strong_wolfe_powell(1e-4,0.9);
 
-    options.max_iter = 2000;
+    options.max_iter = 100;
     options.verbosity_level = 2;
 
     fmincl::backend::VECTOR_TYPE X =  fmincl::minimize(fun,X0, options);

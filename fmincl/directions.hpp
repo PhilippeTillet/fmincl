@@ -11,6 +11,8 @@
 #ifndef FMINCL_DIRECTIONS_HPP_
 #define FMINCL_DIRECTIONS_HPP_
 
+#include <vector>
+
 #include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 
@@ -48,17 +50,11 @@ class cg : public detail::direction_base{
 public:
     cg() { }
     void operator()(detail::state & state){
-        if(backend::is_empty(gkm1_) || restart())
-            state.p() = -state.g();
-        else{
-            backend::SCALAR_TYPE beta = compute_beta(state.g(), gkm1_);
-            state.p() = -state.g() + beta* state.p();
-        }
-        gkm1_ = state.g();
+        backend::SCALAR_TYPE beta = compute_beta(state.g(), state.gm1());
+        state.p() = -state.g() + beta* state.p();
     }
 
 private:
-    backend::VECTOR_TYPE gkm1_;
     BETA_POLICY compute_beta;
     RESTART_POLICY restart;
 };
@@ -70,60 +66,103 @@ private:
 
 
 class bfgs{
+public:
+    bfgs() : is_first_update_(true){ }
 
+    void operator()(detail::state & state){
+      backend::VECTOR_TYPE s = state.x() - state.xm1();
+      backend::VECTOR_TYPE y = state.g() - state.gm1();
+      if(is_first_update_==true){
+        backend::SCALAR_TYPE ipsy = backend::inner_prod(s,y);
+        backend::SCALAR_TYPE nykm1 = backend::inner_prod(y,y);
+        backend::SCALAR_TYPE scale = ipsy/nykm1;
+        backend::set_to_identity(Hk, state.dim());
+        Hk *= scale;
+        is_first_update_=false;
+      }
+
+      double ys = backend::inner_prod(s,y);
+      backend::VECTOR_TYPE Hy(backend::size1(Hk));
+      backend::prod(Hk,y,Hy);
+      double yHy = backend::inner_prod(y,Hy);
+      double gamma = ys/yHy;
+      backend::VECTOR_TYPE v(backend::size1(Hk));
+      v = std::sqrt(yHy)*(s/ys - Hy/yHy);
+      Hk = gamma*Hk;
+      backend::rank_2_update(-gamma/yHy,Hy,Hy,Hk);
+      backend::rank_2_update(gamma,v,v,Hk);
+      backend::rank_2_update(1/ys,s,s,Hk);
+
+      backend::VECTOR_TYPE tmp(backend::size1(Hk));
+      backend::prod(Hk,state.g(),tmp);
+      state.p() = -tmp;
+    }
+
+private:
+    backend::MATRIX_TYPE Hk;
+    bool is_first_update_;
+};
+
+template<unsigned int M>
+class lbfgs{
+  private:
+  public:
+    lbfgs() : vecs_(M) { }
+
+    void operator()(detail::state & state){
+      for(unsigned int i = std::min(state.iter(),M)-1 ; i > 0  ; --i){
+        vecs_[i] = vecs_[i-1];
+      }
+      vecs_[0].first = state.x() - state.xm1();
+      vecs_[0].second = state.g() - state.gm1();
+
+//      for(unsigned int i = 0 ; i < M ; ++i){
+//        std::cout << "vec " << i << std::endl;
+//        std::cout << vecs_[i].first << std::endl;
+//        std::cout << vecs_[i].second << std::endl;
+//      }
+
+      std::vector<double> rhos(M);
+      std::vector<double> alphas(M);
+
+      int i = 0;
+      backend::VECTOR_TYPE q = state.g();
+      for(; i < std::min(state.iter(),M) ; ++i){
+        backend::VECTOR_TYPE & s = vecs_[i].first;
+        backend::VECTOR_TYPE & y = vecs_[i].second;
+        rhos[i] = 1.0d/backend::inner_prod(y,s);
+        alphas[i] = rhos[i]*backend::inner_prod(s,q);
+        q -= alphas[i]*y;
+      }
+      backend::VECTOR_TYPE & sk = vecs_[0].first;
+      backend::VECTOR_TYPE & yk = vecs_[0].second;
+      double scale = backend::inner_prod(sk,yk)/backend::inner_prod(yk,yk);
+      backend::VECTOR_TYPE r = scale*q;
+      --i;
+      for(; i >=0 ; --i){
+        backend::VECTOR_TYPE & s = vecs_[i].first;
+        backend::VECTOR_TYPE & y = vecs_[i].second;
+        double beta = rhos[i]*backend::inner_prod(y,r);
+        r += s*(alphas[i]-beta);
+      }
+      state.p() = -r;
+    }
+
+  private:
+    std::vector<std::pair<backend::VECTOR_TYPE, backend::VECTOR_TYPE> > vecs_;
 };
 
 template<class UPDATE>
 class quasi_newton : public detail::direction_base{
 public:
-    quasi_newton() : is_first_update_(true) {
-
-    }
+    quasi_newton(){ }
 
     void operator()(detail::state & state){
-        if(backend::is_empty(gkm1_)){
-            state.p() = -state.g();
-        }
-        else{
-            backend::VECTOR_TYPE s = state.x() - xkm1_;
-            backend::VECTOR_TYPE y = state.g() - gkm1_;
-
-
-            if(is_first_update_==true){
-                backend::SCALAR_TYPE ipsy = backend::inner_prod(s,y);
-                backend::SCALAR_TYPE nykm1 = backend::inner_prod(y,y);
-                backend::SCALAR_TYPE scale = ipsy/nykm1;
-                backend::set_to_identity(Hk, state.dim());
-                Hk *= scale;
-                is_first_update_=false;
-            }
-
-            double ys = backend::inner_prod(s,y);
-            backend::VECTOR_TYPE Hy(backend::size1(Hk));
-            backend::prod(Hk,y,Hy);
-            double yHy = backend::inner_prod(y,Hy);
-            double gamma = ys/yHy;
-            backend::VECTOR_TYPE v(backend::size1(Hk));
-            v = std::sqrt(yHy)*(s/ys - Hy/yHy);
-            Hk = gamma*Hk;
-            backend::rank_2_update(-gamma/yHy,Hy,Hy,Hk);
-            backend::rank_2_update(gamma,v,v,Hk);
-            backend::rank_2_update(1/ys,s,s,Hk);
-
-            backend::VECTOR_TYPE tmp(backend::size1(Hk));
-            backend::prod(Hk,state.g(),tmp);
-
-            state.p() = -tmp;
-        }
-        xkm1_ = state.x();
-        gkm1_ = state.g();
+      update_(state);
     }
 
 private:
-    backend::VECTOR_TYPE xkm1_;
-    backend::VECTOR_TYPE gkm1_;
-    backend::MATRIX_TYPE Hk;
-    bool is_first_update_;
+    UPDATE update_;
 };
 
 

@@ -44,11 +44,17 @@ namespace fmincl{
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             utils::print_infos(options.verbosity_level, state);
             state.diff() = (state.val()-state.valm1());
-            options.direction.get()(state);
-            state.dphi_0() = backend::inner_prod(state.p(),state.g());
-            if(state.dphi_0()>0){
-                state.p() = -state.g();
-                state.dphi_0() = - backend::inner_prod(state.g(), state.g());
+            if(state.iter()==0){
+              state.p() = -state.g();
+              state.dphi_0() = backend::inner_prod(state.p(),state.g());
+            }
+            else{
+              options.direction.get()(state);
+              state.dphi_0() = backend::inner_prod(state.p(),state.g());
+              if(state.dphi_0()>0){
+                  state.p() = -state.g();
+                  state.dphi_0() = - backend::inner_prod(state.g(), state.g());
+              }
             }
 
             double ai;
@@ -64,8 +70,10 @@ namespace fmincl{
             if(search_res.best_f>state.val()) break;
 
             state.valm1() = state.val();
+            state.xm1() = state.x();
             state.x() = search_res.best_x;
             state.val() = search_res.best_f;
+            state.gm1() = state.g();
             state.g() = search_res.best_g;
 
             if(std::abs(state.val() - state.valm1()) < 1e-6)

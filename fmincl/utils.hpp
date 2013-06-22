@@ -43,7 +43,7 @@ namespace fmincl{
 
         class state{
         public:
-            state(backend::VECTOR_TYPE const & x0, detail::function_wrapper const & fun) : fun_(fun), iter_(0), dim_(x0.size()), x_(x0), g_(dim_), p_(dim_){
+            state(backend::VECTOR_TYPE const & x0, detail::function_wrapper const & fun) : fun_(fun), iter_(0), dim_(x0.size()), x_(x0), g_(dim_), p_(dim_), xm1_(dim_), gm1_(dim_){
 
             }
 
@@ -52,6 +52,8 @@ namespace fmincl{
             unsigned int & dim() { return dim_; }
             backend::VECTOR_TYPE & x() { return x_; }
             backend::VECTOR_TYPE & g() { return g_; }
+            backend::VECTOR_TYPE & xm1() { return xm1_; }
+            backend::VECTOR_TYPE & gm1() { return gm1_; }
             backend::VECTOR_TYPE & p() { return p_; }
             double & val() { return valk_; }
             double & valm1() { return valkm1_; }
@@ -64,14 +66,14 @@ namespace fmincl{
             unsigned int dim_;
             backend::VECTOR_TYPE x_;
             backend::VECTOR_TYPE g_;
+            backend::VECTOR_TYPE xm1_;
+            backend::VECTOR_TYPE gm1_;
             backend::VECTOR_TYPE p_;
             double valk_;
             double valkm1_;
             double diff_;
             double dphi_0_;
         };
-
-
     }
 
     namespace utils{
