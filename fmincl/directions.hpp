@@ -140,26 +140,20 @@ public:
     void operator()(detail::state & state){
       backend::VECTOR_TYPE s = state.x() - state.xm1();
       backend::VECTOR_TYPE y = state.g() - state.gm1();
+      double ys = backend::inner_prod(s,y);
       if(is_first_update_==true){
-        backend::SCALAR_TYPE ipsy = backend::inner_prod(s,y);
-        backend::SCALAR_TYPE nykm1 = backend::inner_prod(y,y);
-        backend::SCALAR_TYPE scale = ipsy/nykm1;
+        double yy = backend::inner_prod(y,y);
+        double scale = ys/yy;
         backend::set_to_identity(Hk, state.dim());
         Hk *= scale;
         is_first_update_=false;
       }
-
-      double ys = backend::inner_prod(s,y);
       backend::VECTOR_TYPE Hy(backend::size1(Hk));
       backend::prod(Hk,y,Hy);
       double yHy = backend::inner_prod(y,Hy);
-      double gamma = ys/yHy;
-      backend::VECTOR_TYPE v(backend::size1(Hk));
-      v = std::sqrt(yHy)*(s/ys - Hy/yHy);
-      Hk = gamma*Hk;
-      backend::rank_2_update(-gamma/yHy,Hy,Hy,Hk);
-      backend::rank_2_update(gamma,v,v,Hk);
-      backend::rank_2_update(1/ys,s,s,Hk);
+      backend::rank_2_update(-1/ys,s,Hy,Hk);
+      backend::rank_2_update(-1/ys,Hy,s,Hk);
+      backend::rank_2_update(1/ys + yHy/pow(ys,2),s,s,Hk);
 
       backend::VECTOR_TYPE tmp(backend::size1(Hk));
       backend::prod(Hk,state.g(),tmp);

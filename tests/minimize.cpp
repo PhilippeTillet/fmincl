@@ -13,7 +13,7 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 10;
+static const int dim = 100;
 
 int main(){
     rosenbrock<NumericT> fun;
@@ -23,9 +23,10 @@ int main(){
     //fmincl::check_grad(fun,X0);
 
     fmincl::optimization_options options;
-    options.direction = new fmincl::quasi_newton();
-
+    options.direction = new fmincl::quasi_newton(new fmincl::bfgs());
+    options.max_iter = 1e4;
+    options.verbosity_level = 2;
     fmincl::backend::VECTOR_TYPE X =  fmincl::minimize(fun,X0, options);
 
-    std::cout << "Minimum : " << X << std::endl;
+    //std::cout << "Minimum : " << X << std::endl;
 }
