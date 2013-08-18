@@ -24,6 +24,8 @@
     Contributed by Philippe Tillet.
 */
 
+#include <algorithm> //for std::swap
+
 namespace fmincl
 {
   namespace tools

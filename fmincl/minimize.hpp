@@ -15,18 +15,10 @@
 #include "fmincl/backend.hpp"
 #include "fmincl/directions.hpp"
 #include "fmincl/line_search.hpp"
+#include "fmincl/optimization_otions.hpp"
 #include "fmincl/utils.hpp"
 
 namespace fmincl{
-
-    struct optimization_options{
-        optimization_options(unsigned int verbosity = 0
-                            , unsigned int iter = 512) : verbosity_level(verbosity), max_iter(iter){ }
-        mutable tools::shared_ptr<detail::direction_base> direction;
-        mutable tools::shared_ptr<detail::line_search_base> line_search;
-        unsigned int verbosity_level;
-        unsigned int max_iter;
-    };
 
     void fill_default_direction_line_search(optimization_options const & options){
       if(options.direction==NULL)
@@ -39,14 +31,25 @@ namespace fmincl{
       }
     }
 
+    inline void print_state_infos(detail::state & state, optimization_options const & options){
+        if(options.verbosity_level <2 )
+            return;
+        std::cout << "iter " << state.iter() << " | cost : " << state.val() << "| NVal : " << state.fun().n_value_calc() << std::endl;
+    }
+
     template<class Fun>
     backend::VECTOR_TYPE minimize(Fun const & user_fun, backend::VECTOR_TYPE const & x0, optimization_options const & options){
         fill_default_direction_line_search(options);
         detail::function_wrapper_impl<Fun> fun(user_fun);
         detail::state state(x0, fun);
         state.val() = state.fun()(state.x(), &state.g());
+
+        if(options.verbosity_level >= 1){
+          std::cout << options.info();
+        }
+
         for( ; state.iter() < options.max_iter ; ++state.iter()){
-            utils::print_infos(options.verbosity_level, state);
+            print_state_infos(state,options);
             state.diff() = (state.val()-state.valm1());
             if(state.iter()==0){
               state.p() = -state.g();

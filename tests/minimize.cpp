@@ -22,7 +22,7 @@ int main(){
     for(unsigned int i = 0 ; i < dim ; ++i) X0(i) = 0.01*(double)rand()/RAND_MAX;
     //fmincl::check_grad(fun,X0);
 
-    fmincl::optimization_options options;
+    fmincl::wrapped_optimization_options options;
     options.direction = new fmincl::quasi_newton(new fmincl::bfgs());
     options.max_iter = 1e4;
     options.verbosity_level = 2;

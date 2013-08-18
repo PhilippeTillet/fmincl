@@ -78,16 +78,6 @@ namespace fmincl{
 
     namespace utils{
 
-    inline void print_infos(unsigned int verbosity_level, detail::state & state){
-        if(verbosity_level == 0)
-            return;
-        assert(verbosity_level < 3 && "Invalid verbosity level");
-        std::cout << "iter " << state.iter() << " | cost : " << state.val() ;
-        if(verbosity_level > 1)
-            std::cout << "| NVal : " << state.fun().n_value_calc();
-        std::cout << std::endl;
-    }
-
     template<class FUN>
     void check_grad(FUN const & fun, backend::VECTOR_TYPE const & x0){
         unsigned int dim = x0.size();

@@ -76,6 +76,24 @@ public:
       }
     }
 
+    cg_update const & update(cg_update * _update){
+      update_ = _update;
+      return *update_;
+    }
+
+    cg_update const & update() const {
+      return *update_;
+    }
+
+    cg_restart const & restart(cg_restart * _restart){
+      restart_ = _restart;
+      return *restart_;
+    }
+
+    cg_restart const & restart() const {
+      return *restart_;
+    }
+
 private:
     tools::shared_ptr<cg_update> update_;
     tools::shared_ptr<cg_restart> restart_;
@@ -93,7 +111,11 @@ class qn_update{
 
 class lbfgs : public qn_update{
   public:
-    lbfgs(unsigned int m = 8) : m_(m), vecs_(m_) { }
+    lbfgs(unsigned int m = 4) : m_(m), vecs_(m_) { }
+
+    void m(unsigned int _m) {
+      m_ = _m;
+    }
 
     void operator()(detail::state & state){
       for(unsigned int i = std::min(state.iter(),m_)-1 ; i > 0  ; --i){
@@ -167,10 +189,19 @@ private:
 
 class quasi_newton : public detail::direction_base{
   public:
-    quasi_newton(qn_update * update = new lbfgs(8)) : update_(update){ }
+    quasi_newton(qn_update * update = new lbfgs()) : update_(update){ }
 
     virtual void operator()(detail::state & state){
       (*update_)(state);
+    }
+
+    qn_update const & update(qn_update * _update){
+      update_ = _update;
+      return *update_;
+    }
+
+    qn_update const & update(){
+      return *update_;
     }
 
   private:
