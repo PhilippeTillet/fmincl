@@ -35,6 +35,7 @@ namespace fmincl{
     class line_search_base{
       public:
         virtual line_search_result operator()(detail::state & state, double a_init) = 0;
+        virtual ~line_search_base(){ }
     };
 
   }
@@ -93,7 +94,9 @@ namespace fmincl{
         backend::VECTOR_TYPE gj(dim);
         backend::VECTOR_TYPE const & p = state.p();
         double eps = 1e-4;
-        double aj, phi_aj, dphi_aj;
+        double aj = 0;
+        double phi_aj = 0;
+        double dphi_aj = 0;
         while(1){
           double xmin = std::min(alo,ahi);
           double xmax = std::max(alo,ahi);

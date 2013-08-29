@@ -66,9 +66,9 @@ namespace fmincl{
             unsigned int dim_;
             backend::VECTOR_TYPE x_;
             backend::VECTOR_TYPE g_;
+            backend::VECTOR_TYPE p_;
             backend::VECTOR_TYPE xm1_;
             backend::VECTOR_TYPE gm1_;
-            backend::VECTOR_TYPE p_;
             double valk_;
             double valkm1_;
             double diff_;

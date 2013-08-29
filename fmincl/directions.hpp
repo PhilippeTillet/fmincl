@@ -24,6 +24,7 @@ namespace detail{
 class direction_base{
 public:
     virtual void operator()(detail::state & state) = 0;
+    virtual ~direction_base(){ }
 };
 
 }
@@ -36,6 +37,7 @@ public:
 class cg_update{
   public:
     virtual backend::SCALAR_TYPE operator()(backend::VECTOR_TYPE const & gk, backend::VECTOR_TYPE const & gkm1) = 0;
+    virtual ~cg_update(){ }
 };
 
 class polak_ribiere : public cg_update{
@@ -49,14 +51,13 @@ class polak_ribiere : public cg_update{
 class cg_restart{
   public:
     virtual bool operator()(detail::state & state) = 0;
+    virtual ~cg_restart(){ }
 };
 
 
 class no_restart : public cg_restart{
   public:
-    bool operator()(detail::state & state) {
-      return false;
-    }
+    bool operator()(detail::state & state) { return false; }
 };
 
 
@@ -107,6 +108,7 @@ private:
 class qn_update{
   public:
     virtual void operator()(detail::state & state) = 0;
+    virtual ~qn_update(){ }
 };
 
 class lbfgs : public qn_update{

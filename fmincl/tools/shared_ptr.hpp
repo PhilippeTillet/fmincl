@@ -146,6 +146,7 @@ namespace fmincl
         shared_ptr& operator=(T * p)
         {
           *this = shared_ptr(p);
+          return *this;
         }
 
         T* get() const {  return pt; }
