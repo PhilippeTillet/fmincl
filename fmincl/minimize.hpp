@@ -22,31 +22,36 @@ namespace fmincl{
 
     void fill_default_direction_line_search(optimization_options const & options){
       if(options.direction==NULL)
-        options.direction = new quasi_newton();
+        options.direction = new quasi_newton_tag();
       if(options.line_search==NULL){
-        if(dynamic_cast<quasi_newton*>(options.direction.get()))
-          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.9);
+        if(typeid(options.direction.get())==typeid(quasi_newton_tag*))
+          options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.9);
         else
-          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.1);
+          options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.1);
       }
     }
 
-    inline void print_state_infos(detail::state & state, optimization_options const & options){
+    template<class BackendType>
+    inline void print_state_infos(detail::state<BackendType> & state, optimization_options const & options){
         if(options.verbosity_level <2 )
             return;
         std::cout << "iter " << state.iter() << " | cost : " << state.val() << "| NVal : " << state.fun().n_value_calc() << std::endl;
     }
 
-    template<class Fun>
-    backend::VECTOR_TYPE minimize(Fun const & user_fun, backend::VECTOR_TYPE const & x0, optimization_options const & options){
+
+    template<class BackendType, class Fun>
+    typename BackendType::VectorType minimize(Fun const & user_fun, typename BackendType::VectorType const & x0, optimization_options const & options){
         fill_default_direction_line_search(options);
-        detail::function_wrapper_impl<Fun> fun(user_fun);
-        detail::state state(x0, fun);
+        detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
+        detail::state<BackendType> state(x0, fun);
         state.val() = state.fun()(state.x(), &state.g());
 
         if(options.verbosity_level >= 1){
           std::cout << options.info();
         }
+
+        tools::shared_ptr<direction_implementation<BackendType> > direction_impl(direction_mapping<BackendType>::type::create(*options.direction));
+        tools::shared_ptr<line_search_implementation<BackendType> > line_search_impl(line_search_mapping<BackendType>::type::create(*options.line_search));
 
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_state_infos(state,options);
@@ -56,7 +61,7 @@ namespace fmincl{
               state.dphi_0() = backend::inner_prod(state.p(),state.g());
             }
             else{
-              (*options.direction.get())(state);
+              (*direction_impl)(state);
               state.dphi_0() = backend::inner_prod(state.p(),state.g());
               if(state.dphi_0()>0){
                   state.p() = -state.g();
@@ -69,12 +74,12 @@ namespace fmincl{
               ai = std::min(1.0d,1/backend::abs_sum(state.g()));
             }
             else{
-              if(dynamic_cast<quasi_newton*>(options.direction.get()))
+              if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
                 ai = std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             }
-            detail::line_search_result search_res = (*options.line_search.get())(state, ai);
+            line_search_result<BackendType> search_res = (*line_search_impl)(state, ai);
 
             if(search_res.best_f>state.val()) break;
 

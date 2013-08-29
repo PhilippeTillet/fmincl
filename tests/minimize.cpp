@@ -13,20 +13,20 @@
 #include "obj_fun.hpp"
 
 typedef double NumericT;
-static const int dim = 100;
+static const int dim = 2;
 
 int main(){
     rosenbrock<NumericT> fun;
     srand(time(NULL));
-    fmincl::backend::VECTOR_TYPE X0(dim);
+    Eigen::VectorXd X0(dim);
     for(unsigned int i = 0 ; i < dim ; ++i) X0(i) = 0.01*(double)rand()/RAND_MAX;
     //fmincl::check_grad(fun,X0);
 
     fmincl::optimization_options options;
-    options.direction = new fmincl::quasi_newton(new fmincl::bfgs());
+    options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag());
     options.max_iter = 1e4;
     options.verbosity_level = 2;
-    fmincl::backend::VECTOR_TYPE X =  fmincl::minimize(fun,X0, options);
+    Eigen::VectorXd X =  fmincl::minimize<fmincl::backend::EigenTypes<double> >(fun,X0, options);
 
     //std::cout << "Minimum : " << X << std::endl;
 }

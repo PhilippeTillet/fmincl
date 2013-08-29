@@ -16,200 +16,208 @@
 #include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 #include "fmincl/tools/shared_ptr.hpp"
+#include "fmincl/tools/typelist.hpp"
+#include "fmincl/mapping.hpp"
 
 namespace fmincl{
 
-namespace detail{
-
-class direction_base{
-public:
-    virtual void operator()(detail::state & state) = 0;
-    virtual ~direction_base(){ }
+struct direction_tag{ virtual ~direction_tag(){ } };
+template<class BackendType>
+struct direction_implementation{
+    virtual void operator()(detail::state<BackendType> & state) = 0;
 };
 
-}
 
 /* =========================== *
  * CONJUGATE GRADIENTS
  * ===========================*/
 
 //UPDATES
-class cg_update{
-  public:
-    virtual backend::SCALAR_TYPE operator()(backend::VECTOR_TYPE const & gk, backend::VECTOR_TYPE const & gkm1) = 0;
-    virtual ~cg_update(){ }
+struct cg_update_tag{ virtual ~cg_update_tag(){ } };
+template<class BackendType>
+struct cg_update_implementation{
+    virtual typename BackendType::ScalarType operator()(detail::state<BackendType> & state) = 0;
 };
 
-class polak_ribiere : public cg_update{
-  public:
-    backend::SCALAR_TYPE operator()(backend::VECTOR_TYPE const & gk, backend::VECTOR_TYPE const & gkm1){
-        return backend::inner_prod(gk,  gk - gkm1)/backend::inner_prod(gkm1,gkm1);
+struct polak_ribiere_tag : public cg_update_tag{ };
+template<class BackendType>
+struct polak_ribiere_implementation : public cg_update_implementation<BackendType>{
+    polak_ribiere_implementation(polak_ribiere_tag const &){ }
+    typename BackendType::ScalarType operator()(detail::state<BackendType> & state){
+        return backend::inner_prod(state.g(),  state.g() - state.gm1())/backend::inner_prod(state.gm1(),state.gm1());
     }
+};
+
+template<class BackendType>
+struct cg_update_mapping{
+    typedef implementation_from_tag<typename make_typelist<FMINCL_CREATE_MAPPING(polak_ribiere)>::type
+                               ,cg_update_tag, cg_update_implementation<BackendType> > type;
 };
 
 //RESTARTS
-class cg_restart{
-  public:
-    virtual bool operator()(detail::state & state) = 0;
-    virtual ~cg_restart(){ }
+struct cg_restart_tag{ virtual ~cg_restart_tag(){ } };
+template<class BackendType>
+struct cg_restart_implementation{
+    virtual bool operator()(detail::state<BackendType> & state) = 0;
 };
 
-
-class no_restart : public cg_restart{
-  public:
-    bool operator()(detail::state & state) { return false; }
+struct no_restart_tag : public cg_restart_tag{ };
+template<class BackendType>
+struct no_restart_implementation : public cg_restart_implementation<BackendType>{
+    no_restart_implementation(no_restart_tag const & tag){ }
+    bool operator()(detail::state<BackendType> & state) { return false; }
 };
 
+template<class BackendType>
+struct cg_restart_mapping{
+    typedef implementation_from_tag<typename make_typelist<FMINCL_CREATE_MAPPING(no_restart)>::type
+                                   ,cg_restart_tag, cg_restart_implementation<BackendType> > type;
+};
 
 //CG
-class cg : public detail::direction_base{
+struct cg_tag : public direction_tag{
+    cg_tag(cg_update_tag * _update = new polak_ribiere_tag(), cg_restart_tag * _restart = new no_restart_tag()) : update(_update), restart(_restart){ }
+    tools::shared_ptr<cg_update_tag> update;
+    tools::shared_ptr<cg_restart_tag> restart;
+};
+template<class BackendType>
+class cg_implementation : public direction_implementation<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
 public:
-    cg(cg_update * update = new polak_ribiere(), cg_restart * restart = new no_restart()) : update_(update), restart_(restart){
-
-    }
-
-    void operator()(detail::state & state){
-      if((*restart_)(state))
+    cg_implementation(cg_tag const & cg_params) : update_implementation_(cg_update_mapping<BackendType>::type::create(*cg_params.update))
+                                             ,restart_implementation_(cg_restart_mapping<BackendType>::type::create(*cg_params.restart)){ }
+    void operator()(detail::state<BackendType> & state){
+      if((*restart_implementation_)(state))
         state.p() = -state.g();
       else{
-        backend::SCALAR_TYPE beta = (*update_)(state.g(), state.gm1());
+        ScalarType beta = (*update_implementation_)(state);
         state.p() = -state.g() + beta* state.p();
       }
     }
-
-    cg_update const & update(cg_update * _update){
-      update_ = _update;
-      return *update_;
-    }
-
-    cg_update const & update() const {
-      return *update_;
-    }
-
-    cg_restart const & restart(cg_restart * _restart){
-      restart_ = _restart;
-      return *restart_;
-    }
-
-    cg_restart const & restart() const {
-      return *restart_;
-    }
-
 private:
-    tools::shared_ptr<cg_update> update_;
-    tools::shared_ptr<cg_restart> restart_;
+    tools::shared_ptr<cg_update_implementation<BackendType> > update_implementation_;
+    tools::shared_ptr<cg_restart_implementation<BackendType> > restart_implementation_;
 };
-
 
 /* =========================== *
  * QUASI NEWTON
  * ===========================*/
 
-class qn_update{
-  public:
-    virtual void operator()(detail::state & state) = 0;
-    virtual ~qn_update(){ }
+struct qn_update_tag{ virtual ~qn_update_tag(){ } };
+template<class BackendType>
+struct qn_update_implementation{
+    virtual void operator()(detail::state<BackendType> & state) = 0;
 };
 
-class lbfgs : public qn_update{
-  public:
-    lbfgs(unsigned int m = 4) : m_(m), vecs_(m_) { }
-
-    void m(unsigned int _m) {
-      m_ = _m;
-    }
-
-    void operator()(detail::state & state){
-      for(unsigned int i = std::min(state.iter(),m_)-1 ; i > 0  ; --i){
-        vecs_[i] = vecs_[i-1];
-      }
-      vecs_[0].first = state.x() - state.xm1();
-      vecs_[0].second = state.g() - state.gm1();
-
-      std::vector<double> rhos(m_);
-      std::vector<double> alphas(m_);
-
-      int i = 0;
-      backend::VECTOR_TYPE q = state.g();
-      for(; i < std::min(state.iter(),m_) ; ++i){
-        backend::VECTOR_TYPE & s = vecs_[i].first;
-        backend::VECTOR_TYPE & y = vecs_[i].second;
-        rhos[i] = 1.0d/backend::inner_prod(y,s);
-        alphas[i] = rhos[i]*backend::inner_prod(s,q);
-        q -= alphas[i]*y;
-      }
-      backend::VECTOR_TYPE & sk = vecs_[0].first;
-      backend::VECTOR_TYPE & yk = vecs_[0].second;
-      double scale = backend::inner_prod(sk,yk)/backend::inner_prod(yk,yk);
-      backend::VECTOR_TYPE r = scale*q;
-      --i;
-      for(; i >=0 ; --i){
-        backend::VECTOR_TYPE & s = vecs_[i].first;
-        backend::VECTOR_TYPE & y = vecs_[i].second;
-        double beta = rhos[i]*backend::inner_prod(y,r);
-        r += s*(alphas[i]-beta);
-      }
-      state.p() = -r;
-    }
-
-  private:
-    unsigned int m_;
-    std::vector<std::pair<backend::VECTOR_TYPE, backend::VECTOR_TYPE> > vecs_;
+struct lbfgs_tag : public qn_update_tag{
+    lbfgs_tag(unsigned int _m = 4) : m(_m) { }
+    unsigned int m;
 };
-
-class bfgs : public qn_update{
+template<class BackendType>
+class lbfgs_implementation : public qn_update_implementation<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
+    typedef typename BackendType::VectorType VectorType;
+    typedef typename BackendType::MatrixType MatrixType;
 public:
-    bfgs() : is_first_update_(true){ }
+    lbfgs_implementation(lbfgs_tag const & _lbfgs) : vecs_(_lbfgs.m) { }
+    void operator()(detail::state<BackendType> & state){
+        unsigned int m = vecs_.size();
+        for(unsigned int i = std::min(state.iter(),m)-1 ; i > 0  ; --i){
+            vecs_[i] = vecs_[i-1];
+        }
+        vecs_[0].first = state.x() - state.xm1();
+        vecs_[0].second = state.g() - state.gm1();
 
-    void operator()(detail::state & state){
-      backend::VECTOR_TYPE s = state.x() - state.xm1();
-      backend::VECTOR_TYPE y = state.g() - state.gm1();
-      double ys = backend::inner_prod(s,y);
+        std::vector<ScalarType> rhos(m);
+        std::vector<ScalarType> alphas(m);
+
+        int i = 0;
+        VectorType q = state.g();
+        for(; i < std::min(state.iter(),m) ; ++i){
+            VectorType & s = vecs_[i].first;
+            VectorType & y = vecs_[i].second;
+            rhos[i] = 1.0d/backend::inner_prod(y,s);
+            alphas[i] = rhos[i]*backend::inner_prod(s,q);
+            q -= alphas[i]*y;
+        }
+        VectorType & sk = vecs_[0].first;
+        VectorType & yk = vecs_[0].second;
+        ScalarType scale = backend::inner_prod(sk,yk)/backend::inner_prod(yk,yk);
+        VectorType r = scale*q;
+        --i;
+        for(; i >=0 ; --i){
+            VectorType & s = vecs_[i].first;
+            VectorType & y = vecs_[i].second;
+            ScalarType beta = rhos[i]*backend::inner_prod(y,r);
+            r += s*(alphas[i]-beta);
+        }
+        state.p() = -r;
+    }
+private:
+    std::vector<std::pair<VectorType, VectorType> > vecs_;
+};
+
+struct bfgs_tag : public qn_update_tag{ };
+template<class BackendType>
+class bfgs_implementation : public qn_update_implementation<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
+    typedef typename BackendType::VectorType VectorType;
+    typedef typename BackendType::MatrixType MatrixType;
+public:
+    bfgs_implementation(bfgs_tag const &) : is_first_update_(true){ }
+
+    void operator()(detail::state<BackendType> & state){
+      VectorType s = state.x() - state.xm1();
+      VectorType y = state.g() - state.gm1();
+      ScalarType ys = backend::inner_prod(s,y);
       if(is_first_update_==true){
-        double yy = backend::inner_prod(y,y);
-        double scale = ys/yy;
+        ScalarType yy = backend::inner_prod(y,y);
+        ScalarType scale = ys/yy;
         backend::set_to_identity(Hk, state.dim());
         Hk *= scale;
         is_first_update_=false;
       }
-      backend::VECTOR_TYPE Hy(backend::size1(Hk));
+      VectorType Hy(backend::size1(Hk));
       backend::prod(Hk,y,Hy);
-      double yHy = backend::inner_prod(y,Hy);
+      ScalarType yHy = backend::inner_prod(y,Hy);
       backend::rank_2_update(-1/ys,s,Hy,Hk);
       backend::rank_2_update(-1/ys,Hy,s,Hk);
       backend::rank_2_update(1/ys + yHy/pow(ys,2),s,s,Hk);
 
-      backend::VECTOR_TYPE tmp(backend::size1(Hk));
+      VectorType tmp(backend::size1(Hk));
       backend::prod(Hk,state.g(),tmp);
       state.p() = -tmp;
     }
 
 private:
-    backend::MATRIX_TYPE Hk;
+    MatrixType Hk;
     bool is_first_update_;
 };
 
-class quasi_newton : public detail::direction_base{
-  public:
-    quasi_newton(qn_update * update = new lbfgs()) : update_(update){ }
-
-    virtual void operator()(detail::state & state){
-      (*update_)(state);
-    }
-
-    qn_update const & update(qn_update * _update){
-      update_ = _update;
-      return *update_;
-    }
-
-    qn_update const & update(){
-      return *update_;
-    }
-
-  private:
-    tools::shared_ptr<qn_update> update_;
+template<class BackendType>
+struct qn_update_mapping{
+    typedef implementation_from_tag<typename make_typelist<FMINCL_CREATE_MAPPING(lbfgs),FMINCL_CREATE_MAPPING(bfgs)>::type
+                                   ,qn_update_tag, qn_update_implementation<BackendType> > type;
 };
 
+struct quasi_newton_tag : public direction_tag{
+    quasi_newton_tag(qn_update_tag * _update = new lbfgs_tag()) : update(_update){ }
+    tools::shared_ptr<qn_update_tag> update;
+};
+template<class BackendType>
+class quasi_newton_implementation : public direction_implementation<BackendType>{
+  public:
+    quasi_newton_implementation(quasi_newton_tag const & tag) : update(qn_update_mapping<BackendType>::type::create(*tag.update)){ }
+    virtual void operator()(detail::state<BackendType> & state){ (*update)(state);  }
+private:
+    tools::shared_ptr<qn_update_implementation<BackendType> > update;
+};
+
+template<class BackendType>
+struct direction_mapping{
+    typedef implementation_from_tag<typename make_typelist<FMINCL_CREATE_MAPPING(cg),FMINCL_CREATE_MAPPING(quasi_newton)>::type
+                                   ,direction_tag, direction_implementation<BackendType> > type;
+};
 
 
 
