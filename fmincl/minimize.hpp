@@ -24,7 +24,7 @@ namespace fmincl{
       if(options.direction==NULL)
         options.direction = new quasi_newton_tag();
       if(options.line_search==NULL){
-        if(typeid(options.direction.get())==typeid(quasi_newton_tag*))
+        if(dynamic_cast<quasi_newton_tag*>(options.direction.get()))
           options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.9);
         else
           options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.1);

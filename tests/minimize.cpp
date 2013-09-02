@@ -24,7 +24,7 @@ int main(){
     //fmincl::check_grad(fun,X0);
 
     fmincl::optimization_options options;
-    options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag());
+    options.direction = new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag());
     options.max_iter = 1e4;
     options.verbosity_level = 2;
     VectorType X =  fmincl::minimize<fmincl::backend::EigenTypes<ScalarType> >(fun,X0, options);
