@@ -12,13 +12,14 @@
 #include "fmincl/minimize.hpp"
 #include "obj_fun.hpp"
 
-typedef double NumericT;
+typedef float ScalarType;
+typedef Eigen::Matrix<ScalarType,Eigen::Dynamic,1> VectorType;
 static const int dim = 2;
 
 int main(){
-    rosenbrock<NumericT> fun;
+    rosenbrock<ScalarType> fun;
     srand(time(NULL));
-    Eigen::VectorXd X0(dim);
+    VectorType X0(dim);
     for(unsigned int i = 0 ; i < dim ; ++i) X0(i) = 0.01*(double)rand()/RAND_MAX;
     //fmincl::check_grad(fun,X0);
 
@@ -26,7 +27,7 @@ int main(){
     options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag());
     options.max_iter = 1e4;
     options.verbosity_level = 2;
-    Eigen::VectorXd X =  fmincl::minimize<fmincl::backend::EigenTypes<double> >(fun,X0, options);
+    VectorType X =  fmincl::minimize<fmincl::backend::EigenTypes<ScalarType> >(fun,X0, options);
 
     //std::cout << "Minimum : " << X << std::endl;
 }

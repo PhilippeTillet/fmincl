@@ -124,7 +124,7 @@ namespace fmincl{
             aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
           if( (aj - xmin)<eps || (xmax - aj) < eps)
             return line_search_result<BackendType>(true, phi_aj, xj, gj);
-          aj = std::min(std::max(aj,xmin+0.1*(xmax-xmin)),xmax-0.1*(xmax-xmin));
+          aj = std::min(std::max(aj,xmin+0.1f*(xmax-xmin)),xmax-0.1f*(xmax-xmin));
           phi_aj = phi_(state.fun(), xj, x0, aj, p, gj, &dphi_aj);
           if(!sufficient_decrease(aj,phi_aj, state) || phi_aj >= phi_alo){
             ahi = aj;

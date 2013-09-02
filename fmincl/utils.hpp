@@ -23,8 +23,9 @@ namespace fmincl{
         class function_wrapper{
         public:
             typedef typename BackendType::VectorType VectorType;
+            typedef typename BackendType::ScalarType ScalarType;
             function_wrapper() : n_value_calc_(0), n_derivative_calc_(0){ }
-            virtual double operator()(VectorType const & x, VectorType * grad) const = 0;
+            virtual ScalarType operator()(VectorType const & x, VectorType * grad) const = 0;
             unsigned int n_value_calc() const { return n_value_calc_; }
             unsigned int n_derivative_calc() const { return n_derivative_calc_; }
         protected:
@@ -35,9 +36,10 @@ namespace fmincl{
         template<class BackendType, class Fun>
         class function_wrapper_impl : public function_wrapper<BackendType>{
             typedef typename BackendType::VectorType VectorType;
+            typedef typename BackendType::ScalarType ScalarType;
         public:
             function_wrapper_impl(Fun const & fun) : fun_(fun){ }
-            double operator()(VectorType const & x, VectorType * grad) const {
+            ScalarType operator()(VectorType const & x, VectorType * grad) const {
                 ++function_wrapper<BackendType>::n_value_calc_;
                 if(grad) ++function_wrapper<BackendType>::n_derivative_calc_;
                 return fun_(x, grad);

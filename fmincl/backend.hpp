@@ -18,14 +18,11 @@ namespace fmincl{
 
   namespace backend{
 
-    template<class ScalarType>
-    struct EigenTypes;
-
-    template<>
-    struct EigenTypes<double>{
-        typedef double ScalarType;
-        typedef Eigen::VectorXd VectorType;
-        typedef Eigen::MatrixXd MatrixType;
+    template<class _ScalarType>
+    struct EigenTypes{
+        typedef _ScalarType ScalarType;
+        typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> VectorType;
+        typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixType;
     };
 
     template<class EigenType>

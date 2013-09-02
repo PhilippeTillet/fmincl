@@ -41,6 +41,8 @@ namespace fmincl{
 
     template<class BackendType, class Fun>
     typename BackendType::VectorType minimize(Fun const & user_fun, typename BackendType::VectorType const & x0, optimization_options const & options){
+        typedef typename BackendType::ScalarType ScalarType;
+
         fill_default_direction_line_search(options);
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
         detail::state<BackendType> state(x0, fun);
@@ -71,7 +73,7 @@ namespace fmincl{
 
             double ai;
             if(state.iter()==0){
-              ai = std::min(1.0d,1/backend::abs_sum(state.g()));
+              ai = std::min(static_cast<ScalarType>(1.0),1/backend::abs_sum(state.g()));
             }
             else{
               if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))
