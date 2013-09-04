@@ -12,6 +12,7 @@
 #define FMINCL_DIRECTIONS_HPP_
 
 #include <vector>
+#include <cmath>
 
 #include "fmincl/utils.hpp"
 #include "fmincl/tools/shared_ptr.hpp"
