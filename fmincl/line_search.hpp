@@ -92,14 +92,14 @@ namespace fmincl{
             x = x0 + alpha*p;
             ScalarType res = fun(x,&grad);
             if(dphi){
-              *dphi = backend::inner_prod(grad,p);
+              *dphi = BackendType::inner_prod(grad,p);
             }
             return res;
           }
       };
 
       bool sufficient_decrease(ScalarType ai, ScalarType phi_ai, detail::state<BackendType> & state) const {
-        return phi_ai <= (state.val() + c1_*ai   );
+        return phi_ai <= (state.val() + c1_*ai );
       }
       bool curvature(ScalarType dphi_ai, detail::state<BackendType> & state) const{
         return std::abs(dphi_ai) <= c2_*std::abs(state.dphi_0());

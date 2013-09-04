@@ -44,7 +44,8 @@ template<class BackendType>
 struct polak_ribiere_implementation : public cg_update_implementation<BackendType>{
     polak_ribiere_implementation(polak_ribiere_tag const &){ }
     typename BackendType::ScalarType operator()(detail::state<BackendType> & state){
-        return backend::inner_prod(state.g(),  state.g() - state.gm1())/backend::inner_prod(state.gm1(),state.gm1());
+        typename BackendType::VectorType tmp = state.g() - state.gm1();
+        return BackendType::inner_prod(state.g(),tmp)/BackendType::inner_prod(state.gm1(),state.gm1());
     }
 };
 
@@ -136,19 +137,19 @@ public:
         for(; i < std::min(state.iter(),m) ; ++i){
             VectorType & s = vecs_[i].first;
             VectorType & y = vecs_[i].second;
-            rhos[i] = 1.0d/backend::inner_prod(y,s);
-            alphas[i] = rhos[i]*backend::inner_prod(s,q);
+            rhos[i] = 1.0d/BackendType::inner_prod(y,s);
+            alphas[i] = rhos[i]*BackendType::inner_prod(s,q);
             q -= alphas[i]*y;
         }
         VectorType & sk = vecs_[0].first;
         VectorType & yk = vecs_[0].second;
-        ScalarType scale = backend::inner_prod(sk,yk)/backend::inner_prod(yk,yk);
+        ScalarType scale = BackendType::inner_prod(sk,yk)/BackendType::inner_prod(yk,yk);
         VectorType r = scale*q;
         --i;
         for(; i >=0 ; --i){
             VectorType & s = vecs_[i].first;
             VectorType & y = vecs_[i].second;
-            ScalarType beta = rhos[i]*backend::inner_prod(y,r);
+            ScalarType beta = rhos[i]*BackendType::inner_prod(y,r);
             r += s*(alphas[i]-beta);
         }
         state.p() = -r;
@@ -169,23 +170,23 @@ public:
     void operator()(detail::state<BackendType> & state){
       VectorType s = state.x() - state.xm1();
       VectorType y = state.g() - state.gm1();
-      ScalarType ys = backend::inner_prod(s,y);
+      ScalarType ys = BackendType::inner_prod(s,y);
       if(is_first_update_==true){
-        ScalarType yy = backend::inner_prod(y,y);
+        ScalarType yy = BackendType::inner_prod(y,y);
         ScalarType scale = ys/yy;
-        backend::set_to_identity(Hk, state.dim());
+        BackendType::set_to_identity(Hk, state.dim());
         Hk *= scale;
         is_first_update_=false;
       }
-      VectorType Hy(backend::size1(Hk));
-      backend::prod(Hk,y,Hy);
-      ScalarType yHy = backend::inner_prod(y,Hy);
-      backend::rank_2_update(-1/ys,s,Hy,Hk);
-      backend::rank_2_update(-1/ys,Hy,s,Hk);
-      backend::rank_2_update(1/ys + yHy/pow(ys,2),s,s,Hk);
+      VectorType Hy(BackendType::size1(Hk));
+      BackendType::prod(Hk,y,Hy);
+      ScalarType yHy = BackendType::inner_prod(y,Hy);
+      BackendType::rank_2_update(-1/ys,s,Hy,Hk);
+      BackendType::rank_2_update(-1/ys,Hy,s,Hk);
+      BackendType::rank_2_update(1/ys + yHy/pow(ys,2),s,s,Hk);
 
-      VectorType tmp(backend::size1(Hk));
-      backend::prod(Hk,state.g(),tmp);
+      VectorType tmp(BackendType::size1(Hk));
+      BackendType::prod(Hk,state.g(),tmp);
       state.p() = -tmp;
     }
 

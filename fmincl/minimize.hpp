@@ -60,20 +60,20 @@ namespace fmincl{
             state.diff() = (state.val()-state.valm1());
             if(state.iter()==0){
               state.p() = -state.g();
-              state.dphi_0() = backend::inner_prod(state.p(),state.g());
+              state.dphi_0() = BackendType::inner_prod(state.p(),state.g());
             }
             else{
               (*direction_impl)(state);
-              state.dphi_0() = backend::inner_prod(state.p(),state.g());
+              state.dphi_0() = BackendType::inner_prod(state.p(),state.g());
               if(state.dphi_0()>0){
                   state.p() = -state.g();
-                  state.dphi_0() = - backend::inner_prod(state.g(), state.g());
+                  state.dphi_0() = - BackendType::inner_prod(state.g(), state.g());
               }
             }
 
             double ai;
             if(state.iter()==0){
-              ai = std::min(static_cast<ScalarType>(1.0),1/backend::abs_sum(state.g()));
+              ai = std::min(static_cast<ScalarType>(1.0),1/BackendType::norm_1(state.g()));
             }
             else{
               if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))

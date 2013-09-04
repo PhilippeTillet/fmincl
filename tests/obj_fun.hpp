@@ -18,7 +18,7 @@ class quad_fun{
     typedef Eigen::Matrix< ScalarType, Eigen::Dynamic, 1 > VectorType;
 public:
     ScalarType operator()(VectorType const & x, VectorType * grad) const {
-        ScalarType res = fmincl::backend::inner_prod(x,x);
+        ScalarType res = x.dot(x);
         if(grad) *grad = static_cast<ScalarType>(2)*x;
         return res;
     }
