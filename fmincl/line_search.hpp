@@ -15,6 +15,8 @@
 #include "fmincl/mapping.hpp"
 #include "fmincl/tools/typelist.hpp"
 
+#include <cmath>
+
 namespace fmincl{
 
   template<class BackendType>

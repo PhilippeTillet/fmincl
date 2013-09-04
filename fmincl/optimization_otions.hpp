@@ -12,7 +12,9 @@
 #define FMINCL_OPTIMIZATION_OPTIONS_HPP_
 
 #include <typeinfo>
-#include "tools/shared_ptr.hpp"
+#include <sstream>
+
+#include "fmincl/tools/shared_ptr.hpp"
 #include "fmincl/directions.hpp"
 #include "fmincl/line_search.hpp"
 
