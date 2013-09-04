@@ -13,7 +13,6 @@
 
 #include <vector>
 
-#include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 #include "fmincl/tools/shared_ptr.hpp"
 #include "fmincl/tools/typelist.hpp"

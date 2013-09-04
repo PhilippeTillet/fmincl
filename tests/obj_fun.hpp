@@ -11,7 +11,7 @@
 #ifndef FMINCL_TESTS_OBJ_FUN
 #define FMINCL_TESTS_OBJ_FUN
 
-#include "fmincl/backend.hpp"
+#include "Eigen/Dense"
 
 template<class ScalarType>
 class quad_fun{

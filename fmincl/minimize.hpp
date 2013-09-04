@@ -12,7 +12,6 @@
 #define FMINCL_MINIMIZE_HPP_
 
 
-#include "fmincl/backend.hpp"
 #include "fmincl/directions.hpp"
 #include "fmincl/line_search.hpp"
 #include "fmincl/optimization_otions.hpp"

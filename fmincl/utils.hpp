@@ -13,8 +13,6 @@
 
 #include <iostream>
 
-#include "fmincl/backend.hpp"
-
 namespace fmincl{
 
     namespace detail{

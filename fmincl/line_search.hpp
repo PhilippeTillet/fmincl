@@ -11,7 +11,6 @@
 #ifndef FMINCL_LINE_SEARCH_HPP_
 #define FMINCL_LINE_SEARCH_HPP_
 
-#include "fmincl/backend.hpp"
 #include "fmincl/utils.hpp"
 #include "fmincl/mapping.hpp"
 #include "fmincl/tools/typelist.hpp"

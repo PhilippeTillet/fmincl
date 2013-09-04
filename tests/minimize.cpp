@@ -8,7 +8,7 @@
  * ===========================*/
 
 #include <cstdlib>
-#include "fmincl/backend.hpp"
+#include "fmincl/backends/eigen.hpp"
 #include "fmincl/minimize.hpp"
 #include "obj_fun.hpp"
 

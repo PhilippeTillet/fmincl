@@ -8,8 +8,8 @@
  * ===========================*/
 
 
-#ifndef FMINCL_BACKEND_HPP
-#define FMINCL_BACKEND_HPP
+#ifndef FMINCL_BACKENDS_EIGEN_HPP
+#define FMINCL_BACKENDS_EIGEN_HPP
 
 
 #include "Eigen/Dense"
