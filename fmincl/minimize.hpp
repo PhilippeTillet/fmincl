@@ -11,11 +11,14 @@
 #ifndef FMINCL_MINIMIZE_HPP_
 #define FMINCL_MINIMIZE_HPP_
 
+#include "fmincl/optimization_otions.hpp"
+
+#include "fmincl/utils.hpp"
 
 #include "fmincl/directions.hpp"
 #include "fmincl/line_search.hpp"
-#include "fmincl/optimization_otions.hpp"
-#include "fmincl/utils.hpp"
+#include "fmincl/stopping_criterion.hpp"
+
 
 namespace fmincl{
 
@@ -53,7 +56,7 @@ namespace fmincl{
 
         tools::shared_ptr<direction_implementation<BackendType> > direction_impl(direction_mapping<BackendType>::type::create(*options.direction));
         tools::shared_ptr<line_search_implementation<BackendType> > line_search_impl(line_search_mapping<BackendType>::type::create(*options.line_search));
-
+        tools::shared_ptr<stopping_criterion_implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping<BackendType>::type::create(*options.stopping_criterion));
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_state_infos(state,options);
             state.diff() = (state.val()-state.valm1());
@@ -91,7 +94,7 @@ namespace fmincl{
             state.gm1() = state.g();
             state.g() = search_res.best_g;
 
-            if(std::abs(state.val() - state.valm1()) < 1e-6)
+            if((*stopping_criterion__impl)(state))
               break;
 
 

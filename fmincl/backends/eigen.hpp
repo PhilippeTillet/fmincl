@@ -25,6 +25,7 @@ namespace fmincl{
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixType;
 
         static ScalarType norm_1(VectorType const & x){ return x.array().abs().sum();  }
+        static ScalarType norm_2(VectorType const & x){ return x.norm();  }
         static ScalarType inner_prod(VectorType const & x, VectorType const & y){ return x.dot(y); }
         static void set_to_identity(MatrixType & M, unsigned int n){ M = MatrixType::Identity(n, n); }
         static void prod(MatrixType const& M, VectorType const & x, VectorType & res){ res = M*x; }
