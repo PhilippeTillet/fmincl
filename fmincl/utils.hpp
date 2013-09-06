@@ -47,13 +47,24 @@ namespace fmincl{
         };
 
         template<class BackendType>
-        class state{           
+        class state{
+        private:
+            state(state const & other) { }
+
         public:
             typedef typename BackendType::ScalarType ScalarType;
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::MatrixType MatrixType;
 
-            state(VectorType const & x0, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(x0.size()), x_(x0), g_(dim_), p_(dim_), xm1_(dim_), gm1_(dim_){ }
+            state(VectorType const & x0, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(x0.size()){
+                x_ = BackendType::create_vector(dim_);
+                g_ = BackendType::create_vector(dim_);
+                p_ = BackendType::create_vector(dim_);
+                xm1_ = BackendType::create_vector(dim_);
+                gm1_ = BackendType::create_vector(dim_);
+
+                BackendType::copy(x0,x_);
+            }
 
             detail::function_wrapper<BackendType> const & fun() { return fun_; }
             unsigned int & iter() { return iter_; }
@@ -67,15 +78,26 @@ namespace fmincl{
             ScalarType & valm1() { return valkm1_; }
             ScalarType & diff() { return diff_; }
             ScalarType & dphi_0() { return dphi_0_; }
+
+            ~state(){
+                BackendType::delete_if_dynamically_allocated(x_);
+                BackendType::delete_if_dynamically_allocated(g_);
+                BackendType::delete_if_dynamically_allocated(p_);
+                BackendType::delete_if_dynamically_allocated(xm1_);
+                BackendType::delete_if_dynamically_allocated(gm1_);
+            }
+
         private:
             detail::function_wrapper<BackendType> const & fun_;
             unsigned int iter_;
             unsigned int dim_;
+
             VectorType x_;
             VectorType g_;
             VectorType p_;
             VectorType xm1_;
             VectorType gm1_;
+
             ScalarType valk_;
             ScalarType valkm1_;
             ScalarType diff_;

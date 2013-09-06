@@ -24,6 +24,9 @@ namespace fmincl{
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> VectorType;
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixType;
 
+        static VectorType create_vector(std::size_t n) { return VectorType(n); }
+        static void copy(VectorType const & from, VectorType & to) { to = from; }
+        static void delete_if_dynamically_allocated(VectorType const &) { }
         static ScalarType norm_1(VectorType const & x){ return x.array().abs().sum();  }
         static ScalarType norm_2(VectorType const & x){ return x.norm();  }
         static ScalarType inner_prod(VectorType const & x, VectorType const & y){ return x.dot(y); }

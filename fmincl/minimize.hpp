@@ -83,14 +83,15 @@ namespace fmincl{
               else
                 ai = std::min(1.0d,1.01*2*state.diff()/state.dphi_0());
             }
-            line_search_result<BackendType> search_res = (*line_search_impl)(state, ai);
+            line_search_result<BackendType> search_res(state.dim());
+            (*line_search_impl)(search_res,state, ai);
 
-            if(search_res.best_f>state.val()) break;
+            if(search_res.has_failed || search_res.best_phi>state.val()) break;
 
             state.valm1() = state.val();
             state.xm1() = state.x();
             state.x() = search_res.best_x;
-            state.val() = search_res.best_f;
+            state.val() = search_res.best_phi;
             state.gm1() = state.g();
             state.g() = search_res.best_g;
 

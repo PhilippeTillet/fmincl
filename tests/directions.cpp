@@ -17,7 +17,7 @@ template<class ScalarType>
 double test_result(Eigen::Matrix<ScalarType,Eigen::Dynamic,1>  const & vec){
     ScalarType diff = 0;
     for(std::size_t i = 0 ; i < vec.size() ; ++i){
-        if(std::isnan(vec[i])) return NAN;
+        if(std::isnan(vec[i])) return INFINITY;
         diff = std::max(diff,std::fabs(vec[i]-static_cast<ScalarType>(1)));
     }
     return diff;
@@ -52,7 +52,9 @@ int run_test(std::size_t dimension, ScalarType epsilon){
 
 int main(){
     srand(0);
-    double epsilon = 1e-5;
+    float epsilon_float = 1e-3;
+    double epsilon_double = 1e-5;
+
     std::vector<std::size_t> dimensions;
     dimensions.push_back(2);
     dimensions.push_back(10);
@@ -69,7 +71,7 @@ int main(){
         std::cout << std::endl;
         std::cout << "Dimension: " << *it << std::endl;
         std::cout << "-------------------" << std::endl;
-        if(run_test<float>(*it, epsilon)==EXIT_FAILURE){
+        if(run_test<float>(*it, epsilon_float)==EXIT_FAILURE){
             return EXIT_FAILURE;
         }
     }
@@ -82,7 +84,7 @@ int main(){
         std::cout << std::endl;
         std::cout << "Dimension: " << *it << std::endl;
         std::cout << "-------------------" << std::endl;
-        if(run_test<double>(*it, epsilon)==EXIT_FAILURE){
+        if(run_test<double>(*it, epsilon_double)==EXIT_FAILURE){
             return EXIT_FAILURE;
         }
     }

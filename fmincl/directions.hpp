@@ -121,6 +121,7 @@ class lbfgs_implementation : public qn_update_implementation<BackendType>{
     typedef typename BackendType::MatrixType MatrixType;
 public:
     lbfgs_implementation(lbfgs_tag const & _lbfgs) : vecs_(_lbfgs.m) { }
+
     void operator()(detail::state<BackendType> & state){
         unsigned int m = vecs_.size();
         for(unsigned int i = std::min(state.iter(),m)-1 ; i > 0  ; --i){
@@ -132,8 +133,11 @@ public:
         std::vector<ScalarType> rhos(m);
         std::vector<ScalarType> alphas(m);
 
+        VectorType q = BackendType::create_vector(state.dim());
+        VectorType r = BackendType::create_vector(state.dim());
+
         int i = 0;
-        VectorType q = state.g();
+        q = state.g();
         for(; i < std::min(state.iter(),m) ; ++i){
             VectorType & s = vecs_[i].first;
             VectorType & y = vecs_[i].second;
@@ -144,7 +148,7 @@ public:
         VectorType & sk = vecs_[0].first;
         VectorType & yk = vecs_[0].second;
         ScalarType scale = BackendType::inner_prod(sk,yk)/BackendType::inner_prod(yk,yk);
-        VectorType r = scale*q;
+        r = scale*q;
         --i;
         for(; i >=0 ; --i){
             VectorType & s = vecs_[i].first;
@@ -153,6 +157,9 @@ public:
             r += s*(alphas[i]-beta);
         }
         state.p() = -r;
+
+        BackendType::delete_if_dynamically_allocated(q);
+        BackendType::delete_if_dynamically_allocated(r);
     }
 private:
     std::vector<std::pair<VectorType, VectorType> > vecs_;
@@ -170,6 +177,9 @@ public:
     void operator()(detail::state<BackendType> & state){
       VectorType s = state.x() - state.xm1();
       VectorType y = state.g() - state.gm1();
+
+      VectorType Hy = BackendType::create_vector(state.dim());
+
       ScalarType ys = BackendType::inner_prod(s,y);
       if(is_first_update_==true){
         ScalarType yy = BackendType::inner_prod(y,y);
@@ -178,16 +188,17 @@ public:
         Hk *= scale;
         is_first_update_=false;
       }
-      VectorType Hy(BackendType::size1(Hk));
+
       BackendType::prod(Hk,y,Hy);
       ScalarType yHy = BackendType::inner_prod(y,Hy);
       BackendType::rank_2_update(-1/ys,s,Hy,Hk);
       BackendType::rank_2_update(-1/ys,Hy,s,Hk);
       BackendType::rank_2_update(1/ys + yHy/pow(ys,2),s,s,Hk);
 
-      VectorType tmp(BackendType::size1(Hk));
-      BackendType::prod(Hk,state.g(),tmp);
-      state.p() = -tmp;
+      BackendType::prod(Hk,state.g(),state.p());
+      state.p() = -state.p();
+
+      BackendType::delete_if_dynamically_allocated(Hy);
     }
 
 private:
