@@ -31,17 +31,19 @@ private:
     typedef typename Types::Head Head;
     typedef typename Types::Tail Tail;
 public:
-    static BaseImplementationType * create(BaseTagType const & tag){
+    template<class ContextType>
+    static BaseImplementationType * create(BaseTagType const & tag, ContextType & context){
         if(typeid(tag)==typeid(typename Head::Tag))
-            return new typename Head::Impl(static_cast<typename Head::Tag const &>(tag));
+            return new typename Head::Impl(static_cast<typename Head::Tag const &>(tag),context);
         else
-            return implementation_from_tag<Tail, BaseTagType, BaseImplementationType>::create(tag);
+            return implementation_from_tag<Tail, BaseTagType, BaseImplementationType>::create(tag,context);
     }
 };
 
 template<class BaseTagType,class BaseImplementationType>
 struct implementation_from_tag<NullType, BaseTagType, BaseImplementationType>{
-    static BaseImplementationType * create(BaseTagType const & tag){ return NULL; }
+    template<class ContextType>
+    static BaseImplementationType * create(BaseTagType const & tag, ContextType & context){ return NULL; }
 };
 
 }

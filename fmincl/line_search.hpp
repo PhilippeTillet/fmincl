@@ -48,7 +48,7 @@ namespace fmincl{
       typedef typename BackendType::VectorType VectorType;
       typedef typename BackendType::MatrixType MatrixType;
   public:
-      virtual void operator()(line_search_result<BackendType> & res, detail::state<BackendType> & state, ScalarType ai) = 0;
+      virtual void operator()(line_search_result<BackendType> & res, ScalarType ai) = 0;
   };
 
   /* =========================== *
@@ -87,7 +87,6 @@ namespace fmincl{
   template<class BackendType>
   class strong_wolfe_powell_implementation : public line_search_implementation<BackendType>{
     private:
-
       typedef typename line_search_implementation<BackendType>::ScalarType ScalarType;
       typedef typename line_search_implementation<BackendType>::VectorType VectorType;
       typedef typename line_search_implementation<BackendType>::MatrixType MatrixType;
@@ -98,28 +97,28 @@ namespace fmincl{
             x = x0 + alpha*p;
             ScalarType res = fun(x,&grad);
             if(dphi){
-              *dphi = BackendType::inner_prod(grad,p);
+              *dphi = BackendType::dot(grad,p);
             }
             return res;
           }
       };
 
-      bool sufficient_decrease(ScalarType ai, ScalarType phi_ai, detail::state<BackendType> & state) const {
-        return phi_ai <= (state.val() + c1_*ai );
+      bool sufficient_decrease(ScalarType ai, ScalarType phi_ai, detail::optimization_context<BackendType> & context) const {
+        return phi_ai <= (context.val() + c1_*ai );
       }
-      bool curvature(ScalarType dphi_ai, detail::state<BackendType> & state) const{
-        return std::abs(dphi_ai) <= c2_*std::abs(state.dphi_0());
+      bool curvature(ScalarType dphi_ai, detail::optimization_context<BackendType> & context) const{
+        return std::abs(dphi_ai) <= c2_*std::abs(context.dphi_0());
       }
 
-      void zoom(line_search_result<BackendType> & res, ScalarType alo, ScalarType phi_alo, ScalarType dphi_alo, ScalarType ahi, ScalarType phi_ahi, ScalarType dphi_ahi, detail::state<BackendType> & state) const{
+      void zoom(line_search_result<BackendType> & res, ScalarType alo, ScalarType phi_alo, ScalarType dphi_alo, ScalarType ahi, ScalarType phi_ahi, ScalarType dphi_ahi, detail::optimization_context<BackendType> & context) const{
         VectorType & current_x = res.best_x;
         VectorType & current_g = res.best_g;
         ScalarType & current_phi = res.best_phi;
 
-        VectorType x0 = BackendType::create_vector(state.dim());
-        BackendType::copy(state.x(),x0);
+        VectorType x0 = BackendType::create_vector(context.dim());
+        BackendType::copy(context.x(),x0);
 
-        VectorType const & p = state.p();
+        VectorType const & p = context.p();
         ScalarType eps = 1e-8;
         ScalarType aj = 0;
         ScalarType dphi_aj = 0;
@@ -135,14 +134,14 @@ namespace fmincl{
             return;
           }
           aj = std::min(std::max(aj,xmin+0.1f*(xmax-xmin)),xmax-0.1f*(xmax-xmin));
-          current_phi = phi_(state.fun(), current_x, x0, aj, p, current_g, &dphi_aj);
-          if(!sufficient_decrease(aj,current_phi, state) || current_phi >= phi_alo){
+          current_phi = phi_(context.fun(), current_x, x0, aj, p, current_g, &dphi_aj);
+          if(!sufficient_decrease(aj,current_phi, context) || current_phi >= phi_alo){
             ahi = aj;
             phi_ahi = current_phi;
             dphi_ahi = dphi_aj;
           }
           else{
-            if(curvature(dphi_aj, state)){
+            if(curvature(dphi_aj, context)){
                 res.has_failed = false;
                 return;
             }
@@ -161,40 +160,40 @@ namespace fmincl{
 
 
     public:
-      strong_wolfe_powell_implementation(strong_wolfe_powell_tag const & tag) :  c1_(tag.c1), c2_(tag.c2) { }
+      strong_wolfe_powell_implementation(strong_wolfe_powell_tag const & tag, detail::optimization_context<BackendType> & context) : context_(context),  c1_(tag.c1), c2_(tag.c2) { }
 
-      void operator()(line_search_result<BackendType> & res, detail::state<BackendType> & state, ScalarType ai) {
+      void operator()(line_search_result<BackendType> & res, ScalarType ai) {
         ScalarType aim1 = 0;
-        ScalarType last_phi = state.val();
-        ScalarType dphi_aim1 = state.dphi_0();
+        ScalarType last_phi = context_.val();
+        ScalarType dphi_aim1 = context_.dphi_0();
         ScalarType dphi_ai;
 
         ScalarType & current_phi = res.best_phi;
         VectorType & current_x = res.best_x;
         VectorType & current_g = res.best_g;
 
-        VectorType x0 = BackendType::create_vector(state.dim());
-        BackendType::copy(state.x(), x0);
+        VectorType x0 = BackendType::create_vector(context_.dim());
+        BackendType::copy(context_.x(), x0);
 
-        VectorType const & p = state.p();
+        VectorType const & p = context_.p();
 
         for(unsigned int i = 1 ; i<20; ++i){
-          current_phi = phi_(state.fun(), current_x, x0, ai, p, current_g, &dphi_ai);
+          current_phi = phi_(context_.fun(), current_x, x0, ai, p, current_g, &dphi_ai);
 
           //Tests sufficient decrease
-          if(!sufficient_decrease(ai, current_phi, state) || (i>1 && current_phi >= last_phi)){
-             return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, state);
+          if(!sufficient_decrease(ai, current_phi, context_) || (i>1 && current_phi >= last_phi)){
+             return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, context_);
           }
 
           //Tests curvature
-          if(curvature(dphi_ai, state)){
+          if(curvature(dphi_ai, context_)){
             res.has_failed = false; return;
           }
           if(dphi_ai>=0){
-            return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, state);
+            return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, context_);
           }
 
-          //Updates states
+          //Updates context_s
           ScalarType old_ai = ai;
           ScalarType old_phi_ai = current_phi;
           ScalarType old_dphi_ai = dphi_ai;
@@ -212,6 +211,7 @@ namespace fmincl{
         res.has_failed = true;
       }
     private:
+      detail::optimization_context<BackendType> & context_;
       ScalarType c1_;
       ScalarType c2_;
       ScalarType rho_;

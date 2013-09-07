@@ -14,13 +14,14 @@
 #include <cmath>
 
 #include "fmincl/mapping.hpp"
+#include "fmincl/utils.hpp"
 
 namespace fmincl{
 
 struct stopping_criterion_tag{ virtual ~stopping_criterion_tag(){ } };
 template<class BackendType>
 struct stopping_criterion_implementation{
-    virtual bool operator()(detail::state<BackendType> & state) = 0;
+    virtual bool operator()() = 0;
 };
 
 struct gradient_based_stopping_tag : public stopping_criterion_tag{
@@ -29,11 +30,13 @@ struct gradient_based_stopping_tag : public stopping_criterion_tag{
 };
 template<class BackendType>
 struct gradient_based_stopping_implementation : public stopping_criterion_implementation<BackendType>{
-    gradient_based_stopping_implementation(gradient_based_stopping_tag const & _tag) : tag(_tag){ }
-    bool operator()(detail::state<BackendType> & state){
-        return BackendType::norm_2(state.g()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
+    gradient_based_stopping_implementation(gradient_based_stopping_tag const & _tag, detail::optimization_context<BackendType> & context) : context_(context), tag(_tag){ }
+
+    bool operator()(){
+        return BackendType::nrm2(context_.g()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
     }
 private:
+    detail::optimization_context<BackendType> & context_;
     gradient_based_stopping_tag const & tag;
 };
 
@@ -44,11 +47,12 @@ struct value_based_stopping_tag : public stopping_criterion_tag{
 };
 template<class BackendType>
 struct value_based_stopping_implementation : public stopping_criterion_implementation<BackendType>{
-    value_based_stopping_implementation(value_based_stopping_tag const & _tag) : tag(_tag){ }
-    bool operator()(detail::state<BackendType> & state){
-        return std::fabs(state.val() - state.valm1()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
+    value_based_stopping_implementation(value_based_stopping_tag const & _tag, detail::optimization_context<BackendType> & context) : context_(context), tag(_tag){ }
+    bool operator()(){
+        return std::fabs(context_.val() - context_.valm1()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
     }
 private:
+    detail::optimization_context<BackendType> & context_;
     value_based_stopping_tag const & tag;
 };
 

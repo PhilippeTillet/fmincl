@@ -57,7 +57,7 @@ int main(){
 
     std::vector<std::size_t> dimensions;
     dimensions.push_back(2);
-    dimensions.push_back(10);
+    dimensions.push_back(40);
 
     std::cout << "====================" << std::endl;
     std::cout << "      Testing       "  << std::endl;

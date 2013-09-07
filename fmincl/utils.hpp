@@ -47,16 +47,16 @@ namespace fmincl{
         };
 
         template<class BackendType>
-        class state{
+        class optimization_context{
         private:
-            state(state const & other) { }
+            optimization_context(optimization_context const & other) { }
 
         public:
             typedef typename BackendType::ScalarType ScalarType;
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::MatrixType MatrixType;
 
-            state(VectorType const & x0, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(x0.size()){
+            optimization_context(VectorType const & x0, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(x0.size()){
                 x_ = BackendType::create_vector(dim_);
                 g_ = BackendType::create_vector(dim_);
                 p_ = BackendType::create_vector(dim_);
@@ -79,7 +79,7 @@ namespace fmincl{
             ScalarType & diff() { return diff_; }
             ScalarType & dphi_0() { return dphi_0_; }
 
-            ~state(){
+            ~optimization_context(){
                 BackendType::delete_if_dynamically_allocated(x_);
                 BackendType::delete_if_dynamically_allocated(g_);
                 BackendType::delete_if_dynamically_allocated(p_);

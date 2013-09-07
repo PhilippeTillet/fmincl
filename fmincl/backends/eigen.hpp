@@ -24,15 +24,35 @@ namespace fmincl{
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> VectorType;
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixType;
 
-        static VectorType create_vector(std::size_t n) { return VectorType(n); }
-        static void copy(VectorType const & from, VectorType & to) { to = from; }
+        static VectorType create_vector(std::size_t n)
+        { return VectorType(n); }
+        static MatrixType create_matrix(std::size_t m, std::size_t n)
+        { return MatrixType(m,n); }
         static void delete_if_dynamically_allocated(VectorType const &) { }
-        static ScalarType norm_1(VectorType const & x){ return x.array().abs().sum();  }
-        static ScalarType norm_2(VectorType const & x){ return x.norm();  }
-        static ScalarType inner_prod(VectorType const & x, VectorType const & y){ return x.dot(y); }
-        static void set_to_identity(MatrixType & M, unsigned int n){ M = MatrixType::Identity(n, n); }
-        static void prod(MatrixType const& M, VectorType const & x, VectorType & res){ res = M*x; }
-        static void rank_2_update(ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & res){ res+=alpha*x*y.transpose(); }
+
+        static void copy(VectorType const & from, VectorType & to)
+        { to = from; }
+        static void axpy(ScalarType alpha, VectorType const & x, VectorType & y)
+        {  y = alpha*x + y; }
+        static void scale(ScalarType alpha, VectorType & x)
+        { x = alpha*x; }
+        static void scale(ScalarType alpha, MatrixType & A)
+        { A = alpha*A; }
+        static ScalarType asum(VectorType const & x)
+        { return x.array().abs().sum(); }
+        static ScalarType nrm2(VectorType const & x)
+        { return x.norm(); }
+        static ScalarType dot(VectorType const & x, VectorType const & y)
+        { return x.dot(y); }
+        static void gemv(MatrixType const& M, VectorType const & x, VectorType & res)
+        { res = M*x;  }
+        static void syr1(ScalarType const & alpha, VectorType const & x, MatrixType & res)
+        { res+=alpha*x*x.transpose(); }
+        static void syr2(ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & res)
+        { res+=alpha*x*y.transpose() + Eigen::internal::conj(alpha)*y*x.transpose(); }
+        static void set_to_identity(MatrixType & M, unsigned int n)
+        { M = MatrixType::Identity(n, n); }
+
         static size_t size1(MatrixType const & M){ return M.rows(); }
         static size_t size2(MatrixType const & M){ return M.cols(); }
         static size_t size(VectorType const & v){ return v.size(); }
