@@ -104,9 +104,10 @@ public:
                                                                                                       ,update_implementation_(cg_update_mapping<BackendType>::type::create(*cg_params.update, context))
                                                                                                       ,restart_implementation_(cg_restart_mapping<BackendType>::type::create(*cg_params.restart, context)){ }
     void operator()(){
-      VectorType& p = context_.p();
-      VectorType& g = context_.g();
-      unsigned int& N = context_.dim();
+      unsigned int const & N = context_.dim();
+
+      VectorType const & g = context_.g();
+      VectorType & p = context_.p();
 
       if((*restart_implementation_)())
         p = -g;
@@ -142,22 +143,24 @@ class lbfgs_implementation : public qn_update_implementation<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::MatrixType MatrixType;
 public:
-    lbfgs_implementation(lbfgs_tag const & _lbfgs, detail::optimization_context<BackendType> & context) : context_(context), vecs_(_lbfgs.m){
-        q_ = BackendType::create_vector(context_.dim());
-        r_ = BackendType::create_vector(context_.dim());
+    lbfgs_implementation(lbfgs_tag const & tag, detail::optimization_context<BackendType> & context) : tag_(tag), context_(context), vecs_(tag.m){
+        N_ = context_.dim();
+
+        q_ = BackendType::create_vector(N_);
+        r_ = BackendType::create_vector(N_);
     }
 
     void operator()(){
         //Initizalization of aliases
-        VectorType & x=context_.x();
-        VectorType & xm1=context_.xm1();
-        VectorType & g=context_.g();
-        VectorType & gm1=context_.gm1();
+        VectorType const & x=context_.x();
+        VectorType const & xm1=context_.xm1();
+        VectorType const & g=context_.g();
+        VectorType const & gm1=context_.gm1();
         VectorType & p=context_.p();
-        unsigned int & iter = context_.iter();
+        unsigned int iter = context_.iter();
+        unsigned int m = tag_.m;
 
         //Algorithm
-        unsigned int m = vecs_.size();
         for(unsigned int i = std::min(iter,m)-1 ; i > 0  ; --i){
             vecs_[i] = vecs_[i-1];
         }
@@ -197,6 +200,10 @@ public:
     }
 
 private:
+    lbfgs_tag const & tag_;
+
+    unsigned int N_;
+
     VectorType q_;
     VectorType r_;
 
@@ -212,14 +219,11 @@ class bfgs_implementation : public qn_update_implementation<BackendType>{
     typedef typename BackendType::MatrixType MatrixType;
 public:
     bfgs_implementation(bfgs_tag const &, detail::optimization_context<BackendType> & context) : context_(context), is_first_update_(true){
-
-        unsigned int N = context_.dim();
-
-        Hy_ = BackendType::create_vector(N);
-        s_ = BackendType::create_vector(N);
-        y_ = BackendType::create_vector(N);
-
-        H_ = BackendType::create_matrix(N, N);
+        N_ = context_.dim();
+        Hy_ = BackendType::create_vector(N_);
+        s_ = BackendType::create_vector(N_);
+        y_ = BackendType::create_vector(N_);
+        H_ = BackendType::create_matrix(N_, N_);
     }
 
     void operator()(){
@@ -229,7 +233,6 @@ public:
       VectorType & gm1 = context_.gm1();
       VectorType & p = context_.p();
 
-      std::size_t N = context_.dim();
       //s = x - xm1
       BackendType::copy(x,s_);
       BackendType::axpy(-1,xm1,s_);
@@ -240,9 +243,10 @@ public:
 
       ScalarType ys = BackendType::dot(s_,y_);
       if(is_first_update_==true){
+        BackendType::set_to_identity(H_, N_);
+
         ScalarType yy = BackendType::dot(y_,y_);
         ScalarType scale = ys/yy;
-        BackendType::set_to_identity(H_, N);
         BackendType::scale(scale,H_);
         is_first_update_=false;
       }
@@ -266,6 +270,8 @@ public:
 
 private:
     detail::optimization_context<BackendType> & context_;
+
+    unsigned int N_;
 
     VectorType Hy_;
     VectorType s_;
