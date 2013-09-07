@@ -41,9 +41,12 @@ int main(){
     std::cout << std::endl;
 
     fmincl::optimization_options options;
-    options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag());
-    options.max_iter = 500;
+    options.direction = new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag(4)); //You can select the number of storage pairs in the constructor of lbfgs_tag()
+    //options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag()); //Uncomment for BFGS
+    //options.direction = new fmincl::cg_tag(); //Uncomment for ConjugateGradient
+    options.max_iter = 1000;
     options.verbosity_level=0;
+    options.stopping_criterion = new fmincl::gradient_based_stopping_tag(1e-4); //Stops when the gradient is below 1e-4
     fmincl::minimize<fmincl::backend::OpenBlasTypes<ScalarType> >(S,rosenbrock<fmincl::backend::OpenBlasTypes<ScalarType> >(D),X0,D,options);
 
     viennacl::tools::timer t;
