@@ -25,6 +25,7 @@ struct direction_tag{ virtual ~direction_tag(){ } };
 template<class BackendType>
 struct direction_implementation{
     virtual void operator()(void) = 0;
+    virtual ~direction_implementation(){ }
 };
 
 
@@ -37,6 +38,7 @@ struct cg_update_tag{ virtual ~cg_update_tag(){ } };
 template<class BackendType>
 struct cg_update_implementation{
     virtual typename BackendType::ScalarType operator()(void) = 0;
+    virtual ~cg_update_implementation(){ }
 };
 
 struct polak_ribiere_tag : public cg_update_tag{ };
@@ -86,12 +88,13 @@ struct cg_restart_tag{ virtual ~cg_restart_tag(){ } };
 template<class BackendType>
 struct cg_restart_implementation{
     virtual bool operator()(void) = 0;
+    virtual ~cg_restart_implementation(){ }
 };
 
 struct no_restart_tag : public cg_restart_tag{ };
 template<class BackendType>
 struct no_restart_implementation : public cg_restart_implementation<BackendType>{
-    no_restart_implementation(no_restart_tag const & tag, detail::optimization_context<BackendType> & context) { }
+    no_restart_implementation(no_restart_tag const & /*tag*/, detail::optimization_context<BackendType> & /*context*/) { }
     bool operator()() { return false; }
 };
 
@@ -135,10 +138,10 @@ public:
       }
     }
 private:
+    detail::optimization_context<BackendType> & context_;
+
     tools::shared_ptr<cg_update_implementation<BackendType> > update_implementation_;
     tools::shared_ptr<cg_restart_implementation<BackendType> > restart_implementation_;
-
-    detail::optimization_context<BackendType> & context_;
 };
 
 /* =========================== *
@@ -149,6 +152,7 @@ struct qn_update_tag{ virtual ~qn_update_tag(){ } };
 template<class BackendType>
 struct qn_update_implementation{
     virtual void operator()(void) = 0;
+    virtual ~qn_update_implementation(){ }
 };
 
 struct lbfgs_tag : public qn_update_tag{
@@ -216,8 +220,8 @@ public:
 
         BackendType::copy(N_,g,q_);
         int i = 0;
-        for(; i < std::min(iter,m) ; ++i){
-            rhos[i] = 1.0d/BackendType::dot(N_,y(i),s(i));
+        for(; i < (int)std::min(iter,m) ; ++i){
+            rhos[i] = static_cast<ScalarType>(1)/BackendType::dot(N_,y(i),s(i));
             alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
             //q_ = q - alphas[i]*y(i);
             BackendType::axpy(N_,-alphas[i],y(i),q_);
@@ -252,6 +256,7 @@ public:
 
 private:
     lbfgs_tag const & tag_;
+    detail::optimization_context<BackendType> & context_;
 
     std::size_t N_;
 
@@ -259,7 +264,6 @@ private:
     VectorType r_;
 
     std::vector<storage_pair> vecs_;
-    detail::optimization_context<BackendType> & context_;
 };
 
 struct bfgs_tag : public qn_update_tag{ };

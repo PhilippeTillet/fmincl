@@ -42,7 +42,7 @@ namespace fmincl{
 
 
     template<class BackendType, class Fun>
-    typename BackendType::VectorType minimize(Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+    void minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
 
@@ -93,7 +93,7 @@ namespace fmincl{
               if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
-                ai = std::min(1.0d,1.01*2*context.diff()/context.dphi_0());
+                ai = std::min(static_cast<ScalarType>(1),static_cast<ScalarType>(1.01*2)*context.diff()/context.dphi_0());
             }
 
 
@@ -122,9 +122,7 @@ namespace fmincl{
 
         }
 
-        VectorType res = BackendType::create_vector(N);
         BackendType::copy(N,context.x(),res);
-        return res;
     }
 
 }

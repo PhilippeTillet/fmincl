@@ -22,6 +22,7 @@ struct stopping_criterion_tag{ virtual ~stopping_criterion_tag(){ } };
 template<class BackendType>
 struct stopping_criterion_implementation{
     virtual bool operator()() = 0;
+    virtual ~stopping_criterion_implementation(){ }
 };
 
 struct gradient_based_stopping_tag : public stopping_criterion_tag{

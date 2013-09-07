@@ -24,6 +24,10 @@ file( GLOB_RECURSE MAKE_HEADERS_VISIBLE_SRC
     *.hpp *.h)
 add_custom_target( MAKE_HEADERS_VISIBLE SOURCES ${MAKE_HEADERS_VISIBLE_SRC} )
 
+
+#Set Warning level
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+
 if(BUILD_EXAMPLES)
    add_subdirectory(examples)
 endif()

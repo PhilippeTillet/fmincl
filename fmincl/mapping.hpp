@@ -43,7 +43,7 @@ public:
 template<class BaseTagType,class BaseImplementationType>
 struct implementation_from_tag<NullType, BaseTagType, BaseImplementationType>{
     template<class ContextType>
-    static BaseImplementationType * create(BaseTagType const & tag, ContextType & context){ return NULL; }
+    static BaseImplementationType * create(BaseTagType const & /*tag*/, ContextType & /*context*/){ return NULL; }
 };
 
 }

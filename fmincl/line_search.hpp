@@ -49,6 +49,7 @@ namespace fmincl{
       typedef typename BackendType::MatrixType MatrixType;
   public:
       virtual void operator()(line_search_result<BackendType> & res, ScalarType ai) = 0;
+      virtual ~line_search_implementation(){ }
   };
 
   /* =========================== *
@@ -116,9 +117,6 @@ namespace fmincl{
         ScalarType & current_phi = res.best_phi;
         VectorType const & p = context.p();
 
-        VectorType x0 = BackendType::create_vector(N_);
-        BackendType::copy(N_,context.x(),x0);
-
         ScalarType eps = 1e-8;
         ScalarType aj = 0;
         ScalarType dphi_aj = 0;
@@ -135,7 +133,7 @@ namespace fmincl{
             return;
           }
           aj = std::min(std::max(aj,xmin+0.1f*(xmax-xmin)),xmax-0.1f*(xmax-xmin));
-          current_phi = phi(N_, context.fun(), current_x, x0, aj, p, current_g, &dphi_aj);
+          current_phi = phi(N_, context.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
           if(!sufficient_decrease(aj,current_phi, context) || current_phi >= phi_alo){
             ahi = aj;
             phi_ahi = current_phi;
@@ -157,13 +155,18 @@ namespace fmincl{
           }
         }
 
-        BackendType::delete_if_dynamically_allocated(x0);
       }
 
 
 
     public:
-      strong_wolfe_powell_implementation(strong_wolfe_powell_tag const & tag, detail::optimization_context<BackendType> & context) : context_(context), N_(context.dim()),  c1_(tag.c1), c2_(tag.c2) { }
+      strong_wolfe_powell_implementation(strong_wolfe_powell_tag const & tag, detail::optimization_context<BackendType> & context) : context_(context), N_(context.dim()),  c1_(tag.c1), c2_(tag.c2) {
+          x0_ = BackendType::create_vector(N_);
+      }
+
+      ~strong_wolfe_powell_implementation(){
+          BackendType::delete_if_dynamically_allocated(x0_);
+      }
 
       void operator()(line_search_result<BackendType> & res, ScalarType ai) {
         ScalarType aim1 = 0;
@@ -177,12 +180,11 @@ namespace fmincl{
         VectorType const & p = context_.p();
 
 
-        VectorType x0 = BackendType::create_vector(N_);
-        BackendType::copy(N_,context_.x(), x0);
+        BackendType::copy(N_,context_.x(), x0_);
 
 
         for(unsigned int i = 1 ; i<20; ++i){
-          current_phi = phi(N_,context_.fun(), current_x, x0, ai, p, current_g, &dphi_ai);
+          current_phi = phi(N_,context_.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
 
           //Tests sufficient decrease
           if(!sufficient_decrease(ai, current_phi, context_) || (i>1 && current_phi >= last_phi)){
@@ -213,14 +215,17 @@ namespace fmincl{
         }
 
         res.has_failed = true;
-        BackendType::delete_if_dynamically_allocated(x0);
+        BackendType::delete_if_dynamically_allocated(x0_);
       }
     private:
       detail::optimization_context<BackendType> & context_;
       int N_;
+
       ScalarType c1_;
       ScalarType c2_;
       ScalarType rho_;
+
+      VectorType x0_;
   };
 
 

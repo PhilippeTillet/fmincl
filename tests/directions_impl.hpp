@@ -31,16 +31,17 @@ int run_test_impl(std::size_t dimension, typename BackendType::ScalarType epsilo
 
     ScalarType diff;
     VectorType X0 = BackendType::create_vector(dimension);
-
+    VectorType S = BackendType::create_vector(dimension);
     for(unsigned int i = 0 ; i < dimension ; ++i) X0[i] = 0.01*(ScalarType)rand()/RAND_MAX;
 
 #define TEST_OPTIONS(options) \
-    if((diff = test_result<BackendType>(dimension, fmincl::minimize<BackendType>(rosenbrock<BackendType>(dimension),X0,dimension,options)))>epsilon){ \
+    fmincl::minimize<BackendType>(S,rosenbrock<BackendType>(dimension),X0,dimension,options); \
+    if((diff = test_result<BackendType>(dimension, S))>epsilon){ \
         std::cout << "## Failure! Diff = " << diff << std::endl; \
         res = EXIT_FAILURE; \
     }
-
     std::cout << "* Testing BFGS..." << std::endl;
+
     TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton_tag(new fmincl::bfgs_tag())))
 
     std::cout << "* Testing L-BFGS [m=1] ..." << std::endl;
@@ -54,6 +55,7 @@ int run_test_impl(std::size_t dimension, typename BackendType::ScalarType epsilo
     TEST_OPTIONS(fmincl::optimization_options(new fmincl::cg_tag(new fmincl::polak_ribiere_tag(), new fmincl::no_restart_tag())))
 
     BackendType::delete_if_dynamically_allocated(X0);
+    BackendType::delete_if_dynamically_allocated(S);
 
     return res;
 }
