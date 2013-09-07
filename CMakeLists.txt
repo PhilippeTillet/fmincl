@@ -13,6 +13,7 @@ include_directories(${OPENCL_INCLUDE_DIRS})
 
 # User options
 option(BUILD_TESTING "Build the tests " ON)
+option(BUILD_EXAMPLES "Build the examples " ON)
 
 # Includes
 include_directories(BEFORE ${PROJECT_SOURCE_DIR})

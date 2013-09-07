@@ -9,7 +9,7 @@
 
 #include <cstdlib>
 #include "fmincl/minimize.hpp"
-#include "rosenbrock.hpp"
+#include "common/rosenbrock.hpp"
 
 template<class BackendType>
 double test_result(std::size_t N, typename BackendType::VectorType const & vec){
