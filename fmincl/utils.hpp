@@ -49,21 +49,21 @@ namespace fmincl{
         template<class BackendType>
         class optimization_context{
         private:
-            optimization_context(optimization_context const & other) { }
-
+            optimization_context(optimization_context const & other);
+            optimization_context& operator=(optimization_context const & other);
         public:
             typedef typename BackendType::ScalarType ScalarType;
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::MatrixType MatrixType;
 
-            optimization_context(VectorType const & x0, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(x0.size()){
+            optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(dim){
                 x_ = BackendType::create_vector(dim_);
                 g_ = BackendType::create_vector(dim_);
                 p_ = BackendType::create_vector(dim_);
                 xm1_ = BackendType::create_vector(dim_);
                 gm1_ = BackendType::create_vector(dim_);
 
-                BackendType::copy(x0,x_);
+                BackendType::copy(dim_,x0,x_);
             }
 
             detail::function_wrapper<BackendType> const & fun() { return fun_; }

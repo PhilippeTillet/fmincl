@@ -42,12 +42,13 @@ namespace fmincl{
 
 
     template<class BackendType, class Fun>
-    typename BackendType::VectorType minimize(Fun const & user_fun, typename BackendType::VectorType const & x0, optimization_options const & options){
+    typename BackendType::VectorType minimize(Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef typename BackendType::ScalarType ScalarType;
+        typedef typename BackendType::VectorType VectorType;
 
         fill_default_direction_line_search(options);
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
-        detail::optimization_context<BackendType> context(x0, fun);
+        detail::optimization_context<BackendType> context(x0, N, fun);
         context.val() = context.fun()(context.x(), &context.g());
 
         if(options.verbosity_level >= 1){
@@ -60,27 +61,33 @@ namespace fmincl{
         for( ; context.iter() < options.max_iter ; ++context.iter()){
             print_context_infos(context,options);
             context.diff() = (context.val()-context.valm1());
+
+
             if(context.iter()==0){
               //Sets descent direction to gradient
-              context.p() = -context.g();
+              BackendType::copy(N,context.g(),context.p());
+              BackendType::scale(N,-1,context.p());
 
-              context.dphi_0() = BackendType::dot(context.p(),context.g());
+              context.dphi_0() = BackendType::dot(N,context.p(),context.g());
             }
             else{
               //Update direction into context.p()
               (*direction_impl)();
 
               //Checks whether the direction is a descent direction or not
-              context.dphi_0() = BackendType::dot(context.p(),context.g());
+              context.dphi_0() = BackendType::dot(N,context.p(),context.g());
               if(context.dphi_0()>0){
-                  context.p() = -context.g();
-                  context.dphi_0() = - BackendType::dot(context.g(), context.g());
+                  BackendType::copy(N,context.g(),context.p());
+                  BackendType::scale(N,-1,context.p());
+
+                  context.dphi_0() = - BackendType::dot(N,context.g(), context.g());
               }
             }
 
+
             double ai;
             if(context.iter()==0){
-              ai = std::min(static_cast<ScalarType>(1.0),1/BackendType::asum(context.g()));
+              ai = std::min(static_cast<ScalarType>(1.0),1/BackendType::asum(N,context.g()));
             }
             else{
               if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))
@@ -89,18 +96,24 @@ namespace fmincl{
                 ai = std::min(1.0d,1.01*2*context.diff()/context.dphi_0());
             }
 
+
             //Perform line search to find the step size
-            line_search_result<BackendType> search_res(context.dim());
+            line_search_result<BackendType> search_res(N);
             (*line_search_impl)(search_res, ai);
+
 
             if(search_res.has_failed || search_res.best_phi>context.val()) break;
 
+
+            BackendType::copy(N,context.x(),context.xm1());
+            BackendType::copy(N,search_res.best_x,context.x());
+
+            BackendType::copy(N,context.g(),context.gm1());
+            BackendType::copy(N,search_res.best_g,context.g());
+
             context.valm1() = context.val();
-            context.xm1() = context.x();
-            context.x() = search_res.best_x;
             context.val() = search_res.best_phi;
-            context.gm1() = context.g();
-            context.g() = search_res.best_g;
+
 
             if((*stopping_criterion__impl)())
               break;
@@ -108,7 +121,10 @@ namespace fmincl{
 
 
         }
-        return context.x();
+
+        VectorType res = BackendType::create_vector(N);
+        BackendType::copy(N,context.x(),res);
+        return res;
     }
 
 }

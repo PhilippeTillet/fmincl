@@ -33,7 +33,7 @@ struct gradient_based_stopping_implementation : public stopping_criterion_implem
     gradient_based_stopping_implementation(gradient_based_stopping_tag const & _tag, detail::optimization_context<BackendType> & context) : context_(context), tag(_tag){ }
 
     bool operator()(){
-        return BackendType::nrm2(context_.g()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
+        return BackendType::nrm2(context_.dim(),context_.g()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
     }
 private:
     detail::optimization_context<BackendType> & context_;

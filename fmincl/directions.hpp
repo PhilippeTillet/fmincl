@@ -47,17 +47,29 @@ private:
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
 public:
-    polak_ribiere_implementation(polak_ribiere_tag const &, detail::optimization_context<BackendType> & context) : context_(context){ }
+    polak_ribiere_implementation(polak_ribiere_tag const &, detail::optimization_context<BackendType> & context) : context_(context){
+        N_ = context_.dim();
+        tmp_ = BackendType::create_vector(N_);
+    }
+
     ScalarType operator()(){
         VectorType & g = context_.g();
         VectorType & gm1 = context_.gm1();
-        unsigned int & N = context_.dim();
 
-        VectorType tmp = g - gm1;
-        return BackendType::dot(g,tmp)/BackendType::dot(gm1,gm1);
+        //tmp_ = g - gm1;
+        BackendType::copy(N_,g, tmp_);
+        BackendType::axpy(N_,-1,gm1,tmp_);
+        return BackendType::dot(N_,g,tmp_)/BackendType::dot(N_,gm1,gm1);
+    }
+
+    ~polak_ribiere_implementation(){
+        BackendType::delete_if_dynamically_allocated(tmp_);
     }
 private:
     detail::optimization_context<BackendType> & context_;
+
+    std::size_t N_;
+    VectorType tmp_;
 };
 
 template<class BackendType>
@@ -104,16 +116,22 @@ public:
                                                                                                       ,update_implementation_(cg_update_mapping<BackendType>::type::create(*cg_params.update, context))
                                                                                                       ,restart_implementation_(cg_restart_mapping<BackendType>::type::create(*cg_params.restart, context)){ }
     void operator()(){
-      unsigned int const & N = context_.dim();
-
       VectorType const & g = context_.g();
       VectorType & p = context_.p();
+      std::size_t N = context_.dim();
 
-      if((*restart_implementation_)())
-        p = -g;
+      if((*restart_implementation_)()){
+
+        //p = -g;
+        BackendType::copy(N,g,p);
+        BackendType::scale(N,-1,p);
+      }
       else{
         ScalarType beta = (*update_implementation_)();
-        p = -g + beta*p;
+
+        //p = -g + beta*p;
+        BackendType::scale(N,beta,p);
+        BackendType::axpy(N,-1,g,p);
       }
     }
 private:
@@ -142,12 +160,26 @@ class lbfgs_implementation : public qn_update_implementation<BackendType>{
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::MatrixType MatrixType;
+
+    struct storage_pair{
+        VectorType s;
+        VectorType y;
+    };
+
+    VectorType & s(std::size_t i) { return vecs_[i].s; }
+    VectorType & y(std::size_t i) { return vecs_[i].y; }
+
 public:
     lbfgs_implementation(lbfgs_tag const & tag, detail::optimization_context<BackendType> & context) : tag_(tag), context_(context), vecs_(tag.m){
         N_ = context_.dim();
 
         q_ = BackendType::create_vector(N_);
         r_ = BackendType::create_vector(N_);
+
+        for(unsigned int i = 0 ; i < tag_.m ; ++i){
+            vecs_[i].s = BackendType::create_vector(N_);
+            vecs_[i].y = BackendType::create_vector(N_);
+        }
     }
 
     void operator()(){
@@ -157,57 +189,76 @@ public:
         VectorType const & g=context_.g();
         VectorType const & gm1=context_.gm1();
         VectorType & p=context_.p();
-        unsigned int iter = context_.iter();
-        unsigned int m = tag_.m;
 
-        //Algorithm
-        for(unsigned int i = std::min(iter,m)-1 ; i > 0  ; --i){
-            vecs_[i] = vecs_[i-1];
-        }
-        vecs_[0].first = x - xm1;
-        vecs_[0].second = g - gm1;
+        unsigned int const & iter = context_.iter();
+        unsigned int const & m = tag_.m;
 
         std::vector<ScalarType> rhos(m);
         std::vector<ScalarType> alphas(m);
 
+        //Algorithm
 
-        int i = 0;
-        q_ = g;
-        for(; i < std::min(iter,m) ; ++i){
-            VectorType & s = vecs_[i].first;
-            VectorType & y = vecs_[i].second;
-            rhos[i] = 1.0d/BackendType::dot(y,s);
-            alphas[i] = rhos[i]*BackendType::dot(s,q_);
-            q_ -= alphas[i]*y;
+
+        //Updates storage
+        for(unsigned int i = std::min(iter,m)-1 ; i > 0  ; --i){
+            BackendType::copy(N_,s(i-1), s(i));
+            BackendType::copy(N_,y(i-1), y(i));
         }
-        VectorType & sk = vecs_[0].first;
-        VectorType & yk = vecs_[0].second;
-        ScalarType scale = BackendType::dot(sk,yk)/BackendType::dot(yk,yk);
-        r_ = scale*q_;
+
+        //s(0) = x - xm1;
+        BackendType::copy(N_,x,s(0));
+        BackendType::axpy(N_,-1,xm1,s(0));
+
+        //y(0) = g - gm1;
+        BackendType::copy(N_,g,y(0));
+        BackendType::axpy(N_,-1,gm1,y(0));
+
+
+        BackendType::copy(N_,g,q_);
+        int i = 0;
+        for(; i < std::min(iter,m) ; ++i){
+            rhos[i] = 1.0d/BackendType::dot(N_,y(i),s(i));
+            alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
+            //q_ = q - alphas[i]*y(i);
+            BackendType::axpy(N_,-alphas[i],y(i),q_);
+        }
+        ScalarType scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
+
+        //r_ = scale*q_;
+        BackendType::copy(N_,q_,r_);
+        BackendType::scale(N_,scale,r_);
+
         --i;
         for(; i >=0 ; --i){
-            VectorType & s = vecs_[i].first;
-            VectorType & y = vecs_[i].second;
-            ScalarType beta = rhos[i]*BackendType::dot(y,r_);
-            r_ += s*(alphas[i]-beta);
+            ScalarType beta = rhos[i]*BackendType::dot(N_,y(i),r_);
+            //r_ = r_ + (alphas[i]-beta)*s(i)
+            BackendType::axpy(N_,alphas[i]-beta,s(i),r_);
         }
-        p = -r_;
+
+        //p = -r_;
+        BackendType::copy(N_,r_,p);
+        BackendType::scale(N_,-1,p);
     }
 
     ~lbfgs_implementation(){
         BackendType::delete_if_dynamically_allocated(q_);
         BackendType::delete_if_dynamically_allocated(r_);
+
+        for(unsigned int i = 0 ; i < tag_.m ; ++i){
+            BackendType::delete_if_dynamically_allocated(s(i));
+            BackendType::delete_if_dynamically_allocated(y(i));
+        }
     }
 
 private:
     lbfgs_tag const & tag_;
 
-    unsigned int N_;
+    std::size_t N_;
 
     VectorType q_;
     VectorType r_;
 
-    std::vector<std::pair<VectorType, VectorType> > vecs_;
+    std::vector<storage_pair> vecs_;
     detail::optimization_context<BackendType> & context_;
 };
 
@@ -227,37 +278,46 @@ public:
     }
 
     void operator()(){
+      //Aliases initialization
       VectorType & x = context_.x();
       VectorType & xm1 = context_.xm1();
       VectorType & g = context_.g();
       VectorType & gm1 = context_.gm1();
       VectorType & p = context_.p();
 
-      //s = x - xm1
-      BackendType::copy(x,s_);
-      BackendType::axpy(-1,xm1,s_);
+      //Algorithm
 
-      //y = g - gm1
-      BackendType::copy(g,y_);
-      BackendType::axpy(-1,gm1,y_);
+      //s = x - xm1;
+      BackendType::copy(N_,x,s_);
+      BackendType::axpy(N_,-1,xm1,s_);
 
-      ScalarType ys = BackendType::dot(s_,y_);
+      //y = g - gm1;
+      BackendType::copy(N_,g,y_);
+      BackendType::axpy(N_,-1,gm1,y_);
+
+      ScalarType ys = BackendType::dot(N_,s_,y_);
       if(is_first_update_==true){
-        BackendType::set_to_identity(H_, N_);
+        BackendType::set_to_identity(N_,H_);
 
-        ScalarType yy = BackendType::dot(y_,y_);
+        ScalarType yy = BackendType::dot(N_,y_,y_);
         ScalarType scale = ys/yy;
-        BackendType::scale(scale,H_);
+        BackendType::scale(N_,N_,scale,H_);
         is_first_update_=false;
       }
 
-      BackendType::gemv(H_,y_,Hy_);
-      ScalarType yHy = BackendType::dot(y_,Hy_);
-      BackendType::syr2(-1/ys,s_,Hy_,H_);
-      BackendType::syr1(1/ys + yHy/pow(ys,2),s_,H_);
+      //Hy_ = H*y
+      BackendType::symv(N_,1,H_,y_,0,Hy_);
+      ScalarType yHy = BackendType::dot(N_,y_,Hy_);
 
-      BackendType::gemv(H_,g,p);
-      BackendType::scale(-1,p);
+      //H_ += (-1/ys)*(s_*Hy' + Hy*s_')
+      BackendType::syr2(N_,-1/ys,s_,Hy_,H_);
+
+      //H_ += (1/ys + yHy/pow(ys,2))*s_*s_'
+      BackendType::syr1(N_,1/ys + yHy/pow(ys,2),s_,H_);
+
+      //p = -H_*g
+      BackendType::symv(N_,1,H_,g,0,p);
+      BackendType::scale(N_,-1,p);
     }
 
     ~bfgs_implementation(){
@@ -271,7 +331,7 @@ public:
 private:
     detail::optimization_context<BackendType> & context_;
 
-    unsigned int N_;
+    std::size_t N_;
 
     VectorType Hy_;
     VectorType s_;
