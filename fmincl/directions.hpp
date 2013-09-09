@@ -275,10 +275,15 @@ class bfgs_implementation : public qn_update_implementation<BackendType>{
 public:
     bfgs_implementation(bfgs_tag const &, detail::optimization_context<BackendType> & context) : context_(context), is_first_update_(true){
         N_ = context_.dim();
-        Hy_ = BackendType::create_vector(N_); BackendType::set_to_value(Hy_,0,N_);
+        Hy_ = BackendType::create_vector(N_);
         s_ = BackendType::create_vector(N_);
         y_ = BackendType::create_vector(N_);
         H_ = BackendType::create_matrix(N_, N_);
+
+        BackendType::set_to_value(Hy_,0,N_);
+        BackendType::set_to_value(s_,0,N_);
+        BackendType::set_to_value(y_,0,N_);
+
     }
 
     void operator()(){
@@ -309,16 +314,14 @@ public:
       //Hy_ = H*y
       BackendType::symv(N_,1,H_,y_,0,Hy_);
       ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-
-      //H_ += (-1/ys)*(s_*Hy' + Hy*s_')
-      BackendType::syr2(N_,-1/ys,s_,Hy_,H_);
-
-      //H_ += (1/ys + yHy/pow(ys,2))*s_*s_'
-      BackendType::syr1(N_,1/ys + yHy/pow(ys,2),s_,H_);
+      ScalarType alpha = -1/ys;
+      ScalarType beta = 1/ys + yHy/pow(ys,2);
+      //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
+      BackendType::syr2(N_,alpha,s_,Hy_,H_);
+      BackendType::syr1(N_,beta,s_,H_);
 
       //p = -H_*g
-      BackendType::symv(N_,1,H_,g,0,p);
-      BackendType::scale(N_,-1,p);
+      BackendType::symv(N_,-1,H_,g,0,p);
     }
 
     ~bfgs_implementation(){
