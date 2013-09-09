@@ -51,8 +51,10 @@ namespace fmincl{
         { A+=alpha*x*x.transpose(); }
         static void syr2(std::size_t /*N*/, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)
         { A+=alpha*x*y.transpose() + alpha*y*x.transpose(); }
-        static void set_to_identity(std::size_t N, MatrixType & A)
-        { A = MatrixType::Identity(N, N); }
+        static void set_to_diagonal(std::size_t N, MatrixType & A, ScalarType lambda)
+        { A = lambda*MatrixType::Identity(N, N); }
+        static void set_to_value(VectorType & V, ScalarType val, std::size_t N)
+        { V = VectorType::Constant(N,val); }
     };
 
 

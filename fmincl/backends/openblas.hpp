@@ -55,10 +55,12 @@ namespace fmincl{
         { cblas_ssyr(CblasRowMajor,CblasUpper,N,alpha,x,1,A,N); }
         static void syr2(std::size_t N, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)
         { cblas_ssyr2(CblasRowMajor,CblasUpper,N,alpha,x,1,y,1,A,N); }
-        static void set_to_identity(std::size_t N, MatrixType & A) {
+        static void set_to_value(VectorType & V, ScalarType val, std::size_t N)
+        { std::memset(V, val, sizeof(ScalarType)*N); }
+        static void set_to_diagonal(std::size_t N, MatrixType & A, ScalarType lambda) {
             std::memset(A,0,N*N);
             for(std::size_t i = 0 ; i < N ; ++i){
-                A[i*N+i] = 1;
+                A[i*N+i] = lambda;
             }
         }
     };
@@ -97,10 +99,12 @@ namespace fmincl{
         { cblas_dsyr(CblasRowMajor,CblasUpper,N,alpha,x,1,A,N); }
         static void syr2(std::size_t N, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)
         { cblas_dsyr2(CblasRowMajor,CblasUpper,N,alpha,x,1,y,1,A,N); }
-        static void set_to_identity(std::size_t N, MatrixType & A) {
+        static void set_to_value(VectorType & V, ScalarType val, std::size_t N)
+        { std::memset(V, val, sizeof(ScalarType)*N); }
+        static void set_to_diagonal(std::size_t N, MatrixType & A, ScalarType lambda) {
             std::memset(A,0,N*N);
             for(std::size_t i = 0 ; i < N ; ++i){
-                A[i*N+i] = 1;
+                A[i*N+i] = lambda;
             }
         }
     };

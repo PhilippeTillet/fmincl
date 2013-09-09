@@ -275,7 +275,7 @@ class bfgs_implementation : public qn_update_implementation<BackendType>{
 public:
     bfgs_implementation(bfgs_tag const &, detail::optimization_context<BackendType> & context) : context_(context), is_first_update_(true){
         N_ = context_.dim();
-        Hy_ = BackendType::create_vector(N_);
+        Hy_ = BackendType::create_vector(N_); BackendType::set_to_value(Hy_,0,N_);
         s_ = BackendType::create_vector(N_);
         y_ = BackendType::create_vector(N_);
         H_ = BackendType::create_matrix(N_, N_);
@@ -301,11 +301,8 @@ public:
 
       ScalarType ys = BackendType::dot(N_,s_,y_);
       if(is_first_update_==true){
-        BackendType::set_to_identity(N_,H_);
-
         ScalarType yy = BackendType::dot(N_,y_,y_);
-        ScalarType scale = ys/yy;
-        BackendType::scale(N_,N_,scale,H_);
+        BackendType::set_to_diagonal(N_,H_,ys/yy);
         is_first_update_=false;
       }
 
