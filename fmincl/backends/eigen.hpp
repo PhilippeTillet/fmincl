@@ -19,7 +19,7 @@ namespace fmincl{
   namespace backend{
 
     template<class _ScalarType>
-    struct EigenTypes{
+    struct eigen_types{
         typedef _ScalarType ScalarType;
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> VectorType;
         typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixType;

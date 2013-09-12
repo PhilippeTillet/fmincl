@@ -42,17 +42,17 @@ int run_test_impl(std::size_t dimension, typename BackendType::ScalarType epsilo
     }
     std::cout << "* Testing BFGS..." << std::endl;
 
-    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton_tag(new fmincl::bfgs_tag())))
+    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton(new fmincl::bfgs())))
 
     std::cout << "* Testing L-BFGS [m=1] ..." << std::endl;
-    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag(1))))
+    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton(new fmincl::lbfgs(1))))
     std::cout << "* Testing L-BFGS [m=4] ..." << std::endl;
-    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag(4))))
+    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton(new fmincl::lbfgs(4))))
     std::cout << "* Testing L-BFGS [m=16] ..." << std::endl;
-    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag(16))))
+    TEST_OPTIONS(fmincl::optimization_options(new fmincl::quasi_newton(new fmincl::lbfgs(16))))
 
     std::cout << "* Testing Polak-Ribiere [No restart]..." << std::endl;
-    TEST_OPTIONS(fmincl::optimization_options(new fmincl::cg_tag(new fmincl::polak_ribiere_tag(), new fmincl::no_restart_tag())))
+    TEST_OPTIONS(fmincl::optimization_options(new fmincl::conjugate_gradient(new fmincl::polak_ribiere(), new fmincl::no_restart())))
 
     BackendType::delete_if_dynamically_allocated(X0);
     BackendType::delete_if_dynamically_allocated(S);

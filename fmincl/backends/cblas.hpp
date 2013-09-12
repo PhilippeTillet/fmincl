@@ -20,10 +20,10 @@ namespace fmincl{
   namespace backend{
 
     template<class _ScalarType>
-    struct OpenBlasTypes;
+    struct cblas_types;
 
     template<>
-    struct OpenBlasTypes<float>{
+    struct cblas_types<float>{
         typedef float ScalarType;
         typedef ScalarType* VectorType;
         typedef ScalarType* MatrixType;
@@ -67,7 +67,7 @@ namespace fmincl{
 
 
     template<>
-    struct OpenBlasTypes<double>{
+    struct cblas_types<double>{
         typedef double ScalarType;
         typedef ScalarType* VectorType;
         typedef ScalarType* MatrixType;

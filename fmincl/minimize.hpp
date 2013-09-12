@@ -15,21 +15,26 @@
 
 #include "fmincl/utils.hpp"
 
-#include "fmincl/directions.hpp"
-#include "fmincl/line_search.hpp"
-#include "fmincl/stopping_criterion.hpp"
+#include "fmincl/directions/conjugate_gradient.hpp"
+#include "fmincl/directions/quasi_newton.hpp"
+
+#include "fmincl/line_search/strong_wolfe_powell.hpp"
+
+#include "fmincl/stopping_criterion/value_treshold.hpp"
+#include "fmincl/stopping_criterion/gradient_treshold.hpp"
 
 
 namespace fmincl{
 
+
     void fill_default_direction_line_search(optimization_options const & options){
       if(options.direction==NULL)
-        options.direction = new quasi_newton_tag();
+        options.direction = new quasi_newton();
       if(options.line_search==NULL){
-        if(dynamic_cast<quasi_newton_tag*>(options.direction.get()))
-          options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.9);
+        if(dynamic_cast<quasi_newton*>(options.direction.get()))
+          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.9);
         else
-          options.line_search = new fmincl::strong_wolfe_powell_tag(1e-4,0.1);
+          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.1);
       }
     }
 
@@ -43,6 +48,10 @@ namespace fmincl{
 
     template<class BackendType, class Fun>
     void minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+        typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient> direction_mapping;
+        typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
+        typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
+
         typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
 
@@ -55,9 +64,11 @@ namespace fmincl{
           std::cout << options.info();
         }
 
-        tools::shared_ptr<direction_implementation<BackendType> > direction_impl(direction_mapping<BackendType>::type::create(*options.direction,context));
-        tools::shared_ptr<line_search_implementation<BackendType> > line_search_impl(line_search_mapping<BackendType>::type::create(*options.line_search,context));
-        tools::shared_ptr<stopping_criterion_implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping<BackendType>::type::create(*options.stopping_criterion,context));
+        tools::shared_ptr<direction::implementation<BackendType> > direction_impl(direction_mapping::create(*options.direction,context));
+        tools::shared_ptr<line_search::implementation<BackendType> > line_search_impl(line_search_mapping::create(*options.line_search,context));
+        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping::create(*options.stopping_criterion,context));
+
+
         for( ; context.iter() < options.max_iter ; ++context.iter()){
             print_context_infos(context,options);
             context.diff() = (context.val()-context.valm1());
@@ -69,6 +80,7 @@ namespace fmincl{
               BackendType::scale(N,-1,context.p());
 
               context.dphi_0() = BackendType::dot(N,context.p(),context.g());
+
             }
             else{
               //Update direction into context.p()
@@ -84,13 +96,14 @@ namespace fmincl{
               }
             }
 
+            //std::cout << context.p()[0] << " " << context.p()[1] << std::endl;
 
             double ai;
             if(context.iter()==0){
               ai = std::min(static_cast<ScalarType>(1.0),1/BackendType::asum(N,context.g()));
             }
             else{
-              if(dynamic_cast<quasi_newton_implementation<BackendType> const *>(direction_impl.get()))
+              if(dynamic_cast<quasi_newton::implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
                 ai = std::min(static_cast<ScalarType>(1),static_cast<ScalarType>(1.01*2)*context.diff()/context.dphi_0());
@@ -102,7 +115,8 @@ namespace fmincl{
             (*line_search_impl)(search_res, ai);
 
 
-            if(search_res.has_failed || search_res.best_phi>context.val()) break;
+            if(search_res.has_failed || search_res.best_phi>context.val())
+                break;
 
 
             BackendType::copy(N,context.x(),context.xm1());

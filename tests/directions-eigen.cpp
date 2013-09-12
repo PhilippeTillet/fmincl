@@ -24,14 +24,14 @@ int main(){
     std::cout << "====================" << std::endl;
     std::cout << "Float:" << std::endl;
     std::cout << "-------------------" << std::endl;
-    if(run_test<fmincl::backend::EigenTypes<float> >(epsilon_float)==EXIT_FAILURE)
+    if(run_test<fmincl::backend::eigen_types<float> >(epsilon_float)==EXIT_FAILURE)
         return EXIT_FAILURE;
 
     std::cout << std::endl;
     std::cout << "====================" << std::endl;
     std::cout << "Double" << std::endl;
     std::cout << "-------------------" << std::endl;
-    if(run_test<fmincl::backend::EigenTypes<double> >(epsilon_double)==EXIT_FAILURE)
+    if(run_test<fmincl::backend::eigen_types<double> >(epsilon_double)==EXIT_FAILURE)
         return EXIT_FAILURE;
 
     std::cout << std::endl;

@@ -13,37 +13,23 @@
 
 #include <typeinfo>
 
-#include "tools/typelist.hpp"
-
 namespace fmincl{
 
-template<class _Tag, class _Impl>
-struct impl_tag_mapping{
-    typedef _Impl Impl;
-    typedef _Tag Tag;
-};
-
-#define FMINCL_CREATE_MAPPING(name) impl_tag_mapping<name##_tag,name##_implementation<BackendType> >
-
-template<class Types, class BaseTagType, class BaseImplementationType>
-struct implementation_from_tag{
-private:
-    typedef typename Types::Head Head;
-    typedef typename Types::Tail Tail;
-public:
+template<class BackendType, class BaseType, class T1, class T2=void, class T3=void>
+struct implementation_of{
     template<class ContextType>
-    static BaseImplementationType * create(BaseTagType const & tag, ContextType & context){
-        if(typeid(tag)==typeid(typename Head::Tag))
-            return new typename Head::Impl(static_cast<typename Head::Tag const &>(tag),context);
+    static typename BaseType::template implementation<BackendType> * create(BaseType const & tag, ContextType & context){
+        if(typeid(tag)==typeid(T1))
+            return new typename T1::template implementation<BackendType>(static_cast<T1 const &>(tag),context);
         else
-            return implementation_from_tag<Tail, BaseTagType, BaseImplementationType>::create(tag,context);
+            return implementation_of<BackendType,BaseType,T2,T3>::create(tag,context);
     }
 };
 
-template<class BaseTagType,class BaseImplementationType>
-struct implementation_from_tag<NullType, BaseTagType, BaseImplementationType>{
+template<class BackendType, class BaseType>
+struct implementation_of<BackendType,BaseType,void>{
     template<class ContextType>
-    static BaseImplementationType * create(BaseTagType const & /*tag*/, ContextType & /*context*/){ return NULL; }
+    static typename BaseType::template implementation<BackendType> * create(BaseType const &, ContextType &){ return NULL; }
 };
 
 }

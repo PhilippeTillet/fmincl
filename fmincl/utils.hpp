@@ -107,21 +107,25 @@ namespace fmincl{
 
     namespace utils{
 
-    template<class FUN, class VectorType>
-    void check_grad(FUN const & fun, VectorType const & x0){
-        unsigned int dim = x0.size();
-        VectorType x(x0);
-        VectorType fgrad(dim);
-        VectorType numgrad(dim);
-        double eps = 1e-8;
+    template<class BackendType, class FUN>
+    void check_grad(FUN const & fun, typename BackendType::VectorType const & x0, std::size_t N){
+        typedef typename BackendType::VectorType VectorType;
+        VectorType x = BackendType::create_vector(N);
+        BackendType::copy(N,x0,x);
+        VectorType fgrad = BackendType::create_vector(N);
+        VectorType numgrad = BackendType::create_vector(N);
+        typename BackendType::ScalarType eps = 1e-8;
         fun(x,&fgrad);
-        for(unsigned int i=0 ; i < dim ; ++i){
-            double old = x(i);
-            x(i) = old-eps; double vleft = fun(x,NULL);
-            x(i) = old+eps; double vright = fun(x,NULL);
-            numgrad(i) = (vright-vleft)/(2*eps);
+        for(unsigned int i=0 ; i < N ; ++i){
+            double old = x[i];
+            x[i] = old-eps; double vleft = fun(x,NULL);
+            x[i] = old+eps; double vright = fun(x,NULL);
+            numgrad[i] = (vright-vleft)/(2*eps);
         }
-        std::cout << numgrad - fgrad << std::endl;
+        for(unsigned int i=0 ; i < N ; ++i){
+            std::cout << numgrad[i] - fgrad[i] << std::endl;
+
+        }
     }
 
     }
