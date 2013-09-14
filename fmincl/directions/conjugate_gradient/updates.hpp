@@ -16,22 +16,24 @@
 namespace fmincl{
 
 struct cg_update{
-    template<class BackendType>
-    struct implementation{
-        virtual typename BackendType::ScalarType operator()(void) = 0;
-        virtual ~implementation(){ }
-    };
     virtual ~cg_update(){ }
+
+    template<class BackendType>
+    struct implementation : public implementation_base<BackendType>{
+        implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
+        virtual typename BackendType::ScalarType operator()(void) = 0;
+    };
 };
 
 struct polak_ribiere : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
+        using implementation_base<BackendType>::context_;
+        using typename implementation_base<BackendType>::ScalarType;
+        using typename implementation_base<BackendType>::VectorType;
     public:
-        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : context_(context){
+        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context) {
             N_ = context_.dim();
             tmp_ = BackendType::create_vector(N_);
         }
@@ -50,7 +52,6 @@ struct polak_ribiere : public cg_update{
             BackendType::delete_if_dynamically_allocated(tmp_);
         }
     private:
-        detail::optimization_context<BackendType> & context_;
         std::size_t N_;
         VectorType tmp_;
     };

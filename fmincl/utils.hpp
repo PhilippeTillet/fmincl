@@ -105,6 +105,19 @@ namespace fmincl{
         };
     }
 
+    template<class BackendType>
+    struct implementation_base{
+    protected:
+        typedef typename BackendType::ScalarType ScalarType;
+        typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::MatrixType MatrixType;
+
+        implementation_base(detail::optimization_context<BackendType> & context) : context_(context){ }
+        virtual ~implementation_base(){ }
+    protected:
+        detail::optimization_context<BackendType> & context_;
+    };
+
     namespace utils{
 
     template<class BackendType, class FUN>

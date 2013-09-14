@@ -12,26 +12,30 @@
 #define FMINCL_DIRECTIONS_QUASI_NEWTON_UPDATE_HPP_
 
 #include "fmincl/mapping.hpp"
+#include "fmincl/utils.hpp"
 
 namespace fmincl{
 
 struct qn_update{
     template<class BackendType>
-    struct implementation{
+    struct implementation : public implementation_base<BackendType>{
+        implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
         virtual void operator()(void) = 0;
-        virtual ~implementation(){ }
     };
-
 
     virtual ~qn_update(){ }
 };
 
 struct lbfgs : public qn_update{
+    lbfgs(unsigned int _m = 4) : m(_m) { }
+    unsigned int m;
+
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
-        typedef typename BackendType::MatrixType MatrixType;
+        using implementation_base<BackendType>::context_;
+        using typename implementation_base<BackendType>::ScalarType;
+        using typename implementation_base<BackendType>::VectorType;
+        using typename implementation_base<BackendType>::MatrixType;
 
         struct storage_pair{
             VectorType s;
@@ -42,7 +46,7 @@ struct lbfgs : public qn_update{
         VectorType & y(std::size_t i) { return vecs_[i].y; }
 
     public:
-        implementation(lbfgs const & tag, detail::optimization_context<BackendType> & context) : tag_(tag), context_(context), vecs_(tag.m){
+        implementation(lbfgs const & tag, detail::optimization_context<BackendType> & context) : qn_update::implementation<BackendType>(context), tag_(tag), vecs_(tag.m){
             N_ = context_.dim();
 
             q_ = BackendType::create_vector(N_);
@@ -124,18 +128,11 @@ struct lbfgs : public qn_update{
 
     private:
         lbfgs const & tag_;
-        detail::optimization_context<BackendType> & context_;
-
         std::size_t N_;
-
         VectorType q_;
         VectorType r_;
-
         std::vector<storage_pair> vecs_;
     };
-
-    lbfgs(unsigned int _m = 4) : m(_m) { }
-    unsigned int m;
 };
 
 
@@ -143,11 +140,12 @@ struct lbfgs : public qn_update{
 struct bfgs : public qn_update{
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
-        typedef typename BackendType::MatrixType MatrixType;
+        using implementation_base<BackendType>::context_;
+        using typename implementation_base<BackendType>::ScalarType;
+        using typename implementation_base<BackendType>::VectorType;
+        using typename implementation_base<BackendType>::MatrixType;
     public:
-        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : context_(context), is_first_update_(true){
+        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : qn_update::implementation<BackendType>(context), is_first_update_(true){
             N_ = context_.dim();
             Hy_ = BackendType::create_vector(N_);
             s_ = BackendType::create_vector(N_);
@@ -161,9 +159,6 @@ struct bfgs : public qn_update{
         }
 
         void operator()(){
-          ScalarType eps1 = 0.05;
-          ScalarType eps2 = 2;
-
           //Aliases initialization
           VectorType & x = context_.x();
           VectorType & xm1 = context_.xm1();
@@ -229,8 +224,6 @@ struct bfgs : public qn_update{
         }
 
     private:
-        detail::optimization_context<BackendType> & context_;
-
         std::size_t N_;
 
         VectorType Hy_;
