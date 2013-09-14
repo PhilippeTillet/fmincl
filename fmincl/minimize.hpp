@@ -47,7 +47,7 @@ namespace fmincl{
 
 
     template<class BackendType, class Fun>
-    void minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+    typename BackendType::ScalarType minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient> direction_mapping;
         typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
         typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
@@ -131,12 +131,10 @@ namespace fmincl{
 
             if((*stopping_criterion__impl)())
               break;
-
-
-
         }
 
         BackendType::copy(N,context.x(),res);
+        return context.val();
     }
 
 }

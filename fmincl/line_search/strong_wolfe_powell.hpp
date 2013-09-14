@@ -133,7 +133,8 @@ namespace fmincl{
 
               //Tests curvature
               if(curvature(dphi_ai)){
-                res.has_failed = false; return;
+                res.has_failed = false;
+                return;
               }
               if(dphi_ai>=0){
                 return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, context_);
@@ -153,7 +154,6 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
-
             res.has_failed = true;
           }
         private:

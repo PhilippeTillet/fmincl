@@ -1,2 +1,2 @@
-add_executable(rosenbrock-cblas rosenbrock-cblas.cpp)
-target_link_libraries(rosenbrock-cblas openblas)
+add_executable(rosenbrock rosenbrock.cpp)
+target_link_libraries(rosenbrock openblas)

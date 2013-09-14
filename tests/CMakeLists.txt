@@ -1,6 +1,6 @@
-add_executable(directions-eigen-test directions-eigen.cpp)
-add_test(directions-eigen directions-eigen-test)
-
-add_executable(directions-cblas-test directions-cblas.cpp)
-add_test(directions-cblas directions-cblas-test)
-target_link_libraries(directions-cblas-test openblas)
+set(FUNCTIONS_PATH ${CMAKE_SOURCE_DIR}/common)
+foreach(F conjugate-gradients quasi-newton low-memory-quasi-newton)
+    add_executable(${F}-test ${F}.cpp)
+    target_link_libraries(${F}-test openblas)
+    add_test(${F} ${F}-test)
+endforeach(F)
