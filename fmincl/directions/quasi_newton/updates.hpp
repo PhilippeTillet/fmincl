@@ -159,36 +159,31 @@ struct bfgs : public qn_update{
         }
 
         void operator()(){
-          //Aliases initialization
-          VectorType & x = context_.x();
-          VectorType & xm1 = context_.xm1();
-          VectorType & g = context_.g();
-          VectorType & gm1 = context_.gm1();
-          VectorType & p = context_.p();
-
-          //Algorithm
-
           //s = x - xm1;
-          BackendType::copy(N_,x,s_);
-          BackendType::axpy(N_,-1,xm1,s_);
+          BackendType::copy(N_,context_.x(),s_);
+          BackendType::axpy(N_,-1,context_.xm1(),s_);
 
           //y = g - gm1;
-          BackendType::copy(N_,g,y_);
-          BackendType::axpy(N_,-1,gm1,y_);
+          BackendType::copy(N_,context_.g(),y_);
+          BackendType::axpy(N_,-1,context_.gm1(),y_);
 
           ScalarType ys = BackendType::dot(N_,s_,y_);
-          if(is_first_update_==true){
+
+          if(is_first_update_)
             BackendType::set_to_diagonal(N_,H_,1);
-            ScalarType yy = BackendType::dot(N_,y_,y_);
-            ScalarType gamma = ys/yy;
-            BackendType::scale(N_,N_,gamma,H_);
-            is_first_update_=false;
+
+          ScalarType gamma = 1;
+
+          //Update Scaling
+          if(is_first_update_){
+              BackendType::symv(N_,1,H_,y_,0,Hy_);
+              ScalarType yHy = BackendType::dot(N_,y_,Hy_);
+              gamma = ys/yHy;
           }
 
-          //Hy_ = H*y
+          BackendType::scale(N_,N_,gamma,H_);
           BackendType::symv(N_,1,H_,y_,0,Hy_);
           ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-
 
           //BFGS UPDATE
           //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
@@ -197,22 +192,10 @@ struct bfgs : public qn_update{
           BackendType::syr2(N_,alpha,s_,Hy_,H_);
           BackendType::syr1(N_,beta,s_,H_);
 
-          //SELF-SCALING BFGS UPDATE
-    //      //gamma = ys/yHy;
-    //      //v = sqrt(yHy)*(s/ys - Hy/yHy);
-    //      //H = gamma*(H - Hy*Hy'/yHy + v*v') + (s*s')/ys;
-    //      VectorType v = BackendType::create_vector(N_);
-    //      BackendType::set_to_value(v,0,N_);
-    //      BackendType::axpy(N_,std::sqrt(yHy)/ys,s_,v);
-    //      BackendType::axpy(N_,-std::sqrt(yHy)/yHy,Hy_,v);
-    //      BackendType::scale(N_,N_,gamma,H_);
-    //      BackendType::syr1(N_,-gamma/yHy,Hy_,H_);
-    //      BackendType::syr1(N_,gamma,v,H_);
-    //      BackendType::syr1(N_,1/ys,s_,H_);
-    //      BackendType::delete_if_dynamically_allocated(v);
-
           //p = -H_*g
-          BackendType::symv(N_,-1,H_,g,0,p);
+          BackendType::symv(N_,-1,H_,context_.g(),0,context_.p());
+
+          if(is_first_update_) is_first_update_=false;
         }
 
         ~implementation(){

@@ -41,7 +41,7 @@ int main(){
 
     fmincl::optimization_options options;
     //options.direction = new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag()); //You can select the number of storage pairs in the constructor of lbfgs_tag()
-    //options.direction = new fmincl::quasi_newton_tag(new fmincl::bfgs_tag()); //Uncomment for BFGS
+    options.direction = new fmincl::quasi_newton(new fmincl::bfgs()); //Uncomment for BFGS
     //options.direction = new fmincl::cg_tag(); //Uncomment for ConjugateGradient
     options.max_iter = 1000;
     options.verbosity_level=2;
