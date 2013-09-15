@@ -180,7 +180,7 @@ struct bfgs : public qn_update{
              if(ys/yHy>1)
                   gamma = ys/yHy;
               else if(sg/gHy<1)
-                  gamma = sg/gHy;
+                 gamma = sg/gHy;
               else
                   gamma = 1;
           }

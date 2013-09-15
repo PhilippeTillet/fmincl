@@ -65,19 +65,12 @@ struct fletcher_reeves : public cg_update{
     public:
         implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context.g()), gm1_(context.gm1()){
             N_ = context_.dim();
-            tmp_ = BackendType::create_vector(N_);
         }
-
-        ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
-
         double operator()(){
-            BackendType::copy(N_,g_, tmp_);
-            BackendType::axpy(N_,-1,gm1_,tmp_);
-            return -BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,context_.p(),tmp_);
+            return BackendType::dot(N_,g_,g_)/BackendType::dot(N_,gm1_,gm1_);
         }
     private:
         std::size_t N_;
-        VectorType tmp_;
         VectorType & g_;
         VectorType & gm1_;
     };

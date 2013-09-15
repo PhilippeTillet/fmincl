@@ -59,8 +59,11 @@ int test_function(std::string const & function_name, fmincl::optimization_option
         for(typename std::vector<double>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it)
             min_local_minima_diff = std::min(min_local_minima_diff,std::fabs(found_minimum - *it));
 
-        if(min_local_minima_diff<=epsilon)
+        if(min_local_minima_diff<=epsilon){
+#ifndef DISABLE_WARNING
             std::cout << "#Warning for " << function_name << " : Converge to local minimum!" << std::endl;
+#endif
+        }
         else{
             if(min_local_minima_diff<diff)
                 std::cout << "## Failure for " << function_name << " ! Closer to local minima ! Diff = " << min_local_minima_diff << std::endl; \
@@ -73,18 +76,20 @@ int test_function(std::string const & function_name, fmincl::optimization_option
     BackendType::delete_if_dynamically_allocated(S);
     return res;
 }
-template<class BackendType>
+template<class ScalarType>
 int test_option(std::string const & options_name, fmincl::direction * direction){
+    typedef fmincl::backend::cblas_types<ScalarType> BackendType;
     static const std::size_t max_iter = 2048;
-    static const unsigned int verbosity = 2;
-    optimization_options options(direction, new value_treshold(1e-6), max_iter, verbosity);
+    static const unsigned int verbosity = 0;
+    optimization_options options(direction, new gradient_treshold(), max_iter, verbosity);
     std::cout << "Testing " << options_name << "..." << std::endl;
     int res = EXIT_SUCCESS;
-//    res |= test_function<BackendType,beale<BackendType> >("Beale",options);
-//    res |= test_function<BackendType,rosenbrock<10,BackendType> >("Extended Rosenbrock",options);
-//    res |= test_function<BackendType,freudenstein_roth<BackendType> >("Freudenstein-Roth",options);
-    res |= test_function<BackendType,powell_badly_scaled<BackendType> >("Powell-Badly-Scaled",options);
-//    res |= test_function<BackendType,rosenbrock<2,BackendType> >("Rosenbrock",options);
+    res |= test_function<BackendType,beale<BackendType> >("Beale",options);
+    res |= test_function<BackendType,rosenbrock<4,BackendType> >("Extended Rosenbrock",options);
+    res |= test_function<BackendType,freudenstein_roth<BackendType> >("Freudenstein-Roth",options);
+    if(typeid(ScalarType)==typeid(double))
+        res |= test_function<BackendType,powell_badly_scaled<BackendType> >("Powell-Badly-Scaled",options);
+    res |= test_function<BackendType,rosenbrock<2,BackendType> >("Rosenbrock",options);
     return res;
 }
 

@@ -17,19 +17,15 @@ using namespace fmincl;
 
 int main(){
     srand(0);
-
-    typedef typename get_backend<float>::type backend_float;
-    typedef typename get_backend<double>::type backend_double;
-
     int result = EXIT_SUCCESS;
 
     std::cout << "Testing Float:" << std::endl;
-    result |= test_option<backend_float>("BFGS", new quasi_newton(new bfgs()));
+    result |= test_option<float>("BFGS", new quasi_newton(new bfgs()));
 
     std::cout << std::endl;
 
     std::cout << "Testing Double:" << std::endl;
-    result |= test_option<backend_double>("BFGS", new quasi_newton(new bfgs()));
+    result |= test_option<double>("BFGS", new quasi_newton(new bfgs()));
 
     return result;
 

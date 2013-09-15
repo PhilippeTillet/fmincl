@@ -32,7 +32,7 @@ namespace fmincl{
         options.direction = new quasi_newton();
       if(options.line_search==NULL){
         if(dynamic_cast<quasi_newton*>(options.direction.get()))
-          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.9);
+          options.line_search = new fmincl::strong_wolfe_powell(0,0.9);
         else
           options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.1);
       }
@@ -115,7 +115,7 @@ namespace fmincl{
             (*line_search_impl)(search_res, ai);
 
 
-            if(search_res.has_failed || search_res.best_phi>context.val()){
+            if(search_res.has_failed && search_res.best_phi>context.val()){
                 break;
             }
 
@@ -134,6 +134,7 @@ namespace fmincl{
               break;
             }
         }
+        print_context_infos(context,options);
 
         BackendType::copy(N,context.x(),res);
         return context.val();
