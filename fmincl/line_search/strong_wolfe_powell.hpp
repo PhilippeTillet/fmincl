@@ -28,42 +28,41 @@ namespace fmincl{
       template<class BackendType>
       class implementation : public line_search::implementation<BackendType>{
         private:
-          typedef typename line_search::implementation<BackendType>::ScalarType ScalarType;
           typedef typename line_search::implementation<BackendType>::VectorType VectorType;
           typedef typename line_search::implementation<BackendType>::MatrixType MatrixType;
 
-          ScalarType phi(int N, detail::function_wrapper<BackendType> const & fun, VectorType & x, VectorType const & x0, ScalarType alpha, VectorType const & p, VectorType & grad, ScalarType * dphi) const {
+          double phi(int N, detail::function_wrapper<BackendType> const & fun, VectorType & x, VectorType const & x0, double alpha, VectorType const & p, VectorType & grad, double * dphi) const {
 
             //x = x0 + alpha*p;
             BackendType::copy(N,x0,x);
             BackendType::axpy(N,alpha,p,x);
-            ScalarType res = fun(x,&grad);
+            double res = fun(x,&grad);
             if(dphi){
               *dphi = BackendType::dot(N,grad,p);
             }
             return res;
           }
 
-          bool sufficient_decrease(ScalarType ai, ScalarType phi_ai, detail::optimization_context<BackendType> & context) const {
+          bool sufficient_decrease(double ai, double phi_ai, detail::optimization_context<BackendType> & context) const {
             return phi_ai <= (context.val() + c1_*ai );
           }
-          bool curvature(ScalarType dphi_ai) const{
+          bool curvature(double dphi_ai) const{
             return std::abs(dphi_ai) <= c2_*std::abs(context_.dphi_0());
           }
 
-          void zoom(line_search_result<BackendType> & res, ScalarType alo, ScalarType phi_alo, ScalarType dphi_alo, ScalarType ahi, ScalarType phi_ahi, ScalarType dphi_ahi, detail::optimization_context<BackendType> & context) const{
+          void zoom(line_search_result<BackendType> & res, double alo, double phi_alo, double dphi_alo, double ahi, double phi_ahi, double dphi_ahi, detail::optimization_context<BackendType> & context) const{
             VectorType & current_x = res.best_x;
             VectorType & current_g = res.best_g;
-            ScalarType & current_phi = res.best_phi;
+            double & current_phi = res.best_phi;
             VectorType const & p = context.p();
 
-            ScalarType eps = 1e-4;
-            ScalarType aj = 0;
-            ScalarType dphi_aj = 0;
+            double eps = 1e-15;
+            double aj = 0;
+            double dphi_aj = 0;
 
             while(1){
-              ScalarType xmin = std::min(alo,ahi);
-              ScalarType xmax = std::max(alo,ahi);
+              double xmin = std::min(alo,ahi);
+              double xmax = std::max(alo,ahi);
               if(alo < ahi)
                 aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
               else
@@ -108,13 +107,13 @@ namespace fmincl{
               BackendType::delete_if_dynamically_allocated(x0_);
           }
 
-          void operator()(line_search_result<BackendType> & res, ScalarType ai) {
-            ScalarType aim1 = 0;
-            ScalarType last_phi = context_.val();
-            ScalarType dphi_aim1 = context_.dphi_0();
-            ScalarType dphi_ai;
+          void operator()(line_search_result<BackendType> & res, double ai) {
+            double aim1 = 0;
+            double last_phi = context_.val();
+            double dphi_aim1 = context_.dphi_0();
+            double dphi_ai;
 
-            ScalarType & current_phi = res.best_phi;
+            double & current_phi = res.best_phi;
             VectorType & current_x = res.best_x;
             VectorType & current_g = res.best_g;
             VectorType const & p = context_.p();
@@ -123,7 +122,7 @@ namespace fmincl{
             BackendType::copy(N_,context_.x(), x0_);
 
 
-            for(unsigned int i = 1 ; i<20; ++i){
+            for(unsigned int i = 1 ; i<10; ++i){
               current_phi = phi(N_,context_.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
 
               //Tests sufficient decrease
@@ -141,28 +140,28 @@ namespace fmincl{
               }
 
               //Updates context_s
-              ScalarType old_ai = ai;
-              ScalarType old_phi_ai = current_phi;
-              ScalarType old_dphi_ai = dphi_ai;
+              double old_ai = ai;
+              double old_phi_ai = current_phi;
+              double old_dphi_ai = dphi_ai;
 
               //Cubic extrapolation to chose a new value of ai
-              ScalarType xmin = ai + 0.01*(ai-aim1);
-              ScalarType xmax = 10*ai;
+              double xmin = ai + 0.01*(ai-aim1);
+              double xmax = 10*ai;
               ai = cubicmin(aim1,ai,last_phi,current_phi,dphi_aim1,dphi_ai,xmin,xmax);
 
               aim1 = old_ai;
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
-            res.has_failed = true;
+
           }
         private:
           detail::optimization_context<BackendType> & context_;
           int N_;
 
-          ScalarType c1_;
-          ScalarType c2_;
-          ScalarType rho_;
+          double c1_;
+          double c2_;
+          double rho_;
 
           VectorType x0_;
       };

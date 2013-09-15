@@ -26,7 +26,6 @@ namespace fmincl{
 struct conjugate_gradient : public direction{
     template<class BackendType>
     class implementation : public direction::implementation<BackendType>{
-        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
 
         typedef implementation_of<BackendType,cg_restart,no_restart,restart_on_dim> restart_mapping;
@@ -49,7 +48,7 @@ struct conjugate_gradient : public direction{
             BackendType::scale(N,-1,p);
           }
           else{
-            ScalarType beta = (*update_implementation_)();
+            double beta = (*update_implementation_)();
 
             //p = -g + beta*p;
             BackendType::scale(N,beta,p);

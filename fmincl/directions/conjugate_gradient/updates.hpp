@@ -23,7 +23,7 @@ struct cg_update{
     template<class BackendType>
     struct implementation : public implementation_base<BackendType>{
         implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
-        virtual typename BackendType::ScalarType operator()(void) = 0;
+        virtual double operator()(void) = 0;
     };
 };
 
@@ -32,7 +32,6 @@ struct polak_ribiere : public cg_update{
     struct implementation : public cg_update::implementation<BackendType>{
     private:
         using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::ScalarType;
         using typename implementation_base<BackendType>::VectorType;
     public:
         implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context_.g()), gm1_(context_.gm1()){
@@ -42,7 +41,7 @@ struct polak_ribiere : public cg_update{
 
         ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
 
-        ScalarType operator()(){
+        double operator()(){
             //tmp_ = g - gm1;
             BackendType::copy(N_,g_, tmp_);
             BackendType::axpy(N_,-1,gm1_,tmp_);
@@ -62,17 +61,23 @@ struct fletcher_reeves : public cg_update{
     struct implementation : public cg_update::implementation<BackendType>{
     private:
         using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::ScalarType;
         using typename implementation_base<BackendType>::VectorType;
     public:
         implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context.g()), gm1_(context.gm1()){
             N_ = context_.dim();
+            tmp_ = BackendType::create_vector(N_);
         }
-        ScalarType operator()(){
-            return BackendType::dot(N_,g_,g_)/BackendType::dot(N_,gm1_,gm1_);
+
+        ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
+
+        double operator()(){
+            BackendType::copy(N_,g_, tmp_);
+            BackendType::axpy(N_,-1,gm1_,tmp_);
+            return -BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,context_.p(),tmp_);
         }
     private:
         std::size_t N_;
+        VectorType tmp_;
         VectorType & g_;
         VectorType & gm1_;
     };

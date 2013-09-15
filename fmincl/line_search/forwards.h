@@ -42,7 +42,6 @@ namespace fmincl{
   struct line_search_result{
     private:
       typedef typename BackendType::VectorType VectorType;
-      typedef typename BackendType::ScalarType ScalarType;
 
       //NonCopyable, we do not want useless temporaries here
       line_search_result(line_search_result const &){ }
@@ -54,7 +53,7 @@ namespace fmincl{
           BackendType::delete_if_dynamically_allocated(best_g);
       }
       bool has_failed;
-      ScalarType best_phi;
+      double best_phi;
       VectorType best_x;
       VectorType best_g;
   };
@@ -63,11 +62,10 @@ namespace fmincl{
       template<class BackendType>
       struct implementation{
       protected:
-          typedef typename BackendType::ScalarType ScalarType;
           typedef typename BackendType::VectorType VectorType;
           typedef typename BackendType::MatrixType MatrixType;
       public:
-          virtual void operator()(line_search_result<BackendType> & res, ScalarType ai) = 0;
+          virtual void operator()(line_search_result<BackendType> & res, double ai) = 0;
           virtual ~implementation(){ }
       };
 

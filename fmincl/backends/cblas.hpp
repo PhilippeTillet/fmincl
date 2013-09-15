@@ -24,7 +24,9 @@ namespace fmincl{
 
     template<>
     struct cblas_types<float>{
+    private:
         typedef float ScalarType;
+    public:
         typedef ScalarType* VectorType;
         typedef ScalarType* MatrixType;
 
@@ -43,12 +45,12 @@ namespace fmincl{
         { cblas_sscal(N,alpha,x,1); }
         static void scale(std::size_t M, std::size_t N, ScalarType alpha, MatrixType & A)
         { cblas_sscal(M*N,alpha,A,1); }
-        static ScalarType asum(std::size_t N, VectorType const & x)
+        static double asum(std::size_t N, VectorType const & x)
         { return cblas_sasum(N,x,1);}
-        static ScalarType nrm2(std::size_t N, VectorType const & x)
+        static double nrm2(std::size_t N, VectorType const & x)
         { return cblas_snrm2(N,x,1); }
-        static ScalarType dot(std::size_t N, VectorType const & x, VectorType const & y)
-        { return cblas_sdot(N,x,1,y,1); }
+        static double dot(std::size_t N, VectorType const & x, VectorType const & y)
+        { return cblas_dsdot(N,x,1,y,1); }
         static void symv(std::size_t N, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
         { cblas_ssymv(CblasRowMajor,CblasUpper,N,alpha,A,N,x,1,beta,y,1);  }
         static void syr1(std::size_t N, ScalarType const & alpha, VectorType const & x, MatrixType & A)

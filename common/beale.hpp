@@ -7,19 +7,18 @@
 template<class BackendType>
 class beale{
     typedef typename BackendType::VectorType VectorType;
-    typedef typename BackendType::ScalarType ScalarType;
 public:
     static const std::size_t N = 2;
 
-    static ScalarType true_minimum_value() { return 0; }
+    static double true_minimum_value() { return 0; }
 
-    static void local_minima_value(std::vector<ScalarType> &) { }
+    static void local_minima_value(std::vector<double> &) { }
 
     static void init(VectorType & X){ X[0] = 1; X[1] = 1; }
 
-    ScalarType operator()(VectorType const & V, VectorType * grad) const {
-        ScalarType x=V[0], y=V[1];
-        ScalarType res = std::pow(1.5   -x+x*y,2)
+    double operator()(VectorType const & V, VectorType * grad) const {
+        double x=V[0], y=V[1];
+        double res = std::pow(1.5   -x+x*y,2)
                         +std::pow(2.25  -x+x*y*y,2)
                         +std::pow(2.625 -x+x*y*y*y,2);
         if(grad){

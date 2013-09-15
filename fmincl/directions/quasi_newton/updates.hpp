@@ -33,7 +33,6 @@ struct lbfgs : public qn_update{
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
         using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::ScalarType;
         using typename implementation_base<BackendType>::VectorType;
         using typename implementation_base<BackendType>::MatrixType;
 
@@ -69,8 +68,8 @@ struct lbfgs : public qn_update{
             unsigned int const & iter = context_.iter();
             unsigned int const & m = tag_.m;
 
-            std::vector<ScalarType> rhos(m);
-            std::vector<ScalarType> alphas(m);
+            std::vector<double> rhos(m);
+            std::vector<double> alphas(m);
 
             //Algorithm
 
@@ -93,12 +92,12 @@ struct lbfgs : public qn_update{
             BackendType::copy(N_,g,q_);
             int i = 0;
             for(; i < (int)std::min(iter,m) ; ++i){
-                rhos[i] = static_cast<ScalarType>(1)/BackendType::dot(N_,y(i),s(i));
+                rhos[i] = static_cast<double>(1)/BackendType::dot(N_,y(i),s(i));
                 alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
                 //q_ = q - alphas[i]*y(i);
                 BackendType::axpy(N_,-alphas[i],y(i),q_);
             }
-            ScalarType scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
+            double scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
 
             //r_ = scale*q_;
             BackendType::copy(N_,q_,r_);
@@ -106,7 +105,7 @@ struct lbfgs : public qn_update{
 
             --i;
             for(; i >=0 ; --i){
-                ScalarType beta = rhos[i]*BackendType::dot(N_,y(i),r_);
+                double beta = rhos[i]*BackendType::dot(N_,y(i),r_);
                 //r_ = r_ + (alphas[i]-beta)*s(i)
                 BackendType::axpy(N_,alphas[i]-beta,s(i),r_);
             }
@@ -141,7 +140,6 @@ struct bfgs : public qn_update{
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
         using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::ScalarType;
         using typename implementation_base<BackendType>::VectorType;
         using typename implementation_base<BackendType>::MatrixType;
     public:
@@ -167,18 +165,18 @@ struct bfgs : public qn_update{
           BackendType::copy(N_,context_.g(),y_);
           BackendType::axpy(N_,-1,context_.gm1(),y_);
 
-          ScalarType ys = BackendType::dot(N_,s_,y_);
+          double ys = BackendType::dot(N_,s_,y_);
 
           if(is_first_update_)
             BackendType::set_to_diagonal(N_,H_,1);
 
-          ScalarType gamma = 1;
+          double gamma = 1;
 
           {
               BackendType::symv(N_,1,H_,y_,0,Hy_);
-              ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-              ScalarType sg = BackendType::dot(N_,s_,context_.gm1());
-              ScalarType gHy = BackendType::dot(N_,context_.gm1(),Hy_);
+              double yHy = BackendType::dot(N_,y_,Hy_);
+              double sg = BackendType::dot(N_,s_,context_.gm1());
+              double gHy = BackendType::dot(N_,context_.gm1(),Hy_);
              if(ys/yHy>1)
                   gamma = ys/yHy;
               else if(sg/gHy<1)
@@ -189,12 +187,12 @@ struct bfgs : public qn_update{
 
           BackendType::scale(N_,N_,gamma,H_);
           BackendType::symv(N_,1,H_,y_,0,Hy_);
-          ScalarType yHy = BackendType::dot(N_,y_,Hy_);
+          double yHy = BackendType::dot(N_,y_,Hy_);
 
           //BFGS UPDATE
           //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
-          ScalarType alpha = -1/ys;
-          ScalarType beta = 1/ys + yHy/pow(ys,2);
+          double alpha = -1/ys;
+          double beta = 1/ys + yHy/pow(ys,2);
           BackendType::syr2(N_,alpha,s_,Hy_,H_);
           BackendType::syr1(N_,beta,s_,H_);
 

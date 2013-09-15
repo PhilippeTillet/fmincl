@@ -22,27 +22,19 @@ int main(){
 
     int result = EXIT_SUCCESS;
 
-//    std::cout << "[Polak-Ribière]:" << std::endl;
-//    std::cout << " No Restart / Float:" << std::endl;
-//    result |= test_option<backend_float>("Conjugate Gradient [Polak-Ribière - No Restart]", optimization_options(new conjugate_gradient(new polak_ribiere(), new no_restart())));
-//    std::cout << "No Restart / Double:" << std::endl;
-//    result |= test_option<backend_double>("Conjugate Gradient [Polak-Ribière - No Restart]", optimization_options(new conjugate_gradient(new polak_ribiere(), new no_restart())));
-//    std::cout << " Restart K=D / Float:" << std::endl;
-//    result |= test_option<backend_float>("Conjugate Gradient [Polak-Ribière - Restart K=D]", optimization_options(new conjugate_gradient(new polak_ribiere(), new restart_on_dim())));
-//    std::cout << " Restart K=D / Double:" << std::endl;
-//    result |= test_option<backend_double>("Conjugate Gradient [Polak-Ribière - Restart K=D]", optimization_options(new conjugate_gradient(new polak_ribiere(), new restart_on_dim())));
+    std::cout << "[Polak-Ribière]:" << std::endl;
+    result |= test_option<backend_float>("Conjugate Gradient [Float - Polak-Ribière - No Restart]", new conjugate_gradient(new polak_ribiere(), new no_restart()));
+//    result |= test_option<backend_double>("Conjugate Gradient [Double - Polak-Ribière - No Restart]", new conjugate_gradient(new polak_ribiere(), new no_restart()));
+//    result |= test_option<backend_float>("Conjugate Gradient [Float - Polak-Ribière - Restart K=D]", new conjugate_gradient(new polak_ribiere(), new restart_on_dim()));
+//    result |= test_option<backend_double>("Conjugate Gradient [Double - Polak-Ribière - Restart K=D]", new conjugate_gradient(new polak_ribiere(), new restart_on_dim()));
 
-    std::cout << "---------------" << std::endl;
+//    std::cout << "---------------"<< std::endl;
 
-    std::cout << "[Fletcher-Reeves]:" << std::endl;
-    std::cout << " No Restart / Float:" << std::endl;
-    result |= test_option<backend_float>("Conjugate Gradient [Fletcher-Reeves - No Restart]", optimization_options(new conjugate_gradient(new fletcher_reeves(), new no_restart())));
-//    std::cout << "No Restart / Double:" << std::endl;
-//    result |= test_option<backend_double>("Conjugate Gradient [Fletcher-Reeves - No Restart]", optimization_options(new conjugate_gradient(new fletcher_reeves(), new no_restart())));
-//    std::cout << " Restart K=D / Float:" << std::endl;
-//    result |= test_option<backend_float>("Conjugate Gradient [Fletcher-Reeves - Restart K=D]", optimization_options(new conjugate_gradient(new fletcher_reeves(), new restart_on_dim())));
-//    std::cout << " Restart K=D / Double:" << std::endl;
-//    result |= test_option<backend_double>("Conjugate Gradient [Fletcher-Reeves - Restart K=D]", optimization_options(new conjugate_gradient(new fletcher_reeves(), new restart_on_dim())));
+//    std::cout << "[Fletcher-Reeves]:"<< std::endl;
+//    result |= test_option<backend_float>("Conjugate Gradient [Float - Fletcher-Reeves - No Restart]", new conjugate_gradient(new fletcher_reeves(), new no_restart()));
+//    result |= test_option<backend_double>("Conjugate Gradient [Double - Fletcher-Reeves - No Restart]", new conjugate_gradient(new fletcher_reeves(), new no_restart()));
+//    result |= test_option<backend_float>("Conjugate Gradient [Float - Fletcher-Reeves - Restart K=D]", new conjugate_gradient(new fletcher_reeves(), new restart_on_dim()));
+//    result |= test_option<backend_double>("Conjugate Gradient [Double - Fletcher-Reeves - Restart K=D]", new conjugate_gradient(new fletcher_reeves(), new restart_on_dim()));
 
     return result;
 

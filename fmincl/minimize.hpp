@@ -47,12 +47,11 @@ namespace fmincl{
 
 
     template<class BackendType, class Fun>
-    typename BackendType::ScalarType minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+    double minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient> direction_mapping;
         typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
         typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
 
-        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
 
         fill_default_direction_line_search(options);
@@ -101,13 +100,13 @@ namespace fmincl{
 
             double ai;
             if(context.iter()==0){
-              ai = std::min(static_cast<ScalarType>(1.0),1/BackendType::asum(N,context.g()));
+              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,context.g()));
             }
             else{
               if(dynamic_cast<quasi_newton::implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
-                ai = std::min(static_cast<ScalarType>(1),static_cast<ScalarType>(1.01*2)*context.diff()/context.dphi_0());
+                ai = std::min(static_cast<double>(1),static_cast<double>(1.01*2)*context.diff()/context.dphi_0());
             }
 
 

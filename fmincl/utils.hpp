@@ -21,9 +21,8 @@ namespace fmincl{
         class function_wrapper{
         public:
             typedef typename BackendType::VectorType VectorType;
-            typedef typename BackendType::ScalarType ScalarType;
             function_wrapper() : n_value_calc_(0), n_derivative_calc_(0){ }
-            virtual ScalarType operator()(VectorType const & x, VectorType * grad) const = 0;
+            virtual double operator()(VectorType const & x, VectorType * grad) const = 0;
             unsigned int n_value_calc() const { return n_value_calc_; }
             unsigned int n_derivative_calc() const { return n_derivative_calc_; }
         protected:
@@ -34,10 +33,9 @@ namespace fmincl{
         template<class BackendType, class Fun>
         class function_wrapper_impl : public function_wrapper<BackendType>{
             typedef typename BackendType::VectorType VectorType;
-            typedef typename BackendType::ScalarType ScalarType;
         public:
             function_wrapper_impl(Fun const & fun) : fun_(fun){ }
-            ScalarType operator()(VectorType const & x, VectorType * grad) const {
+            double operator()(VectorType const & x, VectorType * grad) const {
                 ++function_wrapper<BackendType>::n_value_calc_;
                 if(grad) ++function_wrapper<BackendType>::n_derivative_calc_;
                 return fun_(x, grad);
@@ -52,7 +50,6 @@ namespace fmincl{
             optimization_context(optimization_context const & other);
             optimization_context& operator=(optimization_context const & other);
         public:
-            typedef typename BackendType::ScalarType ScalarType;
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::MatrixType MatrixType;
 
@@ -74,10 +71,10 @@ namespace fmincl{
             VectorType & xm1() { return xm1_; }
             VectorType & gm1() { return gm1_; }
             VectorType & p() { return p_; }
-            ScalarType & val() { return valk_; }
-            ScalarType & valm1() { return valkm1_; }
-            ScalarType & diff() { return diff_; }
-            ScalarType & dphi_0() { return dphi_0_; }
+            double & val() { return valk_; }
+            double & valm1() { return valkm1_; }
+            double & diff() { return diff_; }
+            double & dphi_0() { return dphi_0_; }
 
             ~optimization_context(){
                 BackendType::delete_if_dynamically_allocated(x_);
@@ -98,17 +95,16 @@ namespace fmincl{
             VectorType xm1_;
             VectorType gm1_;
 
-            ScalarType valk_;
-            ScalarType valkm1_;
-            ScalarType diff_;
-            ScalarType dphi_0_;
+            double valk_;
+            double valkm1_;
+            double diff_;
+            double dphi_0_;
         };
     }
 
     template<class BackendType>
     struct implementation_base{
     protected:
-        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
 

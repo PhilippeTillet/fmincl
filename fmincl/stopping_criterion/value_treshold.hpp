@@ -26,7 +26,7 @@ struct value_treshold : public stopping_criterion{
     struct implementation : public stopping_criterion::implementation<BackendType>{
         implementation(value_treshold const & _tag, detail::optimization_context<BackendType> & context) : context_(context), tag(_tag){ }
         bool operator()(){
-            return std::fabs(context_.val() - context_.valm1()) < static_cast<typename BackendType::ScalarType>(tag.tolerance);
+            return std::fabs(context_.val() - context_.valm1()) < tag.tolerance;
         }
     private:
         detail::optimization_context<BackendType> & context_;

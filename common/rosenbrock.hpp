@@ -7,13 +7,12 @@
 template<std::size_t _N, class BackendType>
 class rosenbrock{
     typedef typename BackendType::VectorType VectorType;
-    typedef typename BackendType::ScalarType ScalarType;
 public:
     static const std::size_t N = _N;
 
-    static ScalarType true_minimum_value() { return 0; }
+    static double true_minimum_value() { return 0; }
 
-    static void local_minima_value(std::vector<ScalarType> &) {  }
+    static void local_minima_value(std::vector<double> &) {  }
 
     static void init(VectorType & X){
         for(unsigned int i = 0 ; i < N ; i+=2){
@@ -22,8 +21,8 @@ public:
         }
     }
 
-    ScalarType operator()(VectorType const & x, VectorType * grad) const {
-        ScalarType res=0;
+    double operator()(VectorType const & x, VectorType * grad) const {
+        double res=0;
         for(unsigned int i=0 ; i<N-1;++i){
             res = res + 100*(pow(x[i+1] - x[i]*x[i],2)) + pow(1 - x[i],2);
         }
