@@ -26,6 +26,8 @@ int main(){
     std::cout << "Testing Float:" << std::endl;
     result |= test_option<backend_float>("BFGS", optimization_options(new quasi_newton(new bfgs())));
 
+    std::cout << std::endl;
+
     std::cout << "Testing Double:" << std::endl;
     result |= test_option<backend_double>("BFGS", optimization_options(new quasi_newton(new bfgs())));
 

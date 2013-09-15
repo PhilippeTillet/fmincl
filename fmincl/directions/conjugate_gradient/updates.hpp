@@ -13,6 +13,8 @@
 
 #include "fmincl/utils.hpp"
 
+#include <cmath>
+
 namespace fmincl{
 
 struct cg_update{
@@ -33,29 +35,49 @@ struct polak_ribiere : public cg_update{
         using typename implementation_base<BackendType>::ScalarType;
         using typename implementation_base<BackendType>::VectorType;
     public:
-        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context) {
+        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context_.g()), gm1_(context_.gm1()){
             N_ = context_.dim();
             tmp_ = BackendType::create_vector(N_);
         }
 
+        ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
+
         ScalarType operator()(){
-            VectorType & g = context_.g();
-            VectorType & gm1 = context_.gm1();
-
             //tmp_ = g - gm1;
-            BackendType::copy(N_,g, tmp_);
-            BackendType::axpy(N_,-1,gm1,tmp_);
-            return BackendType::dot(N_,g,tmp_)/BackendType::dot(N_,gm1,gm1);
-        }
-
-        ~implementation(){
-            BackendType::delete_if_dynamically_allocated(tmp_);
+            BackendType::copy(N_,g_, tmp_);
+            BackendType::axpy(N_,-1,gm1_,tmp_);
+            return BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,gm1_,gm1_);
         }
     private:
         std::size_t N_;
+        VectorType & g_;
+        VectorType & gm1_;
         VectorType tmp_;
     };
 };
+
+
+struct fletcher_reeves : public cg_update{
+    template<class BackendType>
+    struct implementation : public cg_update::implementation<BackendType>{
+    private:
+        using implementation_base<BackendType>::context_;
+        using typename implementation_base<BackendType>::ScalarType;
+        using typename implementation_base<BackendType>::VectorType;
+    public:
+        implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context.g()), gm1_(context.gm1()){
+            N_ = context_.dim();
+        }
+        ScalarType operator()(){
+            return BackendType::dot(N_,g_,g_)/BackendType::dot(N_,gm1_,gm1_);
+        }
+    private:
+        std::size_t N_;
+        VectorType & g_;
+        VectorType & gm1_;
+    };
+};
+
 
 
 }

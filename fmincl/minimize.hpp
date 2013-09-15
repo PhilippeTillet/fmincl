@@ -89,6 +89,7 @@ namespace fmincl{
               //Checks whether the direction is a descent direction or not
               context.dphi_0() = BackendType::dot(N,context.p(),context.g());
               if(context.dphi_0()>0){
+                  //Reset p = -g;
                   BackendType::copy(N,context.g(),context.p());
                   BackendType::scale(N,-1,context.p());
 
@@ -115,8 +116,9 @@ namespace fmincl{
             (*line_search_impl)(search_res, ai);
 
 
-            if(search_res.has_failed || search_res.best_phi>context.val())
+            if(search_res.has_failed || search_res.best_phi>context.val()){
                 break;
+            }
 
 
             BackendType::copy(N,context.x(),context.xm1());
@@ -129,8 +131,9 @@ namespace fmincl{
             context.val() = search_res.best_phi;
 
 
-            if((*stopping_criterion__impl)())
+            if((*stopping_criterion__impl)()){
               break;
+            }
         }
 
         BackendType::copy(N,context.x(),res);

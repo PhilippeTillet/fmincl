@@ -24,7 +24,7 @@ void print_vector(ScalarType * x, std::size_t N){
 
 int main(){
     srand(0);
-    static const std::size_t N = rosenbrock<fmincl::backend::cblas_types<ScalarType> >::N;
+    static const std::size_t N = rosenbrock<2,fmincl::backend::cblas_types<ScalarType> >::N;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
@@ -46,7 +46,7 @@ int main(){
     options.max_iter = 1000;
     options.verbosity_level=2;
     options.stopping_criterion = new fmincl::gradient_treshold(1e-4); //Stops when the gradient is below 1e-4
-    fmincl::minimize<fmincl::backend::cblas_types<ScalarType> >(S,rosenbrock<fmincl::backend::cblas_types<ScalarType> >(),X0,N,options);
+    fmincl::minimize<fmincl::backend::cblas_types<ScalarType> >(S,rosenbrock<2,fmincl::backend::cblas_types<ScalarType> >(),X0,N,options);
     std::cout << "--------------" << std::endl;
     std::cout << "Solution : " << std::endl;
     print_vector(S,N);

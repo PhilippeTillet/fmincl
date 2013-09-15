@@ -29,8 +29,8 @@ struct conjugate_gradient : public direction{
         typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
 
-        typedef implementation_of<BackendType,cg_restart,no_restart> restart_mapping;
-        typedef implementation_of<BackendType,cg_update,polak_ribiere> update_mapping;
+        typedef implementation_of<BackendType,cg_restart,no_restart,restart_on_dim> restart_mapping;
+        typedef implementation_of<BackendType,cg_update,polak_ribiere,fletcher_reeves> update_mapping;
 
 
     public:

@@ -18,6 +18,7 @@
 
 #include "fmincl/directions/forwards.h"
 #include "fmincl/directions/quasi_newton.hpp"
+#include "fmincl/directions/conjugate_gradient.hpp"
 
 #include "fmincl/line_search/forwards.h"
 
@@ -27,7 +28,7 @@
 namespace fmincl{
 
   struct optimization_options{
-      optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){ }
+      optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 2) : direction(_direction), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){ }
       std::string info() const{
         std::ostringstream oss;
         oss << "Verbosity Level : " << verbosity_level << std::endl;

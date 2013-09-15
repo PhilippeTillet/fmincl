@@ -20,7 +20,7 @@
 namespace fmincl{
 
 struct gradient_treshold : public stopping_criterion{
-    gradient_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
+    gradient_treshold(double _tolerance = 1e-6) : tolerance(_tolerance){ }
     double tolerance;
 
     template<class BackendType>

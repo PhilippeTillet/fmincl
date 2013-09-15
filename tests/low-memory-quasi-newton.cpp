@@ -28,6 +28,8 @@ int main(){
     result |= test_option<backend_float>("LBFGS [M=8]", optimization_options(new quasi_newton(new lbfgs(8))));
     result |= test_option<backend_float>("LBFGS [M=32]", optimization_options(new quasi_newton(new lbfgs(32))));
 
+    std::cout << std::endl;
+
     std::cout << "Testing Double:" << std::endl;
     result |= test_option<backend_double>("LBFGS [M=1]", optimization_options(new quasi_newton(new lbfgs(1))));
     result |= test_option<backend_double>("LBFGS [M=2]", optimization_options(new quasi_newton(new lbfgs(2))));

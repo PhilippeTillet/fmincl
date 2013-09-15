@@ -69,7 +69,7 @@ namespace fmincl{
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if( (aj - xmin)<eps || (xmax - aj) < eps){
-                res.has_failed = true;
+                res.has_failed = false;
                 return;
               }
               aj = std::min(std::max(aj,xmin+0.1f*(xmax-xmin)),xmax-0.1f*(xmax-xmin));

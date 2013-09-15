@@ -174,18 +174,12 @@ struct bfgs : public qn_update{
 
           ScalarType gamma = 1;
 
-          //Update Scaling
-//          if(is_first_update_){
-//              BackendType::symv(N_,1,H_,y_,0,Hy_);
-//              ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-//              gamma = ys/yHy;
-//          }
           {
               BackendType::symv(N_,1,H_,y_,0,Hy_);
               ScalarType yHy = BackendType::dot(N_,y_,Hy_);
               ScalarType sg = BackendType::dot(N_,s_,context_.gm1());
               ScalarType gHy = BackendType::dot(N_,context_.gm1(),Hy_);
-              if(ys/yHy>1)
+             if(ys/yHy>1)
                   gamma = ys/yHy;
               else if(sg/gHy<1)
                   gamma = sg/gHy;

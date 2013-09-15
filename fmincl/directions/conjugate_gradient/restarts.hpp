@@ -32,6 +32,14 @@ struct no_restart : public cg_restart{
     };
 };
 
+struct restart_on_dim : public cg_restart{
+    template<class BackendType>
+    struct implementation : public cg_restart::implementation<BackendType>{
+        using implementation_base<BackendType>::context_;
+        implementation(restart_on_dim const & /*tag*/, detail::optimization_context<BackendType> & context) : cg_restart::implementation<BackendType>(context){ }
+        bool operator()() { return context_.iter()==context_.dim(); }
+    };
+};
 
 }
 

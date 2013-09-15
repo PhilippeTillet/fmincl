@@ -2,6 +2,7 @@
 #define FMINCL_BEALE_HPP_
 
 #include <cmath>
+#include <vector>
 
 template<class BackendType>
 class beale{
@@ -11,6 +12,10 @@ public:
     static const std::size_t N = 2;
 
     static ScalarType true_minimum_value() { return 0; }
+
+    static void local_minima_value(std::vector<ScalarType> &) { }
+
+    static void init(VectorType & X){ X[0] = 1; X[1] = 1; }
 
     ScalarType operator()(VectorType const & V, VectorType * grad) const {
         ScalarType x=V[0], y=V[1];
