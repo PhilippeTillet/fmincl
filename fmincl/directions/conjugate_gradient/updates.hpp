@@ -77,6 +77,22 @@ struct fletcher_reeves : public cg_update{
 };
 
 
+struct gilbert_nocedal : public cg_update{
+    template<class BackendType>
+    struct implementation : public cg_update::implementation<BackendType>{
+    private:
+        using implementation_base<BackendType>::context_;
+        using typename implementation_base<BackendType>::VectorType;
+    public:
+        implementation(gilbert_nocedal const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context){ }
+        double operator()(){
+            double betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context_)();
+            double betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context_)();
+            return std::min(betaPR,betaFR);
+        }
+    };
+};
+
 
 }
 
