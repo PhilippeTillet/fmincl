@@ -58,8 +58,8 @@ namespace fmincl{
             double eps = 1e-10;
             double aj = 0;
             double dphi_aj = 0;
-
-            for(unsigned int i = 0 ; i < 20 ; ++i){
+            bool twice_close_to_boundary=false;
+            for(unsigned int i = 0 ; i < 10 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
               if((xmax - xmin) < eps){
@@ -70,8 +70,21 @@ namespace fmincl{
                 aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
-              if(std::abs(aj-xmin) < 1e-4 || std::abs(aj-xmax) < 1e-4)
-                  aj=(xmin+xmax)/2;
+              if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
+                  if(twice_close_to_boundary){
+                      if(std::abs(aj - xmax) < std::abs(aj - xmin))
+                          aj = xmax - 0.1*(xmax-xmin);
+                      else
+                          aj = xmin + 0.1*(xmax-xmin);
+                      twice_close_to_boundary = false;
+                  }
+                  else{
+                      twice_close_to_boundary = true;
+                  }
+              }
+              else{
+                  twice_close_to_boundary = false;
+              }
               current_phi = phi(N_, context.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
               if(!sufficient_decrease(aj,current_phi, context) || current_phi >= phi_alo){
                 ahi = aj;
