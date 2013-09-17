@@ -55,7 +55,7 @@ namespace fmincl{
             VectorType & current_g = res.best_g;
             double & current_phi = res.best_phi;
             VectorType const & p = context.p();
-
+            double eps = 1e-6;
             double aj = 0;
             double dphi_aj = 0;
 
@@ -70,6 +70,10 @@ namespace fmincl{
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
                   if(twice_close_to_boundary){
+                      if( std::min(aj - xmin,xmax - aj) < eps){
+                          res.has_failed=true;
+                          return;
+                      }
                       if(std::abs(aj - xmax) < std::abs(aj - xmin))
                           aj = xmax - 0.1*(xmax-xmin);
                       else
