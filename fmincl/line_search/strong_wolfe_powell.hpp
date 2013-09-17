@@ -55,7 +55,6 @@ namespace fmincl{
             VectorType & current_g = res.best_g;
             double & current_phi = res.best_phi;
             VectorType const & p = context.p();
-            double eps = 1e-6;
             double aj = 0;
             double dphi_aj = 0;
 
@@ -70,10 +69,6 @@ namespace fmincl{
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
                   if(twice_close_to_boundary){
-                      if( std::min(aj - xmin,xmax - aj) < eps){
-                          res.has_failed=true;
-                          return;
-                      }
                       if(std::abs(aj - xmax) < std::abs(aj - xmin))
                           aj = xmax - 0.1*(xmax-xmin);
                       else
@@ -142,7 +137,7 @@ namespace fmincl{
               current_phi = phi(N_,context_.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
 
               //Tests sufficient decrease
-              if(!sufficient_decrease(ai, current_phi, context_) || (i>1 && current_phi >= last_phi)){
+              if(!sufficient_decrease(ai, current_phi, context_) || (i==1 && current_phi >= last_phi)){
                  return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, context_);
               }
 
@@ -160,6 +155,7 @@ namespace fmincl{
               double old_ai = ai;
               double old_phi_ai = current_phi;
               double old_dphi_ai = dphi_ai;
+
 
               //Cubic extrapolation to chose a new value of ai
               double xmin = ai + 0.01*(ai-aim1);
