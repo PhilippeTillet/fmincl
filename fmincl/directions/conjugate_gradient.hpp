@@ -37,15 +37,13 @@ struct conjugate_gradient : public direction{
           VectorType const & g = context_.g();
           VectorType & p = context_.p();
           std::size_t N = context_.dim();
-          double beta = (*update_implementation_)();
+          bool restart = std::abs(BackendType::dot(N,g,context_.gm1()))/BackendType::dot(N,g,g) > 0.2;
+          double beta = restart?0:(*update_implementation_)();
           //p = -g + beta*p;
           BackendType::scale(N,beta,p);
           BackendType::axpy(N,-1,g,p);
           //Restart
-          if(BackendType::dot(N,g,p) > -eps){
-              BackendType::copy(N,g,p);
-              BackendType::scale(N,-1,p);
-          }
+
 
         }
     private:
@@ -55,7 +53,7 @@ struct conjugate_gradient : public direction{
     };
 
 
-    conjugate_gradient(cg_update * _update = new polak_ribiere()) : update(_update){ }
+    conjugate_gradient(cg_update * _update = new fletcher_reeves()) : update(_update){ }
     tools::shared_ptr<cg_update> update;
 };
 
