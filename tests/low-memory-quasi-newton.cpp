@@ -19,19 +19,14 @@ int main(){
 
     int result = EXIT_SUCCESS;
 
-    std::cout << "Testing Float:" << std::endl;
-    result |= test_option<float>("LBFGS [M=1]", new quasi_newton(new lbfgs(1)));
-    result |= test_option<float>("LBFGS [M=2]", new quasi_newton(new lbfgs(2)));
-    result |= test_option<float>("LBFGS [M=8]", new quasi_newton(new lbfgs(8)));
-    result |= test_option<float>("LBFGS [M=32]", new quasi_newton(new lbfgs(32)));
-
-    std::cout << std::endl;
-
-    std::cout << "Testing Double:" << std::endl;
-    result |= test_option<double>("LBFGS [M=1]", new quasi_newton(new lbfgs(1)));
-    result |= test_option<double>("LBFGS [M=2]", new quasi_newton(new lbfgs(2)));
-    result |= test_option<double>("LBFGS [M=8]", new quasi_newton(new lbfgs(8)));
-    result |= test_option<double>("LBFGS [M=32]", new quasi_newton(new lbfgs(32)));
+    result |= test_option<float>("LBFGS [Float, M=1]", new quasi_newton(new lbfgs(1)));
+    result |= test_option<float>("LBFGS [Float, M=2]", new quasi_newton(new lbfgs(2)));
+    result |= test_option<float>("LBFGS [Float, M=8]", new quasi_newton(new lbfgs(8)));
+    result |= test_option<float>("LBFGS [Float, M=32]", new quasi_newton(new lbfgs(32)));
+    result |= test_option<double>("LBFGS [Double, M=1]", new quasi_newton(new lbfgs(1)));
+    result |= test_option<double>("LBFGS [Double, M=2]", new quasi_newton(new lbfgs(2)));
+    result |= test_option<double>("LBFGS [Double, M=8]", new quasi_newton(new lbfgs(8)));
+    result |= test_option<double>("LBFGS [Double, M=32]", new quasi_newton(new lbfgs(32)));
 
     return result;
 

@@ -56,22 +56,33 @@ namespace fmincl{
             double & current_phi = res.best_phi;
             VectorType const & p = context.p();
 
-            double eps = 1e-10;
             double aj = 0;
             double dphi_aj = 0;
 
-            while(1){
+            bool twice_close_to_boundary = false;
+
+            for(unsigned int i = 0 ; i < 10 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
               if(alo < ahi)
                 aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
-              if( (aj - xmin)<eps || (xmax - aj) < eps){
-                res.has_failed = true;
-                return;
+              if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
+                  if(twice_close_to_boundary){
+                      if(std::abs(aj - xmax) < std::abs(aj - xmin))
+                          aj = xmax - 0.1*(xmax-xmin);
+                      else
+                          aj = xmin + 0.1*(xmax-xmin);
+                      twice_close_to_boundary = false;
+                  }
+                  else{
+                      twice_close_to_boundary = true;
+                  }
               }
-              aj = std::min(std::max(aj,xmin+0.1f*(xmax-xmin)),xmax-0.1f*(xmax-xmin));
+              else{
+                  twice_close_to_boundary = false;
+              }
               current_phi = phi(N_, context.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
               if(!sufficient_decrease(aj,current_phi, context) || current_phi >= phi_alo){
                 ahi = aj;
@@ -80,6 +91,7 @@ namespace fmincl{
               }
               else{
                 if(curvature(dphi_aj)){
+                    context.ak() = aj;
                     res.has_failed = false;
                     return;
                 }
@@ -93,7 +105,7 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-
+            res.has_failed = true;
           }
 
 
@@ -132,6 +144,7 @@ namespace fmincl{
 
               //Tests curvature
               if(curvature(dphi_ai)){
+                context_.ak() = ai;
                 res.has_failed = false;
                 return;
               }
@@ -153,6 +166,7 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
+            res.has_failed=true;
 
           }
         private:

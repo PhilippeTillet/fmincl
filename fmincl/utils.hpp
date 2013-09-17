@@ -75,6 +75,8 @@ namespace fmincl{
             double & valm1() { return valkm1_; }
             double & diff() { return diff_; }
             double & dphi_0() { return dphi_0_; }
+            double & dphi_ak() { return dphi_ak_; }
+            double & ak() { return ak_; }
 
             ~optimization_context(){
                 BackendType::delete_if_dynamically_allocated(x_);
@@ -99,6 +101,8 @@ namespace fmincl{
             double valkm1_;
             double diff_;
             double dphi_0_;
+            double dphi_ak_;
+            double ak_;
         };
     }
 

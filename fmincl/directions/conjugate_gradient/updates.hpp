@@ -45,7 +45,7 @@ struct polak_ribiere : public cg_update{
             //tmp_ = g - gm1;
             BackendType::copy(N_,g_, tmp_);
             BackendType::axpy(N_,-1,gm1_,tmp_);
-            return BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,gm1_,gm1_);
+            return std::max(BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,gm1_,gm1_),(double)0);
         }
     private:
         std::size_t N_;
