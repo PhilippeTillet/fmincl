@@ -114,7 +114,7 @@ namespace fmincl{
             (*line_search_impl)(search_res, ai);          
 
 
-            if(search_res.has_failed || search_res.best_phi>context.val()){
+            if(search_res.has_failed){
                 break;
             }
 

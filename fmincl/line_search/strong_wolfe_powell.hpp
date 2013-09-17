@@ -107,7 +107,10 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-            res.has_failed=true;
+            if(current_phi<context_.val()-1e-6)
+                res.has_failed = false;
+            else
+                res.has_failed=true;
           }
 
 
@@ -169,8 +172,10 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
-            res.has_failed=true;
-
+            if(current_phi<context_.val()-1e-6)
+                res.has_failed = false;
+            else
+                res.has_failed=true;
           }
         private:
           detail::optimization_context<BackendType> & context_;
