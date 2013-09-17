@@ -33,11 +33,11 @@ struct conjugate_gradient : public direction{
     public:
         implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : context_(context), update_implementation_(update_mapping::create(*cg_params.update, context)){ }
         void operator()(){
-          double eps = 1e-9;
+          double orthogonality_threshold = 0.2;
           VectorType const & g = context_.g();
           VectorType & p = context_.p();
           std::size_t N = context_.dim();
-          bool restart = std::abs(BackendType::dot(N,g,context_.gm1()))/BackendType::dot(N,g,g) > 0.2;
+          bool restart = std::abs(BackendType::dot(N,g,context_.gm1()))/BackendType::dot(N,g,g) > orthogonality_threshold;
           double beta = restart?0:(*update_implementation_)();
           //p = -g + beta*p;
           BackendType::scale(N,beta,p);
