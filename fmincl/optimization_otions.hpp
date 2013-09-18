@@ -20,7 +20,7 @@
 #include "fmincl/directions/quasi_newton.hpp"
 #include "fmincl/directions/conjugate_gradient.hpp"
 
-#include "fmincl/line_search/forwards.h"
+#include "fmincl/line_search/strong_wolfe_powell.hpp"
 
 #include "fmincl/stopping_criterion/forwards.h"
 #include "fmincl/stopping_criterion/gradient_treshold.hpp"
@@ -28,7 +28,9 @@
 namespace fmincl{
 
   struct optimization_options{
-      optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){ }
+      optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), line_search(new strong_wolfe_powell()), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){
+
+      }
       std::string info() const{
         std::ostringstream oss;
         oss << "Verbosity Level : " << verbosity_level << std::endl;
@@ -39,9 +41,11 @@ namespace fmincl{
         return oss.str();
       }
       mutable tools::shared_ptr<fmincl::direction> direction;
-      mutable tools::shared_ptr<fmincl::stopping_criterion> stopping_criterion;
       mutable tools::shared_ptr<fmincl::line_search> line_search;
+      mutable tools::shared_ptr<fmincl::stopping_criterion> stopping_criterion;
+
       double tolerance;
+
       unsigned int verbosity_level;
       unsigned int max_iter;
   };

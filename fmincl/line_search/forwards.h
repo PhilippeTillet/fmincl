@@ -13,6 +13,10 @@
 
 #include <cmath>
 
+#include "fmincl/directions/forwards.h"
+#include "fmincl/directions/quasi_newton.hpp"
+
+#include "fmincl/forwards.h"
 #include "fmincl/utils.hpp"
 #include "fmincl/mapping.hpp"
 
@@ -62,7 +66,7 @@ namespace fmincl{
       template<class BackendType>
       struct implementation{
       public:
-          virtual void operator()(line_search_result<BackendType> & res, detail::optimization_context<BackendType> & context, double ai) = 0;
+          virtual void operator()(line_search_result<BackendType> & res,fmincl::direction::implementation<BackendType> * direction, detail::optimization_context<BackendType> & context, double ai) = 0;
           virtual ~implementation(){ }
       };
 

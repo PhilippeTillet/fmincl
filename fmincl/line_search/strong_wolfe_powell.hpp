@@ -11,6 +11,10 @@
 #ifndef FMINCL_LINE_SEARCH_HPP_
 #define FMINCL_LINE_SEARCH_HPP_
 
+#include "fmincl/directions/conjugate_gradient.hpp"
+#include "fmincl/directions/steepest_descent.hpp"
+#include "fmincl/directions/quasi_newton.hpp"
+
 #include "fmincl/utils.hpp"
 #include "forwards.h"
 
@@ -18,10 +22,9 @@
 
 namespace fmincl{
 
+
   struct strong_wolfe_powell : public line_search{
-      strong_wolfe_powell(double _c1, double _c2) :  c1(_c1), c2(_c2) { }
-      double c1;
-      double c2;
+      strong_wolfe_powell(){ }
 
 
 
@@ -115,7 +118,7 @@ namespace fmincl{
 
 
         public:
-          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : N_(context.N()),  c1_(tag.c1), c2_(tag.c2) {
+          implementation(strong_wolfe_powell const &, detail::optimization_context<BackendType> & context) : N_(context.N()) {
               x0_ = BackendType::create_vector(N_);
           }
 
@@ -123,13 +126,22 @@ namespace fmincl{
               BackendType::delete_if_dynamically_allocated(x0_);
           }
 
-          void operator()(line_search_result<BackendType> & res, detail::optimization_context<BackendType> & c, double ai) {
+          void operator()(line_search_result<BackendType> & res, fmincl::direction::implementation<BackendType> * direction, detail::optimization_context<BackendType> & c, double ai) {
+            c1_ = 1e-4;
+            if(dynamic_cast<quasi_newton::implementation<BackendType>*>(direction))
+              c2_ = 0.9;
+            else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
+              c2_ = 0.2;
+            else
+              c2_ = 0.6;
+
             double aim1 = 0;
             double phi_0 = c.val();
             double dphi_0 = c.dphi_0();
             double last_phi = phi_0;
             double dphi_aim1 = dphi_0;
             double dphi_ai;
+
 
             double & current_phi = res.best_phi;
             VectorType & current_x = res.best_x;

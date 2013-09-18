@@ -27,18 +27,6 @@
 
 namespace fmincl{
 
-
-    void fill_default_direction_line_search(optimization_options const & options){
-      if(options.direction==NULL)
-        options.direction = new quasi_newton();
-      if(options.line_search==NULL){
-        if(dynamic_cast<quasi_newton*>(options.direction.get()))
-          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.9);
-        else
-          options.line_search = new fmincl::strong_wolfe_powell(1e-4,0.2);
-      }
-    }
-
     template<class BackendType>
     inline void print_context_infos(detail::optimization_context<BackendType> & context, optimization_options const & options){
         if(options.verbosity_level <2 )
@@ -55,7 +43,6 @@ namespace fmincl{
 
         typedef typename BackendType::VectorType VectorType;
 
-        fill_default_direction_line_search(options);
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
         detail::optimization_context<BackendType> state(x0, N, fun);
         state.val() = state.fun()(state.x(), &state.g());
@@ -64,42 +51,34 @@ namespace fmincl{
           std::cout << options.info();
         }
 
-        tools::shared_ptr<direction::implementation<BackendType> > direction_impl(direction_mapping::create(*options.direction,state));
-        tools::shared_ptr<line_search::implementation<BackendType> > line_search_impl(line_search_mapping::create(*options.line_search,state));
-        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping::create(*options.stopping_criterion,state));
+        tools::shared_ptr<direction::implementation<BackendType> > fallback_direction(direction_mapping::create(fmincl::steepest_descent(),state));
+        tools::shared_ptr<direction::implementation<BackendType> > default_direction(direction_mapping::create(*options.direction,state));
+        tools::shared_ptr<direction::implementation<BackendType> > current_direction = default_direction;
 
-        double ai;
+        tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,state));
+        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,state));
+
         line_search_result<BackendType> search_res(N);
         //double last_dphi_0;
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_context_infos(state,options);
+            if(state.iter()==0 || current_direction->restart(state))
+                current_direction = fallback_direction;
+            else
+                current_direction = default_direction;
 
-            if(state.iter()==0 || direction_impl->restart(state)){
-              //Sets descent direction to gradient
-              BackendType::copy(N,state.g(),state.p());
-              BackendType::scale(N,-1,state.p());
+            (*current_direction)(state);
+            state.dphi_0() = BackendType::dot(N,state.p(),state.g());
 
-              state.dphi_0() = BackendType::dot(N,state.p(),state.g());
-              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,state.g()));
-            }
-            else{
-              //Update direction into context.p()
-              (*direction_impl)(state);
-              state.dphi_0() = BackendType::dot(N,state.p(),state.g());
-              if(state.dphi_0()>0){
-                  //Reset p = -g;
-                  BackendType::copy(N,state.g(),state.p());
-                  BackendType::scale(N,-1,state.p());
+            //Not a descent direction...
+            if(state.dphi_0()>0){
+                current_direction = fallback_direction;
+                (*current_direction)(state);
+                state.dphi_0() = BackendType::dot(N,state.p(),state.g());
+             }
 
-                  state.dphi_0() = - BackendType::dot(N,state.g(), state.g());
-              }
-              if(dynamic_cast<quasi_newton::implementation<BackendType> const *>(direction_impl.get()))
-                ai = 1;
-              else
-                ai = std::min((double)1,2*(state.val() - state.valm1())/state.dphi_0());
-            }
 
-            (*line_search_impl)(search_res, state, ai);
+            (*line_search)(search_res, current_direction.get(), state, current_direction->line_search_first_trial(state));
 
             if(search_res.has_failed)
                 break;
@@ -114,12 +93,9 @@ namespace fmincl{
             state.val() = search_res.best_phi;
 
 
-            if((*stopping_criterion__impl)(state))
+            if((*stopping)(state))
               break;
         }
-
-        std::cout << state.iter() << std::endl;
-
         BackendType::copy(N,state.x(),res);
         return state.val();
     }

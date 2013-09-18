@@ -11,9 +11,11 @@
 #ifndef FMINCL_UTILS_HPP
 #define FMINCL_UTILS_HPP
 
+#include "tools/shared_ptr.hpp"
 #include <iostream>
 
 namespace fmincl{
+
 
     namespace detail{
 
@@ -85,6 +87,7 @@ namespace fmincl{
 
         private:
             detail::function_wrapper<BackendType> const & fun_;
+
             unsigned int iter_;
             unsigned int dim_;
 
