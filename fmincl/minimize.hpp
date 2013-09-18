@@ -17,6 +17,7 @@
 
 #include "fmincl/directions/conjugate_gradient.hpp"
 #include "fmincl/directions/quasi_newton.hpp"
+#include "fmincl/directions/steepest_descent.hpp"
 
 #include "fmincl/line_search/strong_wolfe_powell.hpp"
 
@@ -48,7 +49,7 @@ namespace fmincl{
 
     template<class BackendType, class Fun>
     double minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
-        typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient> direction_mapping;
+        typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient,steepest_descent> direction_mapping;
         typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
         typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
 

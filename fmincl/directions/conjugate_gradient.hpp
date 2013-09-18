@@ -35,7 +35,7 @@ struct conjugate_gradient : public direction{
 
 
     public:
-        implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : context_(context), update_implementation_(update_mapping::create(*cg_params.update, context)){ }
+        implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : update_implementation_(update_mapping::create(*cg_params.update, context)){ }
 
         virtual bool restart(detail::optimization_context<BackendType> & c){
             double orthogonality_threshold = 0.1;
@@ -49,8 +49,6 @@ struct conjugate_gradient : public direction{
           BackendType::axpy(c.N(),-1,c.g(),c.p());
         }
     private:
-        detail::optimization_context<BackendType> & context_;
-
         tools::shared_ptr<cg_update::implementation<BackendType> > update_implementation_;
     };
 
