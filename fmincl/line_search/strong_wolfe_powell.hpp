@@ -62,17 +62,17 @@ namespace fmincl{
             double aj = 0;
             double dphi_aj = 0;
             bool twice_close_to_boundary=false;
-            for(unsigned int i = 0 ; i < 10 ; ++i){
+            for(unsigned int i = 0 ; i < 20 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
-              if((xmax - xmin) < eps){
-                  res.has_failed=true;
-                  return;
-              }
               if(alo < ahi)
                 aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
+              if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
+                  res.has_failed=true;
+                  return;
+              }
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
                   if(twice_close_to_boundary){
                       if(std::abs(aj - xmax) < std::abs(aj - xmin))
@@ -109,10 +109,7 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-            if(current_phi<c.val()-1e-6)
-                res.has_failed = false;
-            else
-                res.has_failed=true;
+            res.has_failed=true;
           }
 
 
@@ -133,7 +130,7 @@ namespace fmincl{
             else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
               c2_ = 0.2;
             else
-              c2_ = 0.4;
+              c2_ = 0.7;
 
             double aim1 = 0;
             double phi_0 = c.val();
@@ -184,10 +181,7 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
-            if(current_phi<c.val()-1e-6)
-                res.has_failed = false;
-            else
-                res.has_failed=true;
+            res.has_failed=true;
           }
         private:
           int N_;
