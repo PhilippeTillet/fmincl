@@ -8,23 +8,13 @@
  * ===========================*/
 
 
-#ifndef FMINCL_DIRECTIONS_QUASI_NEWTON_UPDATE_HPP_
-#define FMINCL_DIRECTIONS_QUASI_NEWTON_UPDATE_HPP_
+#ifndef FMINCL_DIRECTIONS_QUASI_NEWTON_UPDATE_LBFGS_HPP_
+#define FMINCL_DIRECTIONS_QUASI_NEWTON_UPDATE_LBFGS_HPP_
 
-#include "fmincl/mapping.hpp"
-#include "fmincl/utils.hpp"
+#include "forwards.h"
+#include <vector>
 
 namespace fmincl{
-
-struct qn_update{
-    template<class BackendType>
-    struct implementation{
-        virtual void operator()(detail::optimization_context<BackendType> &) = 0;
-        virtual ~implementation(){ }
-    };
-
-    virtual ~qn_update(){ }
-};
 
 struct lbfgs : public qn_update{
     lbfgs(unsigned int _m = 4) : m(_m) { }
@@ -45,7 +35,7 @@ struct lbfgs : public qn_update{
 
     public:
         implementation(lbfgs const & tag, detail::optimization_context<BackendType> & context) : tag_(tag), vecs_(tag.m){
-            N_ = context.dim();
+            N_ = context.N();
 
             q_ = BackendType::create_vector(N_);
             r_ = BackendType::create_vector(N_);
@@ -122,94 +112,6 @@ struct lbfgs : public qn_update{
         VectorType q_;
         VectorType r_;
         std::vector<storage_pair> vecs_;
-    };
-};
-
-
-
-struct bfgs : public qn_update{
-    template<class BackendType>
-    class implementation : public qn_update::implementation<BackendType>{
-        typedef typename BackendType::VectorType VectorType;
-        typedef typename BackendType::MatrixType MatrixType;
-    public:
-        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : is_first_update_(true){
-            N_ = context.dim();
-            Hy_ = BackendType::create_vector(N_);
-            s_ = BackendType::create_vector(N_);
-            y_ = BackendType::create_vector(N_);
-            H_ = BackendType::create_matrix(N_, N_);
-
-            BackendType::set_to_value(Hy_,0,N_);
-            BackendType::set_to_value(s_,0,N_);
-            BackendType::set_to_value(y_,0,N_);
-
-        }
-
-        void operator()(detail::optimization_context<BackendType> & c){
-          //s = x - xm1;
-          BackendType::copy(N_,c.x(),s_);
-          BackendType::axpy(N_,-1,c.xm1(),s_);
-
-          //y = g - gm1;
-          BackendType::copy(N_,c.g(),y_);
-          BackendType::axpy(N_,-1,c.gm1(),y_);
-
-          double ys = BackendType::dot(N_,s_,y_);
-
-          if(is_first_update_)
-            BackendType::set_to_diagonal(N_,H_,1);
-
-          double gamma = 1;
-
-          {
-              BackendType::symv(N_,1,H_,y_,0,Hy_);
-              double yHy = BackendType::dot(N_,y_,Hy_);
-              double sg = BackendType::dot(N_,s_,c.gm1());
-              double gHy = BackendType::dot(N_,c.gm1(),Hy_);
-             if(ys/yHy>1)
-                  gamma = ys/yHy;
-              else if(sg/gHy<1)
-                 gamma = sg/gHy;
-              else
-                  gamma = 1;
-          }
-
-          BackendType::scale(N_,N_,gamma,H_);
-          BackendType::symv(N_,1,H_,y_,0,Hy_);
-          double yHy = BackendType::dot(N_,y_,Hy_);
-
-          //BFGS UPDATE
-          //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
-          double alpha = -1/ys;
-          double beta = 1/ys + yHy/pow(ys,2);
-          BackendType::syr2(N_,alpha,s_,Hy_,H_);
-          BackendType::syr1(N_,beta,s_,H_);
-
-          //p = -H_*g
-          BackendType::symv(N_,-1,H_,c.g(),0,c.p());
-
-          if(is_first_update_) is_first_update_=false;
-        }
-
-        ~implementation(){
-            BackendType::delete_if_dynamically_allocated(Hy_);
-            BackendType::delete_if_dynamically_allocated(s_);
-            BackendType::delete_if_dynamically_allocated(y_);
-
-            BackendType::delete_if_dynamically_allocated(H_);
-        }
-
-    private:
-        std::size_t N_;
-
-        VectorType Hy_;
-        VectorType s_;
-        VectorType y_;
-
-        MatrixType H_;
-
-        bool is_first_update_;
     };
 };
 

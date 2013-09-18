@@ -19,7 +19,8 @@
 #include "fmincl/utils.hpp"
 
 #include "forwards.h"
-#include "quasi_newton/updates.hpp"
+#include "quasi_newton/updates/lbfgs.hpp"
+#include "quasi_newton/updates/bfgs.hpp"
 
 
 

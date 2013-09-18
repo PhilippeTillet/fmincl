@@ -65,7 +65,7 @@ namespace fmincl{
 
             detail::function_wrapper<BackendType> const & fun() { return fun_; }
             unsigned int & iter() { return iter_; }
-            unsigned int & dim() { return dim_; }
+            unsigned int & N() { return dim_; }
             VectorType & x() { return x_; }
             VectorType & g() { return g_; }
             VectorType & xm1() { return xm1_; }
@@ -73,10 +73,7 @@ namespace fmincl{
             VectorType & p() { return p_; }
             double & val() { return valk_; }
             double & valm1() { return valkm1_; }
-            double & diff() { return diff_; }
             double & dphi_0() { return dphi_0_; }
-            double & dphi_ak() { return dphi_ak_; }
-            double & ak() { return ak_; }
 
             ~optimization_context(){
                 BackendType::delete_if_dynamically_allocated(x_);
@@ -99,10 +96,7 @@ namespace fmincl{
 
             double valk_;
             double valkm1_;
-            double diff_;
             double dphi_0_;
-            double dphi_ak_;
-            double ak_;
         };
     }
 

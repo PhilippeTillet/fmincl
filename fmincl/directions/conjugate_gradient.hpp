@@ -19,7 +19,11 @@
 #include "fmincl/directions/forwards.h"
 
 #include "conjugate_gradient/restarts.hpp"
-#include "conjugate_gradient/updates.hpp"
+
+#include "conjugate_gradient/updates/polak_ribiere.hpp"
+#include "conjugate_gradient/updates/fletcher_reeves.hpp"
+#include "conjugate_gradient/updates/gilbert_nocedal.hpp"
+
 
 namespace fmincl{
 
@@ -35,14 +39,14 @@ struct conjugate_gradient : public direction{
 
         virtual bool restart(detail::optimization_context<BackendType> & c){
             double orthogonality_threshold = 0.1;
-            return std::abs(BackendType::dot(c.dim(),c.g(),c.gm1()))/BackendType::dot(c.dim(),c.g(),c.g()) > orthogonality_threshold;
+            return std::abs(BackendType::dot(c.N(),c.g(),c.gm1()))/BackendType::dot(c.N(),c.g(),c.g()) > orthogonality_threshold;
         }
 
         void operator()(detail::optimization_context<BackendType> & c){
           //p = -g + beta*p;
           double beta = (*update_implementation_)(c);
-          BackendType::scale(c.dim(),beta,c.p());
-          BackendType::axpy(c.dim(),-1,c.g(),c.p());
+          BackendType::scale(c.N(),beta,c.p());
+          BackendType::axpy(c.N(),-1,c.g(),c.p());
         }
     private:
         detail::optimization_context<BackendType> & context_;

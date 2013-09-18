@@ -56,71 +56,71 @@ namespace fmincl{
 
         fill_default_direction_line_search(options);
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
-        detail::optimization_context<BackendType> context(x0, N, fun);
-        context.val() = context.fun()(context.x(), &context.g());
+        detail::optimization_context<BackendType> state(x0, N, fun);
+        state.val() = state.fun()(state.x(), &state.g());
 
         if(options.verbosity_level >= 1){
           std::cout << options.info();
         }
 
-        tools::shared_ptr<direction::implementation<BackendType> > direction_impl(direction_mapping::create(*options.direction,context));
-        tools::shared_ptr<line_search::implementation<BackendType> > line_search_impl(line_search_mapping::create(*options.line_search,context));
-        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping::create(*options.stopping_criterion,context));
+        tools::shared_ptr<direction::implementation<BackendType> > direction_impl(direction_mapping::create(*options.direction,state));
+        tools::shared_ptr<line_search::implementation<BackendType> > line_search_impl(line_search_mapping::create(*options.line_search,state));
+        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping::create(*options.stopping_criterion,state));
 
         double ai;
         line_search_result<BackendType> search_res(N);
         //double last_dphi_0;
-        for( ; context.iter() < options.max_iter ; ++context.iter()){
-            print_context_infos(context,options);
-            context.diff() = (context.val()-context.valm1());
+        for( ; state.iter() < options.max_iter ; ++state.iter()){
+            print_context_infos(state,options);
 
-
-            if(context.iter()==0 || direction_impl->restart(context)){
+            if(state.iter()==0 || direction_impl->restart(state)){
               //Sets descent direction to gradient
-              BackendType::copy(N,context.g(),context.p());
-              BackendType::scale(N,-1,context.p());
+              BackendType::copy(N,state.g(),state.p());
+              BackendType::scale(N,-1,state.p());
 
-              context.dphi_0() = BackendType::dot(N,context.p(),context.g());
-              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,context.g()));
+              state.dphi_0() = BackendType::dot(N,state.p(),state.g());
+              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,state.g()));
             }
             else{
               //Update direction into context.p()
-              (*direction_impl)(context);
-              context.dphi_0() = BackendType::dot(N,context.p(),context.g());
-              if(context.dphi_0()>0){
+              (*direction_impl)(state);
+              state.dphi_0() = BackendType::dot(N,state.p(),state.g());
+              if(state.dphi_0()>0){
                   //Reset p = -g;
-                  BackendType::copy(N,context.g(),context.p());
-                  BackendType::scale(N,-1,context.p());
+                  BackendType::copy(N,state.g(),state.p());
+                  BackendType::scale(N,-1,state.p());
 
-                  context.dphi_0() = - BackendType::dot(N,context.g(), context.g());
+                  state.dphi_0() = - BackendType::dot(N,state.g(), state.g());
               }
               if(dynamic_cast<quasi_newton::implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
-                ai = std::min((double)1,2*context.diff()/context.dphi_0());
+                ai = std::min((double)1,2*(state.val() - state.valm1())/state.dphi_0());
             }
 
-            (*line_search_impl)(search_res, context, ai);
+            (*line_search_impl)(search_res, state, ai);
 
             if(search_res.has_failed)
                 break;
 
-            BackendType::copy(N,context.x(),context.xm1());
-            BackendType::copy(N,search_res.best_x,context.x());
+            BackendType::copy(N,state.x(),state.xm1());
+            BackendType::copy(N,search_res.best_x,state.x());
 
-            BackendType::copy(N,context.g(),context.gm1());
-            BackendType::copy(N,search_res.best_g,context.g());
+            BackendType::copy(N,state.g(),state.gm1());
+            BackendType::copy(N,search_res.best_g,state.g());
 
-            context.valm1() = context.val();
-            context.val() = search_res.best_phi;
+            state.valm1() = state.val();
+            state.val() = search_res.best_phi;
 
 
-            if((*stopping_criterion__impl)(context))
+            if((*stopping_criterion__impl)(state))
               break;
         }
 
-        BackendType::copy(N,context.x(),res);
-        return context.val();
+        std::cout << state.iter() << std::endl;
+
+        BackendType::copy(N,state.x(),res);
+        return state.val();
     }
 
 }

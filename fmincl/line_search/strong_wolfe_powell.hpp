@@ -93,7 +93,6 @@ namespace fmincl{
               }
               else{
                 if(curvature(dphi_aj, c.dphi_0())){
-                    c.ak() = aj;
                     res.has_failed = false;
                     return;
                 }
@@ -116,7 +115,7 @@ namespace fmincl{
 
 
         public:
-          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : N_(context.dim()),  c1_(tag.c1), c2_(tag.c2) {
+          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : N_(context.N()),  c1_(tag.c1), c2_(tag.c2) {
               x0_ = BackendType::create_vector(N_);
           }
 
@@ -151,7 +150,6 @@ namespace fmincl{
 
               //Tests curvature
               if(curvature(dphi_ai, dphi_0)){
-                c.ak() = ai;
                 res.has_failed = false;
                 return;
               }
