@@ -18,9 +18,9 @@ namespace fmincl{
 
 struct qn_update{
     template<class BackendType>
-    struct implementation : public implementation_base<BackendType>{
-        implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
-        virtual void operator()(void) = 0;
+    struct implementation{
+        virtual void operator()(detail::optimization_context<BackendType> &) = 0;
+        virtual ~implementation(){ }
     };
 
     virtual ~qn_update(){ }
@@ -32,9 +32,8 @@ struct lbfgs : public qn_update{
 
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
-        using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::VectorType;
-        using typename implementation_base<BackendType>::MatrixType;
+        typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::MatrixType MatrixType;
 
         struct storage_pair{
             VectorType s;
@@ -45,8 +44,8 @@ struct lbfgs : public qn_update{
         VectorType & y(std::size_t i) { return vecs_[i].y; }
 
     public:
-        implementation(lbfgs const & tag, detail::optimization_context<BackendType> & context) : qn_update::implementation<BackendType>(context), tag_(tag), vecs_(tag.m){
-            N_ = context_.dim();
+        implementation(lbfgs const & tag, detail::optimization_context<BackendType> & context) : tag_(tag), vecs_(tag.m){
+            N_ = context.dim();
 
             q_ = BackendType::create_vector(N_);
             r_ = BackendType::create_vector(N_);
@@ -57,15 +56,7 @@ struct lbfgs : public qn_update{
             }
         }
 
-        void operator()(){
-            //Initizalization of aliases
-            VectorType const & x=context_.x();
-            VectorType const & xm1=context_.xm1();
-            VectorType const & g=context_.g();
-            VectorType const & gm1=context_.gm1();
-            VectorType & p=context_.p();
-
-            unsigned int const & iter = context_.iter();
+        void operator()(detail::optimization_context<BackendType> & c){
             unsigned int const & m = tag_.m;
 
             std::vector<double> rhos(m);
@@ -75,23 +66,23 @@ struct lbfgs : public qn_update{
 
 
             //Updates storage
-            for(unsigned int i = std::min(iter,m)-1 ; i > 0  ; --i){
+            for(unsigned int i = std::min(c.iter(),m)-1 ; i > 0  ; --i){
                 BackendType::copy(N_,s(i-1), s(i));
                 BackendType::copy(N_,y(i-1), y(i));
             }
 
             //s(0) = x - xm1;
-            BackendType::copy(N_,x,s(0));
-            BackendType::axpy(N_,-1,xm1,s(0));
+            BackendType::copy(N_,c.x(),s(0));
+            BackendType::axpy(N_,-1,c.xm1(),s(0));
 
             //y(0) = g - gm1;
-            BackendType::copy(N_,g,y(0));
-            BackendType::axpy(N_,-1,gm1,y(0));
+            BackendType::copy(N_,c.g(),y(0));
+            BackendType::axpy(N_,-1,c.gm1(),y(0));
 
 
-            BackendType::copy(N_,g,q_);
+            BackendType::copy(N_,c.g(),q_);
             int i = 0;
-            for(; i < (int)std::min(iter,m) ; ++i){
+            for(; i < (int)std::min(c.iter(),m) ; ++i){
                 rhos[i] = static_cast<double>(1)/BackendType::dot(N_,y(i),s(i));
                 alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
                 //q_ = q - alphas[i]*y(i);
@@ -111,8 +102,8 @@ struct lbfgs : public qn_update{
             }
 
             //p = -r_;
-            BackendType::copy(N_,r_,p);
-            BackendType::scale(N_,-1,p);
+            BackendType::copy(N_,r_,c.p());
+            BackendType::scale(N_,-1,c.p());
         }
 
         ~implementation(){
@@ -139,12 +130,11 @@ struct lbfgs : public qn_update{
 struct bfgs : public qn_update{
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
-        using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::VectorType;
-        using typename implementation_base<BackendType>::MatrixType;
+        typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::MatrixType MatrixType;
     public:
-        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : qn_update::implementation<BackendType>(context), is_first_update_(true){
-            N_ = context_.dim();
+        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : is_first_update_(true){
+            N_ = context.dim();
             Hy_ = BackendType::create_vector(N_);
             s_ = BackendType::create_vector(N_);
             y_ = BackendType::create_vector(N_);
@@ -156,14 +146,14 @@ struct bfgs : public qn_update{
 
         }
 
-        void operator()(){
+        void operator()(detail::optimization_context<BackendType> & c){
           //s = x - xm1;
-          BackendType::copy(N_,context_.x(),s_);
-          BackendType::axpy(N_,-1,context_.xm1(),s_);
+          BackendType::copy(N_,c.x(),s_);
+          BackendType::axpy(N_,-1,c.xm1(),s_);
 
           //y = g - gm1;
-          BackendType::copy(N_,context_.g(),y_);
-          BackendType::axpy(N_,-1,context_.gm1(),y_);
+          BackendType::copy(N_,c.g(),y_);
+          BackendType::axpy(N_,-1,c.gm1(),y_);
 
           double ys = BackendType::dot(N_,s_,y_);
 
@@ -175,8 +165,8 @@ struct bfgs : public qn_update{
           {
               BackendType::symv(N_,1,H_,y_,0,Hy_);
               double yHy = BackendType::dot(N_,y_,Hy_);
-              double sg = BackendType::dot(N_,s_,context_.gm1());
-              double gHy = BackendType::dot(N_,context_.gm1(),Hy_);
+              double sg = BackendType::dot(N_,s_,c.gm1());
+              double gHy = BackendType::dot(N_,c.gm1(),Hy_);
              if(ys/yHy>1)
                   gamma = ys/yHy;
               else if(sg/gHy<1)
@@ -197,7 +187,7 @@ struct bfgs : public qn_update{
           BackendType::syr1(N_,beta,s_,H_);
 
           //p = -H_*g
-          BackendType::symv(N_,-1,H_,context_.g(),0,context_.p());
+          BackendType::symv(N_,-1,H_,c.g(),0,c.p());
 
           if(is_first_update_) is_first_update_=false;
         }

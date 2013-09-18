@@ -61,11 +61,8 @@ namespace fmincl{
   struct line_search{
       template<class BackendType>
       struct implementation{
-      protected:
-          typedef typename BackendType::VectorType VectorType;
-          typedef typename BackendType::MatrixType MatrixType;
       public:
-          virtual void operator()(line_search_result<BackendType> & res, double ai) = 0;
+          virtual void operator()(line_search_result<BackendType> & res, detail::optimization_context<BackendType> & context, double ai) = 0;
           virtual ~implementation(){ }
       };
 

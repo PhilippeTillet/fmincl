@@ -28,8 +28,8 @@ namespace fmincl{
       template<class BackendType>
       class implementation : public line_search::implementation<BackendType>{
         private:
-          typedef typename line_search::implementation<BackendType>::VectorType VectorType;
-          typedef typename line_search::implementation<BackendType>::MatrixType MatrixType;
+          typedef typename BackendType::VectorType VectorType;
+          typedef typename BackendType::MatrixType MatrixType;
 
           double phi(int N, detail::function_wrapper<BackendType> const & fun, VectorType & x, VectorType const & x0, double alpha, VectorType const & p, VectorType & grad, double * dphi) const {
 
@@ -43,18 +43,18 @@ namespace fmincl{
             return res;
           }
 
-          bool sufficient_decrease(double ai, double phi_ai, detail::optimization_context<BackendType> & context) const {
-            return phi_ai <= (context.val() + c1_*ai );
+          bool sufficient_decrease(double ai, double phi_ai, double phi_0) const {
+            return phi_ai <= (phi_0 + c1_*ai );
           }
-          bool curvature(double dphi_ai) const{
-            return std::abs(dphi_ai) <= c2_*std::abs(context_.dphi_0());
+          bool curvature(double dphi_ai, double dphi_0) const{
+            return std::abs(dphi_ai) <= c2_*std::abs(dphi_0);
           }
 
-          void zoom(line_search_result<BackendType> & res, double alo, double phi_alo, double dphi_alo, double ahi, double phi_ahi, double dphi_ahi, detail::optimization_context<BackendType> & context) const{
+          void zoom(line_search_result<BackendType> & res, double alo, double phi_alo, double dphi_alo, double ahi, double phi_ahi, double dphi_ahi, detail::optimization_context<BackendType> & c) const{
             VectorType & current_x = res.best_x;
             VectorType & current_g = res.best_g;
             double & current_phi = res.best_phi;
-            VectorType const & p = context.p();
+            VectorType const & p = c.p();
             double eps = 1e-10;
             double aj = 0;
             double dphi_aj = 0;
@@ -85,15 +85,15 @@ namespace fmincl{
               else{
                   twice_close_to_boundary = false;
               }
-              current_phi = phi(N_, context.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
-              if(!sufficient_decrease(aj,current_phi, context) || current_phi >= phi_alo){
+              current_phi = phi(N_, c.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
+              if(!sufficient_decrease(aj,current_phi, c.val()) || current_phi >= phi_alo){
                 ahi = aj;
                 phi_ahi = current_phi;
                 dphi_ahi = dphi_aj;
               }
               else{
-                if(curvature(dphi_aj)){
-                    context.ak() = aj;
+                if(curvature(dphi_aj, c.dphi_0())){
+                    c.ak() = aj;
                     res.has_failed = false;
                     return;
                 }
@@ -107,7 +107,7 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-            if(current_phi<context_.val()-1e-6)
+            if(current_phi<c.val()-1e-6)
                 res.has_failed = false;
             else
                 res.has_failed=true;
@@ -116,7 +116,7 @@ namespace fmincl{
 
 
         public:
-          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : context_(context), N_(context.dim()),  c1_(tag.c1), c2_(tag.c2) {
+          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : N_(context.dim()),  c1_(tag.c1), c2_(tag.c2) {
               x0_ = BackendType::create_vector(N_);
           }
 
@@ -124,37 +124,39 @@ namespace fmincl{
               BackendType::delete_if_dynamically_allocated(x0_);
           }
 
-          void operator()(line_search_result<BackendType> & res, double ai) {
+          void operator()(line_search_result<BackendType> & res, detail::optimization_context<BackendType> & c, double ai) {
             double aim1 = 0;
-            double last_phi = context_.val();
-            double dphi_aim1 = context_.dphi_0();
+            double phi_0 = c.val();
+            double dphi_0 = c.dphi_0();
+            double last_phi = phi_0;
+            double dphi_aim1 = dphi_0;
             double dphi_ai;
 
             double & current_phi = res.best_phi;
             VectorType & current_x = res.best_x;
             VectorType & current_g = res.best_g;
-            VectorType const & p = context_.p();
+            VectorType const & p = c.p();
 
 
-            BackendType::copy(N_,context_.x(), x0_);
+            BackendType::copy(N_,c.x(), x0_);
 
 
             for(unsigned int i = 1 ; i<40; ++i){
-              current_phi = phi(N_,context_.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
+              current_phi = phi(N_,c.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
 
               //Tests sufficient decrease
-              if(!sufficient_decrease(ai, current_phi, context_) || (i==1 && current_phi >= last_phi)){
-                 return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, context_);
+              if(!sufficient_decrease(ai, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
+                 return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, c);
               }
 
               //Tests curvature
-              if(curvature(dphi_ai)){
-                context_.ak() = ai;
+              if(curvature(dphi_ai, dphi_0)){
+                c.ak() = ai;
                 res.has_failed = false;
                 return;
               }
               if(dphi_ai>=0){
-                return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, context_);
+                return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, c);
               }
 
               //Updates context_s
@@ -172,13 +174,12 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
-            if(current_phi<context_.val()-1e-6)
+            if(current_phi<c.val()-1e-6)
                 res.has_failed = false;
             else
                 res.has_failed=true;
           }
         private:
-          detail::optimization_context<BackendType> & context_;
           int N_;
 
           double c1_;

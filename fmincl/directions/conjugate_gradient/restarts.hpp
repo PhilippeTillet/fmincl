@@ -17,9 +17,9 @@ namespace fmincl{
 
 struct cg_restart{
     template<class BackendType>
-    struct implementation : implementation_base<BackendType>{
-        implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
-        virtual bool operator()(void) = 0;
+    struct implementation {
+        virtual bool operator()(detail::optimization_context<BackendType> & c) = 0;
+        virtual ~implementation(){ }
     };
     virtual ~cg_restart(){ }
 };
@@ -27,26 +27,24 @@ struct cg_restart{
 struct no_restart : public cg_restart{
     template<class BackendType>
     struct implementation : public cg_restart::implementation<BackendType>{
-        implementation(no_restart const & /*tag*/, detail::optimization_context<BackendType> & context) : cg_restart::implementation<BackendType>(context){ }
-        bool operator()() { return false; }
+        implementation(no_restart const & /*tag*/, detail::optimization_context<BackendType> & context){ }
+        bool operator()(detail::optimization_context<BackendType> & c) { return false; }
     };
 };
 
 struct restart_on_dim : public cg_restart{
     template<class BackendType>
     struct implementation : public cg_restart::implementation<BackendType>{
-        using implementation_base<BackendType>::context_;
-        implementation(restart_on_dim const & /*tag*/, detail::optimization_context<BackendType> & context) : cg_restart::implementation<BackendType>(context){ }
-        bool operator()() { return context_.iter()==context_.dim(); }
+        implementation(restart_on_dim const & /*tag*/, detail::optimization_context<BackendType> & context){ }
+        bool operator()(detail::optimization_context<BackendType> & c) { return c.iter()==c.dim(); }
     };
 };
 
 struct restart_not_sufficient_descent : public cg_restart{
     template<class BackendType>
     struct implementation : public cg_restart::implementation<BackendType>{
-        using implementation_base<BackendType>::context_;
-        implementation(restart_on_dim const & /*tag*/, detail::optimization_context<BackendType> & context) : cg_restart::implementation<BackendType>(context){ }
-        bool operator()() { return context_.iter()==context_.dim(); }
+        implementation(restart_on_dim const & /*tag*/, detail::optimization_context<BackendType> & context){ }
+        bool operator()(detail::optimization_context<BackendType> & c) { return c.iter()==c.dim(); }
     };
 };
 

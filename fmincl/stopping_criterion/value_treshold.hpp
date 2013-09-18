@@ -24,12 +24,11 @@ struct value_treshold : public stopping_criterion{
 
     template<class BackendType>
     struct implementation : public stopping_criterion::implementation<BackendType>{
-        implementation(value_treshold const & _tag, detail::optimization_context<BackendType> & context) : context_(context), tag(_tag){ }
-        bool operator()(){
-            return std::fabs(context_.val() - context_.valm1()) < tag.tolerance;
+        implementation(value_treshold const & _tag, detail::optimization_context<BackendType> &) : tag(_tag){ }
+        bool operator()(detail::optimization_context<BackendType> & c){
+            return std::fabs(c.val() - c.valm1()) < tag.tolerance;
         }
     private:
-        detail::optimization_context<BackendType> & context_;
         value_treshold const & tag;
     };
 };

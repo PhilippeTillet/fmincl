@@ -21,9 +21,9 @@ struct cg_update{
     virtual ~cg_update(){ }
 
     template<class BackendType>
-    struct implementation : public implementation_base<BackendType>{
-        implementation(detail::optimization_context<BackendType> & context) : implementation_base<BackendType>(context){ }
-        virtual double operator()(void) = 0;
+    struct implementation{
+        virtual double operator()(detail::optimization_context<BackendType> &) = 0;
+        virtual ~implementation(){ }
     };
 };
 
@@ -31,26 +31,23 @@ struct polak_ribiere : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
-        using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::VectorType;
+        typedef typename BackendType::VectorType VectorType;
     public:
-        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context_.g()), gm1_(context_.gm1()){
-            N_ = context_.dim();
+        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context){
+            N_ = context.dim();
             tmp_ = BackendType::create_vector(N_);
         }
 
         ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
 
-        double operator()(){
+        double operator()(detail::optimization_context<BackendType> & c){
             //tmp_ = g - gm1;
-            BackendType::copy(N_,g_, tmp_);
-            BackendType::axpy(N_,-1,gm1_,tmp_);
-            return std::max(BackendType::dot(N_,g_,tmp_)/BackendType::dot(N_,gm1_,gm1_),(double)0);
+            BackendType::copy(N_,c.g(), tmp_);
+            BackendType::axpy(N_,-1,c.gm1(),tmp_);
+            return std::max(BackendType::dot(N_,c.g(),tmp_)/BackendType::dot(N_,c.gm1(),c.gm1()),(double)0);
         }
     private:
         std::size_t N_;
-        VectorType & g_;
-        VectorType & gm1_;
         VectorType tmp_;
     };
 };
@@ -60,19 +57,16 @@ struct fletcher_reeves : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
-        using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::VectorType;
+        typedef typename BackendType::VectorType VectorType;
     public:
-        implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context), g_(context.g()), gm1_(context.gm1()){
-            N_ = context_.dim();
+        implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context){
+            N_ = context.dim();
         }
-        double operator()(){
-            return BackendType::dot(N_,g_,g_)/BackendType::dot(N_,gm1_,gm1_);
+        double operator()(detail::optimization_context<BackendType> & c){
+            return BackendType::dot(N_,c.g(),c.g())/BackendType::dot(N_,c.gm1(),c.gm1());
         }
     private:
         std::size_t N_;
-        VectorType & g_;
-        VectorType & gm1_;
     };
 };
 
@@ -81,13 +75,12 @@ struct gilbert_nocedal : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
-        using implementation_base<BackendType>::context_;
-        using typename implementation_base<BackendType>::VectorType;
+        typedef typename BackendType::VectorType VectorType;
     public:
-        implementation(gilbert_nocedal const &, detail::optimization_context<BackendType> & context) : cg_update::implementation<BackendType>(context){ }
-        double operator()(){
-            double betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context_)();
-            double betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context_)();
+        implementation(gilbert_nocedal const &, detail::optimization_context<BackendType> &){ }
+        double operator()(detail::optimization_context<BackendType> & context){
+            double betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context)(context);
+            double betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context)(context);
             return std::min(betaPR,betaFR);
         }
     };

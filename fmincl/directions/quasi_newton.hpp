@@ -34,7 +34,10 @@ struct quasi_newton : public direction{
         typedef implementation_of<BackendType,qn_update,bfgs,lbfgs> update_mapping;
       public:
         implementation(quasi_newton const & tag, detail::optimization_context<BackendType> & context) : update(update_mapping::create(*tag.update, context)){ }
-        virtual void operator()(){ (*update)();  }
+        virtual void operator()(detail::optimization_context<BackendType> & context)
+        {
+            (*update)(context);
+        }
     private:
         tools::shared_ptr<qn_update::implementation<BackendType> > update;
     };

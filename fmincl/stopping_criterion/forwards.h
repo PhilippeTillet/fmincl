@@ -12,6 +12,8 @@
 #define FMINCL_STOPPING_CRITERION_FORWARDS_H
 
 
+#include "fmincl/utils.hpp"
+
 namespace fmincl{
 
 struct stopping_criterion{
@@ -19,7 +21,7 @@ struct stopping_criterion{
 
     template<class BackendType>
     struct implementation{
-        virtual bool operator()() = 0;
+        virtual bool operator()(detail::optimization_context<BackendType> & context) = 0;
         virtual ~implementation(){ }
     };
 };

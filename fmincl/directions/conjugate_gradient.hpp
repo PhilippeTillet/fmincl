@@ -32,20 +32,17 @@ struct conjugate_gradient : public direction{
 
     public:
         implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : context_(context), update_implementation_(update_mapping::create(*cg_params.update, context)){ }
-        void operator()(){
-          double orthogonality_threshold = 0.1;
-          VectorType const & g = context_.g();
-          VectorType & p = context_.p();
-          std::size_t N = context_.dim();
-          bool restart = std::abs(BackendType::dot(N,g,context_.gm1()))/BackendType::dot(N,g,g) > orthogonality_threshold;
-          restart=false;
-          double beta = restart?0:(*update_implementation_)();
+
+        virtual bool restart(detail::optimization_context<BackendType> & c){
+            double orthogonality_threshold = 0.1;
+            return std::abs(BackendType::dot(c.dim(),c.g(),c.gm1()))/BackendType::dot(c.dim(),c.g(),c.g()) > orthogonality_threshold;
+        }
+
+        void operator()(detail::optimization_context<BackendType> & c){
           //p = -g + beta*p;
-          BackendType::scale(N,beta,p);
-          BackendType::axpy(N,-1,g,p);
-          //Restart
-
-
+          double beta = (*update_implementation_)(c);
+          BackendType::scale(c.dim(),beta,c.p());
+          BackendType::axpy(c.dim(),-1,c.g(),c.p());
         }
     private:
         detail::optimization_context<BackendType> & context_;

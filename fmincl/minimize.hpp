@@ -68,26 +68,24 @@ namespace fmincl{
         tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping_criterion__impl(stopping_criterion_mapping::create(*options.stopping_criterion,context));
 
         double ai;
+        line_search_result<BackendType> search_res(N);
         //double last_dphi_0;
         for( ; context.iter() < options.max_iter ; ++context.iter()){
             print_context_infos(context,options);
             context.diff() = (context.val()-context.valm1());
 
 
-            if(context.iter()==0){
+            if(context.iter()==0 || direction_impl->restart(context)){
               //Sets descent direction to gradient
               BackendType::copy(N,context.g(),context.p());
               BackendType::scale(N,-1,context.p());
 
               context.dphi_0() = BackendType::dot(N,context.p(),context.g());
-
+              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,context.g()));
             }
             else{
               //Update direction into context.p()
-              (*direction_impl)();
-
-              //Checks whether the direction is a descent direction or not
-              //last_dphi_0 = context.dphi_0();
+              (*direction_impl)(context);
               context.dphi_0() = BackendType::dot(N,context.p(),context.g());
               if(context.dphi_0()>0){
                   //Reset p = -g;
@@ -96,28 +94,16 @@ namespace fmincl{
 
                   context.dphi_0() = - BackendType::dot(N,context.g(), context.g());
               }
-            }
-
-            if(context.iter()==0){
-              ai = std::min(static_cast<double>(1.0),1/BackendType::asum(N,context.g()));
-            }
-            else{
               if(dynamic_cast<quasi_newton::implementation<BackendType> const *>(direction_impl.get()))
                 ai = 1;
               else
-                //ai = context.ak()*last_dphi_0/context.dphi_0();
                 ai = std::min((double)1,2*context.diff()/context.dphi_0());
             }
 
-            //Perform line search to find the step size
-            line_search_result<BackendType> search_res(N);
-            (*line_search_impl)(search_res, ai);          
+            (*line_search_impl)(search_res, context, ai);
 
-
-            if(search_res.has_failed){
+            if(search_res.has_failed)
                 break;
-            }
-
 
             BackendType::copy(N,context.x(),context.xm1());
             BackendType::copy(N,search_res.best_x,context.x());
@@ -129,9 +115,8 @@ namespace fmincl{
             context.val() = search_res.best_phi;
 
 
-            if((*stopping_criterion__impl)()){
+            if((*stopping_criterion__impl)(context))
               break;
-            }
         }
 
         BackendType::copy(N,context.x(),res);
