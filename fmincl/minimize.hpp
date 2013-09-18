@@ -62,10 +62,10 @@ namespace fmincl{
         //double last_dphi_0;
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_context_infos(state,options);
-            if(state.iter()==0 || current_direction->restart(state))
+            current_direction = default_direction;
+            if(state.iter()==0 || current_direction->restart(state)){
                 current_direction = fallback_direction;
-            else
-                current_direction = default_direction;
+            }
 
             (*current_direction)(state);
             state.dphi_0() = BackendType::dot(N,state.p(),state.g());

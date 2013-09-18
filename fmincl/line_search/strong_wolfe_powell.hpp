@@ -133,7 +133,7 @@ namespace fmincl{
             else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
               c2_ = 0.2;
             else
-              c2_ = 0.6;
+              c2_ = 0.4;
 
             double aim1 = 0;
             double phi_0 = c.val();

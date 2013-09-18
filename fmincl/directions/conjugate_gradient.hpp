@@ -38,7 +38,7 @@ struct conjugate_gradient : public direction{
         implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : update_implementation_(update_mapping::create(*cg_params.update, context)){ }
 
         virtual bool restart(detail::optimization_context<BackendType> & c){
-            double orthogonality_threshold = 0.1;
+            double orthogonality_threshold = 0.5;
             return std::abs(BackendType::dot(c.N(),c.g(),c.gm1()))/BackendType::dot(c.N(),c.g(),c.g()) > orthogonality_threshold;
         }
 
@@ -53,7 +53,7 @@ struct conjugate_gradient : public direction{
     };
 
 
-    conjugate_gradient(cg_update * _update = new polak_ribiere()) : update(_update){ }
+    conjugate_gradient(cg_update * _update = new gilbert_nocedal()) : update(_update){ }
     tools::shared_ptr<cg_update> update;
 };
 
