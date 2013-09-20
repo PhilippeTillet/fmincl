@@ -57,7 +57,7 @@ struct conjugate_gradient : public direction{
     };
 
 
-    conjugate_gradient(cg_update * _update = new gilbert_nocedal(), cg_restart * _restart = new no_restart()) : update(_update), restart(_restart){ }
+    conjugate_gradient(cg_update * _update = new gilbert_nocedal(), cg_restart * _restart = new restart_not_orthogonal()) : update(_update), restart(_restart){ }
     tools::shared_ptr<cg_update> update;
     tools::shared_ptr<cg_restart> restart;
 };

@@ -3,36 +3,33 @@
 
 #include <cmath>
 #include <vector>
+#include "sum_square.hpp"
 
 template<class BackendType>
-class beale{
+class beale : public sum_square<BackendType>{
     typedef typename BackendType::VectorType VectorType;
+    typedef double ScalarType;
+    typedef sum_square<BackendType> base_type;
 public:
-    static const std::size_t N = 2;
-
-    static double true_minimum_value() { return 0; }
-
-    static void local_minima_value(std::vector<double> &) { }
-
-    static void init(VectorType & X){ X[0] = 1; X[1] = 1; }
-
-    double operator()(VectorType const & V, VectorType * grad) const {
-        double x=V[0], y=V[1];
-        double res = std::pow(1.5   -x+x*y,2)
-                        +std::pow(2.25  -x+x*y*y,2)
-                        +std::pow(2.625 -x+x*y*y*y,2);
-        if(grad){
-         (*grad)[0] = 2*(-1+y)*(1.5 -x+x*y)
-                    + 2*(-1+y*y)*(2.25 -x+x*y*y)
-                    + 2*(-1+y*y)*(2.625 -x+x*y*y*y);
-
-         (*grad)[1] = 2*(x)*(1.5 -x+x*y)
-                    + 2*(2*x*y)*(2.25 -x+x*y*y)
-                    + 2*(3*x*y*y)*(2.625 -x+x*y*y*y);
-        }
-        return res;
+    beale() : base_type("Beale",3,2,0){ }
+    void init(VectorType & X) const
+    {
+        X[0] = 1;
+        X[1] = 1;
     }
-
+    void fill_dym_dxn(VectorType const & V, ScalarType * res) const
+    {
+        for(std::size_t m = 0 ; m < base_type::M_ ; ++m){
+            base_type::get(res,m,0) = -1 + std::pow(V[1],m+1);
+            base_type::get(res,m,1) = V[0]*(m+1)*std::pow(V[1],m);
+        }
+    }
+    void fill_ym(VectorType const & V, ScalarType * res) const
+    {
+        ScalarType alpha[3] = {1.5, 2.25, 2.625};
+        for(std::size_t m = 0 ; m < base_type::M_ ; ++m)
+            res[m] = alpha[m]-V[0]+V[0]*std::pow(V[1],m+1);
+    }
 };
 
 #endif

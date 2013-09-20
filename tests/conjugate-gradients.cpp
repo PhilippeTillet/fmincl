@@ -23,6 +23,8 @@ int main(){
     result |= test_option<double>("Conjugate Gradient [Double - Polak-Ribière]", new conjugate_gradient(new polak_ribiere()));
     result |= test_option<float>("Conjugate Gradient [Float - Fletcher-Reeves]", new conjugate_gradient(new fletcher_reeves()));
     result |= test_option<double>("Conjugate Gradient [Double - Fletcher-Reeves]", new conjugate_gradient(new fletcher_reeves()));
+    result |= test_option<float>("Conjugate Gradient [Float - Gilbert-Nocedal]", new conjugate_gradient(new gilbert_nocedal()));
+    result |= test_option<double>("Conjugate Gradient [Double - Gilbert-Nocedal]", new conjugate_gradient(new gilbert_nocedal()));
 
     return result;
 

@@ -16,7 +16,7 @@
 namespace fmincl{
 
 struct restart_not_orthogonal : public cg_restart{
-    restart_not_orthogonal(double _threshold = 0.2) : threshold(_threshold){ }
+    restart_not_orthogonal(double _threshold = 0.1) : threshold(_threshold){ }
     double threshold;
 
     template<class BackendType>

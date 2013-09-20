@@ -39,22 +39,24 @@ double test_result(std::size_t N, typename BackendType::VectorType const & S, ty
     return diff;
 }
 
-template<class BackendType, class FunctionType>
-int test_function(std::string const & function_name, fmincl::optimization_options const & options)
+template<class FunctionType>
+int test_function(FunctionType const & fun, fmincl::optimization_options const & options)
 {
+    typedef typename FunctionType::BackendType BackendType;
     typedef typename BackendType::VectorType VectorType;
     int res = EXIT_SUCCESS;
     double epsilon = 1e-4;
     double diff = 0;
-    static const std::size_t dimension = FunctionType::N;
+
+    std::cout << "- Testing " << fun.name() << "..." << std::endl;
+    std::size_t dimension = fun.N();
     VectorType X0 = BackendType::create_vector(dimension);
-    FunctionType::init(X0);
+    fun.init(X0);
     //fmincl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
     VectorType S = BackendType::create_vector(dimension);
-    double found_minimum = fmincl::minimize<BackendType>(S,FunctionType(),X0,dimension,options);
-    if((diff = std::fabs(FunctionType::true_minimum_value() - found_minimum))>epsilon){ \
-        std::vector<double> local_minima;
-        FunctionType::local_minima_value(local_minima);
+    double found_minimum = fmincl::minimize<BackendType>(S,fun,X0,dimension,options);
+    if((diff = std::fabs(fun.global_minimum() - found_minimum))>epsilon){ \
+        std::vector<double> local_minima = fun.local_minima();
         double min_local_minima_diff = INFINITY;
         for(typename std::vector<double>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it)
             min_local_minima_diff = std::min(min_local_minima_diff,std::fabs(found_minimum - *it));
@@ -66,9 +68,9 @@ int test_function(std::string const & function_name, fmincl::optimization_option
         }
         else{
             if(min_local_minima_diff<diff)
-                std::cout << "## Failure for " << function_name << " ! Closer to local minima ! Diff = " << min_local_minima_diff << std::endl; \
+                std::cout << "## Fail! Diff = " << min_local_minima_diff << std::endl; \
             else
-                std::cout << "## Failure for " << function_name << " ! Diff = " << diff << std::endl; \
+                std::cout << "## Fail! Diff = " << diff << std::endl; \
             res = EXIT_FAILURE;
         }\
     }
@@ -79,17 +81,17 @@ int test_function(std::string const & function_name, fmincl::optimization_option
 template<class ScalarType>
 int test_option(std::string const & options_name, fmincl::direction * direction){
     typedef fmincl::backend::cblas_types<ScalarType> BackendType;
-    static const std::size_t max_iter = 2048;
+    static const std::size_t max_iter = 4096;
     static const unsigned int verbosity = 0;
     optimization_options options(direction, new gradient_treshold(), max_iter, verbosity);
     std::cout << "Testing " << options_name << "..." << std::endl;
     int res = EXIT_SUCCESS;
-    res |= test_function<BackendType,beale<BackendType> >("Beale",options);
-    res |= test_function<BackendType,rosenbrock<4,BackendType> >("Extended Rosenbrock",options);
-    res |= test_function<BackendType,freudenstein_roth<BackendType> >("Freudenstein-Roth",options);
+    res |= test_function(beale<BackendType>(),options);
+    res |= test_function(rosenbrock<BackendType>(2),options);
+    res |= test_function(freudenstein_roth<BackendType>(),options);
     if(typeid(ScalarType)==typeid(double))
-        res |= test_function<BackendType,powell_badly_scaled<BackendType> >("Powell-Badly-Scaled",options);
-    res |= test_function<BackendType,rosenbrock<2,BackendType> >("Rosenbrock",options);
+        res |= test_function(powell_badly_scaled<BackendType>(),options);
+    res |= test_function(rosenbrock<BackendType>(80),options);
     return res;
 }
 
