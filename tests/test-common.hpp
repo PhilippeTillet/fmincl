@@ -16,10 +16,10 @@
 #include "fmincl/backends/cblas.hpp"
 #include "fmincl/minimize.hpp"
 #include "fmincl/utils.hpp"
-#include "common/beale.hpp"
-#include "common/freudenstein-roth.hpp"
-#include "common/powell-badly-scaled.hpp"
-#include "common/rosenbrock.hpp"
+#include "mghfuns/beale.hpp"
+#include "mghfuns/freudenstein-roth.hpp"
+#include "mghfuns/powell-badly-scaled.hpp"
+#include "mghfuns/rosenbrock.hpp"
 
 using namespace fmincl;
 
