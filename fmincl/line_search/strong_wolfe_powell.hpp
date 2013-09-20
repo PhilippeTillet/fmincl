@@ -62,7 +62,7 @@ namespace fmincl{
             double aj = 0;
             double dphi_aj = 0;
             bool twice_close_to_boundary=false;
-            for(unsigned int i = 0 ; i < 20 ; ++i){
+            for(unsigned int i = 0 ; i < 50 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
               if(alo < ahi)

@@ -1,5 +1,5 @@
-#ifndef FMINCL_TEST_COMMON_HPP_
-#define FMINCL_TEST_COMMON_HPP_
+#ifndef TEST_COMMON_HPP
+#define TEST_COMMON_HPP
 
 /* ===========================
  *
@@ -17,9 +17,11 @@
 #include "fmincl/minimize.hpp"
 #include "fmincl/utils.hpp"
 #include "mghfuns/beale.hpp"
-#include "mghfuns/freudenstein-roth.hpp"
-#include "mghfuns/powell-badly-scaled.hpp"
+#include "mghfuns/freudenstein_roth.hpp"
+#include "mghfuns/powell_badly_scaled.hpp"
+#include "mghfuns/brown_badly_scaled.hpp"
 #include "mghfuns/rosenbrock.hpp"
+#include "mghfuns/helical_valley.hpp"
 
 using namespace fmincl;
 
@@ -28,16 +30,6 @@ struct get_backend{
     typedef fmincl::backend::cblas_types<ScalarType> type;
 };
 
-
-template<class BackendType>
-double test_result(std::size_t N, typename BackendType::VectorType const & S, typename BackendType::VectorType const & RealS){
-    double diff = 0;
-    for(std::size_t i = 0 ; i < N ; ++i){
-        if(std::isnan(S[i])) return INFINITY;
-        diff = std::max(diff,std::fabs(S[i]-RealS[i]));
-    }
-    return diff;
-}
 
 template<class FunctionType>
 int test_function(FunctionType const & fun, fmincl::optimization_options const & options)
@@ -48,7 +40,7 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
     double epsilon = 1e-4;
     double diff = 0;
 
-    std::cout << "- Testing " << fun.name() << "..." << std::endl;
+    std::cout << "- Testing " << fun.name() << "..." << std::flush;
     std::size_t dimension = fun.N();
     VectorType X0 = BackendType::create_vector(dimension);
     fun.init(X0);
@@ -63,8 +55,9 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
 
         if(min_local_minima_diff<=epsilon){
 #ifndef DISABLE_WARNING
-            std::cout << "#Warning for " << function_name << " : Converge to local minimum!" << std::endl;
+            std::cout << "#Warning for " << function_name << " : Converge to local minimum!" << std::flush ;
 #endif
+            std::cout << std::endl;
         }
         else{
             if(min_local_minima_diff<diff)
@@ -74,6 +67,8 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
             res = EXIT_FAILURE;
         }\
     }
+    else
+        std::cout << std::endl;
     BackendType::delete_if_dynamically_allocated(X0);
     BackendType::delete_if_dynamically_allocated(S);
     return res;
@@ -89,8 +84,11 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
     res |= test_function(beale<BackendType>(),options);
     res |= test_function(rosenbrock<BackendType>(2),options);
     res |= test_function(freudenstein_roth<BackendType>(),options);
-    if(typeid(ScalarType)==typeid(double))
+    if(typeid(ScalarType)==typeid(double)){
         res |= test_function(powell_badly_scaled<BackendType>(),options);
+        res |= test_function(brown_badly_scaled<BackendType>(),options);
+    }
+    res |= test_function(helical_valley<BackendType>(),options);
     res |= test_function(rosenbrock<BackendType>(80),options);
     return res;
 }

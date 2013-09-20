@@ -103,32 +103,5 @@ namespace fmincl{
         };
     }
 
-    namespace utils{
-
-    template<class BackendType, class FUN>
-    void check_grad(FUN const & fun, typename BackendType::VectorType const & x0, std::size_t N){
-        typedef typename BackendType::VectorType VectorType;
-        VectorType x = BackendType::create_vector(N);
-        BackendType::copy(N,x0,x);
-        VectorType fgrad = BackendType::create_vector(N);
-        VectorType numgrad = BackendType::create_vector(N);
-        double eps = 1e-10;
-        fun(x,&fgrad);
-        for(unsigned int i=0 ; i < N ; ++i){
-            double old = x[i];
-            x[i] = old-eps; double vleft = fun(x,NULL);
-            x[i] = old+eps; double vright = fun(x,NULL);
-            std::cout << vright << " " << vleft << std::endl;
-            numgrad[i] = (vright-vleft)/(2*eps);
-        }
-        for(unsigned int i=0 ; i < N ; ++i){
-            std::cout << numgrad[i] << " " << fgrad[i] << std::endl;
-        }
-    }
-
-    }
-
-
-
 }
 #endif
