@@ -19,7 +19,7 @@ int main(){
     srand(0);
     int result = EXIT_SUCCESS;
 
-    result |= test_option<float>("BFGS [Float]", new quasi_newton(new bfgs()));
+    //result |= test_option<float>("BFGS [Float]", new quasi_newton(new bfgs()));
     result |= test_option<double>("BFGS [Double]", new quasi_newton(new bfgs()));
 
     return result;

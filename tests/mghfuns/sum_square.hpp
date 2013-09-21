@@ -44,7 +44,7 @@ public:
             for(std::size_t n = 0 ; n < N_ ; ++n){
                 (*grad)[n] = 0;
                 for(std::size_t m = 0 ; m < M_ ; ++m){
-                    (*grad)[n] += 2*y[m]*get(dy_dx,m,+n);
+                    (*grad)[n] += 2*y[m]*get(dy_dx,m,n);
                 }
             }
         }
