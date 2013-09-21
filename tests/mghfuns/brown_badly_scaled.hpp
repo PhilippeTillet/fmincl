@@ -10,6 +10,9 @@ class brown_badly_scaled : public sum_square<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef double ScalarType;
     typedef sum_square<BackendType> base_type;
+    using base_type::M_;
+    using base_type::N_;
+    using base_type::get;
 public:
     brown_badly_scaled() : base_type("Brown Badly Scaled",3,2,0){ }
     void init(VectorType & X) const
@@ -19,9 +22,9 @@ public:
     }
     void fill_dym_dxn(VectorType const & V, ScalarType * res) const
     {
-        base_type::get(res,0,0) = 1; base_type::get(res,0,1) = 0;
-        base_type::get(res,1,0) = 0; base_type::get(res,1,1) = 1;
-        base_type::get(res,2,0) = V[1]; base_type::get(res,2,1) = V[0];
+        get(res,0,0) = 1; get(res,0,1) = 0;
+        get(res,1,0) = 0; get(res,1,1) = 1;
+        get(res,2,0) = V[1]; get(res,2,1) = V[0];
 
     }
     void fill_ym(VectorType const & V, ScalarType * res) const

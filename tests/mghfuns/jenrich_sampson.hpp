@@ -10,6 +10,9 @@ class jenrich_sampson : public sum_square<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef double ScalarType;
     typedef sum_square<BackendType> base_type;
+    using base_type::M_;
+    using base_type::N_;
+    using base_type::get;
 public:
     jenrich_sampson() : base_type("Jenrich Sampson",10,2,124.36218){ }
     void init(VectorType & X) const
@@ -19,14 +22,14 @@ public:
     }
     void fill_dym_dxn(VectorType const & V, ScalarType * res) const
     {
-        for(std::size_t m = 1 ; m < base_type::M_+1 ; ++m){
-            base_type::get(res,m-1,0) = m*-std::exp(m*V[0]);
-            base_type::get(res,m-1,1) = m*-std::exp(m*V[1]);
+        for(std::size_t m = 1 ; m < M_+1 ; ++m){
+            get(res,m-1,0) = m*-std::exp(m*V[0]);
+            get(res,m-1,1) = m*-std::exp(m*V[1]);
         }
     }
     void fill_ym(VectorType const & V, ScalarType * res) const
     {
-        for(std::size_t m = 1 ; m < base_type::M_+1 ; ++m){
+        for(std::size_t m = 1 ; m < M_+1 ; ++m){
             res[m-1] = 2 + 2*m - (std::exp(m*V[0]) + std::exp(m*V[1]));
         }
     }

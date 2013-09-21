@@ -16,15 +16,25 @@
 #include "fmincl/backends/cblas.hpp"
 #include "fmincl/minimize.hpp"
 #include "fmincl/utils.hpp"
+
 #include "mghfuns/beale.hpp"
 #include "mghfuns/powell_badly_scaled.hpp"
 #include "mghfuns/brown_badly_scaled.hpp"
 #include "mghfuns/rosenbrock.hpp"
 #include "mghfuns/helical_valley.hpp"
 #include "mghfuns/biggs_exp6.hpp"
-#include "mghfuns/box_3d.hpp"
-#include "mghfuns/variably_dimensioned.hpp"
 #include "mghfuns/watson.hpp"
+#include "mghfuns/variably_dimensioned.hpp"
+#include "mghfuns/box_3d.hpp"
+#include "mghfuns/gaussian.hpp"
+#include "mghfuns/penalty1.hpp"
+#include "mghfuns/penalty2.hpp"
+#include "mghfuns/gulf.hpp"
+#include "mghfuns/powell_singular.hpp"
+#include "mghfuns/wood.hpp"
+#include "mghfuns/trigonometric.hpp"
+#include "mghfuns/brown_dennis.hpp"
+#include "mghfuns/gaussian.hpp"
 
 using namespace fmincl;
 
@@ -86,22 +96,24 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
     int res = EXIT_SUCCESS;
     res |= test_function(helical_valley<BackendType>(),options);
     res |= test_function(biggs_exp6<BackendType>(),options);
-    //res |= test_function(gaussian<BackendType>(),options);
+    res |= test_function(gaussian<BackendType>(),options);
     res |= test_function(powell_badly_scaled<BackendType>(),options);
     res |= test_function(box_3d<BackendType>(),options);
     res |= test_function(variably_dimensioned<BackendType>(20),options);
     res |= test_function(watson<BackendType>(6),options);
-    //res |= test_function(penalty1<BackendType>(),options);
-    //res |= test_function(penalty2<BackendType>(),options);
+    res |= test_function(penalty1<BackendType>(10),options);
+    res |= test_function(penalty2<BackendType>(4),options);
     res |= test_function(brown_badly_scaled<BackendType>(),options);
-    //res |= test_function(brown_dennis<BackendType>(),options);
-    //res |= test_function(gulf<BackendType>(),options);
-    //res |= test_function(trigonometric<BackendType>(),options);
+    res |= test_function(brown_dennis<BackendType>(),options);
+    res |= test_function(gulf<BackendType>(20),options);
+    res |= test_function(trigonometric<BackendType>(10),options);
     res |= test_function(rosenbrock<BackendType>(2),options);
-    //res |= test_function(powell_singular<BackendType>(2),options);
+    res |= test_function(powell_singular<BackendType>(4),options);
+    res |= test_function(rosenbrock<BackendType>(20),options);
+    res |= test_function(powell_singular<BackendType>(40),options);
 
     res |= test_function(beale<BackendType>(),options);
-    //res |= test_function(wood<BackendType>(),options);
+    res |= test_function(wood<BackendType>(),options);
     //res |= test_function(chebyquad<BackendType>(),options);
 
     return res;

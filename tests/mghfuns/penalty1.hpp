@@ -5,8 +5,6 @@
 #include <vector>
 #include "sum_square.hpp"
 
-using namespace std;
-#define RES(i,j) base_type::get(res,i,j)
 
 template<class BackendType>
 class penalty1 : public sum_square<BackendType>{
@@ -17,6 +15,7 @@ class penalty1 : public sum_square<BackendType>{
     using base_type::N_;
     using base_type::M_;
     using base_type::global_minimum_;
+    using base_type::get;
 public:
     penalty1(std::size_t n) : base_type("Penalty 1",n+1,n,0){
         if(n==4)

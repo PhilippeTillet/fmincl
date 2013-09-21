@@ -6,6 +6,8 @@
 #include <string>
 #include <cassert>
 
+using namespace std;
+
 template<class _BackendType>
 class sum_square{
 public:
@@ -34,8 +36,13 @@ public:
     virtual void fill_ym(VectorType const & V, ScalarType * res) const = 0;
     ScalarType operator()(VectorType const & V, VectorType * grad)const{
         ScalarType* y = new ScalarType[M_];
+        for(std::size_t m = 0 ; m < M_ ; ++m)
+            y[m] = 0;
         fill_ym(V,y);
         ScalarType* dy_dx = new ScalarType[M_*N_];
+        for(std::size_t m = 0 ; m < M_ ; ++m)
+            for(std::size_t n = 0 ; n < N_ ; ++n)
+                get(dy_dx,m,n) = 0;
         fill_dym_dxn(V,dy_dx);
         ScalarType res = 0;
         for(std::size_t m = 0 ; m < M_ ; ++m)

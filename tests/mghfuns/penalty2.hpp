@@ -5,8 +5,6 @@
 #include <vector>
 #include "sum_square.hpp"
 
-using namespace std;
-#define RES(i,j) base_type::get(res,i,j)
 
 template<class BackendType>
 class penalty2 : public sum_square<BackendType>{
@@ -14,14 +12,16 @@ class penalty2 : public sum_square<BackendType>{
     typedef double ScalarType;
     typedef sum_square<BackendType> base_type;
     static const double a;
-    using base_type::N_;
     using base_type::M_;
+    using base_type::N_;
+    using base_type::get;
+    using base_type::global_minimum_;
 public:
     penalty2(std::size_t n) : base_type("Penalty 2",2*n,n,0){
         if(n==4)
-            base_type::global_minimum_ = 9.37629e-6;
+            global_minimum_ = 9.37629e-6;
         else if(n==10)
-            base_type::global_minimum_ = 2.93660e-6;
+            global_minimum_ = 2.93660e-6;
         else
             throw "Not allowed dimensionality";
     }

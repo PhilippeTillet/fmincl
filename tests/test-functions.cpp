@@ -26,6 +26,15 @@
 #include "mghfuns/watson.hpp"
 #include "mghfuns/variably_dimensioned.hpp"
 #include "mghfuns/box_3d.hpp"
+#include "mghfuns/gaussian.hpp"
+#include "mghfuns/penalty1.hpp"
+#include "mghfuns/penalty2.hpp"
+#include "mghfuns/gulf.hpp"
+#include "mghfuns/powell_singular.hpp"
+#include "mghfuns/wood.hpp"
+#include "mghfuns/trigonometric.hpp"
+#include "mghfuns/brown_dennis.hpp"
+#include "mghfuns/gaussian.hpp"
 
 using namespace fmincl;
 
@@ -35,17 +44,16 @@ struct get_backend{
 };
 
 template<class FunctionType>
-int test_function(FunctionType const & fun)
+int test_function(FunctionType const & fun, double eps=1e-6)
 {
     typedef typename FunctionType::BackendType BackendType;
     typedef typename BackendType::VectorType VectorType;
-    double eps = 1e-4;
     std::size_t N = fun.N();
     VectorType X0 = BackendType::create_vector(N);
     fun.init(X0);
     std::cout << "- Testing " << fun.name() << "..." << std::flush;
-    double diff = fmincl::check_grad<BackendType>(fun,X0,N,1e-6);
-    if(diff>eps){
+    double diff = fmincl::check_grad<BackendType>(fun,X0,N,eps);
+    if(diff>1e-5){
         std::cout << " Fail ! Diff = " << diff << "." << std::endl;
         return EXIT_FAILURE;
     }
@@ -70,6 +78,26 @@ int main(){
     res |= test_function(box_3d<BackendType>());
     res |= test_function(variably_dimensioned<BackendType>(20));
     res |= test_function(biggs_exp6<BackendType>());
+    res |= test_function(gaussian<BackendType>());
+    res |= test_function(gulf<BackendType>(10));
+    res |= test_function(brown_dennis<BackendType>(),1e-3);
+    res |= test_function(powell_singular<BackendType>(4));
+    res |= test_function(powell_singular<BackendType>(20));
+    res |= test_function(wood<BackendType>());
+    res |= test_function(trigonometric<BackendType>(20));
+    res |= test_function(penalty1<BackendType>(10),5e-2);
+    res |= test_function(penalty2<BackendType>(10));
+    res |= test_function(gaussian<BackendType>());
+
+
+    //res |= test_function(penalty1<BackendType>(),options);
+    //res |= test_function(penalty2<BackendType>(),options);
+    //res |= test_function(brown_dennis<BackendType>(),options);
+    //res |= test_function(gulf<BackendType>(),options);
+    //res |= test_function(trigonometric<BackendType>(),options);
+    //res |= test_function(powell_singular<BackendType>(2),options);
+    //res |= test_function(wood<BackendType>(),options);
+
     return res;
 }
 

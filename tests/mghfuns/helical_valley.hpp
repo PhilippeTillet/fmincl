@@ -13,6 +13,9 @@ class helical_valley : public sum_square<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef double ScalarType;
     typedef sum_square<BackendType> base_type;
+    using base_type::M_;
+    using base_type::N_;
+    using base_type::get;
 
     ScalarType theta(ScalarType x, ScalarType y) const {
         if(x>0)
