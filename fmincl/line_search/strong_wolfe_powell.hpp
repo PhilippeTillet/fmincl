@@ -20,6 +20,8 @@
 
 #include <cmath>
 
+#include <map>
+
 namespace fmincl{
 
 
@@ -62,7 +64,8 @@ namespace fmincl{
             double aj = 0;
             double dphi_aj = 0;
             bool twice_close_to_boundary=false;
-            for(unsigned int i = 0 ; i < 50 ; ++i){
+            std::map<double, double> record;
+            for(unsigned int i = 0 ; i < 10 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
               if(alo < ahi)
@@ -93,8 +96,10 @@ namespace fmincl{
                 ahi = aj;
                 phi_ahi = current_phi;
                 dphi_ahi = dphi_aj;
+
               }
               else{
+                  record[current_phi] = aj;
                 if(curvature(dphi_aj, c.dphi_0())){
                     res.has_failed = false;
                     return;
@@ -181,6 +186,7 @@ namespace fmincl{
               last_phi = old_phi_ai;
               dphi_aim1 = old_dphi_ai;
             }
+
             res.has_failed=true;
           }
         private:

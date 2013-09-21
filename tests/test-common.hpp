@@ -21,6 +21,7 @@
 #include "mghfuns/powell_badly_scaled.hpp"
 #include "mghfuns/brown_badly_scaled.hpp"
 #include "mghfuns/rosenbrock.hpp"
+#include "mghfuns/jenrich_sampson.hpp"
 #include "mghfuns/helical_valley.hpp"
 
 using namespace fmincl;
@@ -88,6 +89,7 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
         res |= test_function(powell_badly_scaled<BackendType>(),options);
         res |= test_function(brown_badly_scaled<BackendType>(),options);
     }
+    res |= test_function(jenrich_sampson<BackendType>(),options);
     res |= test_function(helical_valley<BackendType>(),options);
     res |= test_function(rosenbrock<BackendType>(80),options);
     return res;
