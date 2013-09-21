@@ -60,12 +60,12 @@ namespace fmincl{
             VectorType & current_g = res.best_g;
             double & current_phi = res.best_phi;
             VectorType const & p = c.p();
-            double eps = 1e-10;
+            double eps = 1e-16;
             double aj = 0;
             double dphi_aj = 0;
             bool twice_close_to_boundary=false;
             std::map<double, double> record;
-            for(unsigned int i = 0 ; i < 10 ; ++i){
+            for(unsigned int i = 0 ; i < 40 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
               if(alo < ahi)
@@ -73,7 +73,12 @@ namespace fmincl{
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
-                  res.has_failed=true;
+                  if(record.empty()==false){
+                      current_phi = phi(N_, c.fun(), current_x, x0_, record.begin()->second, p, current_g, &dphi_aj);
+                  }
+                  else{
+                    res.has_failed=true;
+                  }
                   return;
               }
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
@@ -99,7 +104,7 @@ namespace fmincl{
 
               }
               else{
-                  record[current_phi] = aj;
+                record[current_phi] = aj;
                 if(curvature(dphi_aj, c.dphi_0())){
                     res.has_failed = false;
                     return;
@@ -114,7 +119,11 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-            res.has_failed=true;
+            if(record.empty()==false){
+                current_phi = phi(N_, c.fun(), current_x, x0_, record.begin()->second, p, current_g, &dphi_aj);
+            }
+            else
+                res.has_failed=true;
           }
 
 
@@ -135,7 +144,7 @@ namespace fmincl{
             else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
               c2_ = 0.2;
             else
-              c2_ = 0.7;
+              c2_ = 0.8;
 
             double aim1 = 0;
             double phi_0 = c.val();

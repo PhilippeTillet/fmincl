@@ -42,9 +42,9 @@ public:
                 sum2 += V[j]*pow(t,j);
             }
 
-            RES(m,0) = 2*1*sum2;
+            RES(m,0) = -2*1*sum2;
             for(std::size_t n = 1 ; n < base_type::N_ ; ++n){
-                RES(m,n) = n*pow(t,n-1) +  2*pow(t,n)*sum2;
+                RES(m,n) = n*pow(t,n-1) -  2*pow(t,n)*sum2;
             }
         }
         for(std::size_t n = 0 ; n < base_type::N_ ; ++n){

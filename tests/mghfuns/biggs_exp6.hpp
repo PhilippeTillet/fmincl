@@ -14,10 +14,7 @@ class biggs_exp6 : public sum_square<BackendType>{
     typedef double ScalarType;
     typedef sum_square<BackendType> base_type;
 public:
-    biggs_exp6() : base_type("Biggs EXP6",10,6,0){
-        if(base_type::M_==13)
-            base_type::global_minimum_ = 5.65565e-3;
-    }
+    biggs_exp6() : base_type("Biggs EXP6",13,6,5.65565e-3){ }
     void init(VectorType & X) const
     {
         X[0] = 1;

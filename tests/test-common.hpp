@@ -22,6 +22,10 @@
 #include "mghfuns/rosenbrock.hpp"
 #include "mghfuns/helical_valley.hpp"
 #include "mghfuns/biggs_exp6.hpp"
+#include "mghfuns/box_3d.hpp"
+#include "mghfuns/variably_dimensioned.hpp"
+#include "mghfuns/watson.hpp"
+
 using namespace fmincl;
 
 template<class ScalarType>
@@ -76,7 +80,7 @@ template<class ScalarType>
 int test_option(std::string const & options_name, fmincl::direction * direction){
     typedef fmincl::backend::cblas_types<ScalarType> BackendType;
     static const std::size_t max_iter = 4096;
-    static const unsigned int verbosity = 2;
+    static const unsigned int verbosity = 0;
     optimization_options options(direction, new gradient_treshold(), max_iter, verbosity);
     std::cout << "Testing " << options_name << "..." << std::endl;
     int res = EXIT_SUCCESS;
@@ -84,14 +88,14 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
     res |= test_function(biggs_exp6<BackendType>(),options);
     //res |= test_function(gaussian<BackendType>(),options);
     res |= test_function(powell_badly_scaled<BackendType>(),options);
-    //res |= test_function(box_3d<BackendType>(),options);
-    //res |= test_function(variably_dimensioned<BackendType>(),options);
-    res |= test_function(watson<BackendType>(),options);
+    res |= test_function(box_3d<BackendType>(),options);
+    res |= test_function(variably_dimensioned<BackendType>(20),options);
+    res |= test_function(watson<BackendType>(6),options);
     //res |= test_function(penalty1<BackendType>(),options);
     //res |= test_function(penalty2<BackendType>(),options);
     res |= test_function(brown_badly_scaled<BackendType>(),options);
     //res |= test_function(brown_dennis<BackendType>(),options);
-    res |= test_function(gulf<BackendType>(),options);
+    //res |= test_function(gulf<BackendType>(),options);
     //res |= test_function(trigonometric<BackendType>(),options);
     res |= test_function(rosenbrock<BackendType>(2),options);
     //res |= test_function(powell_singular<BackendType>(2),options);

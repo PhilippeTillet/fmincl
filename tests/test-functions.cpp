@@ -44,7 +44,7 @@ int test_function(FunctionType const & fun)
     VectorType X0 = BackendType::create_vector(N);
     fun.init(X0);
     std::cout << "- Testing " << fun.name() << "..." << std::flush;
-    double diff = fmincl::check_grad<BackendType>(fun,X0,N,1e-9);
+    double diff = fmincl::check_grad<BackendType>(fun,X0,N,1e-6);
     if(diff>eps){
         std::cout << " Fail ! Diff = " << diff << "." << std::endl;
         return EXIT_FAILURE;
@@ -62,7 +62,8 @@ int main(){
     res |= test_function(beale<BackendType>());
     res |= test_function(rosenbrock<BackendType>(2));
     res |= test_function(powell_badly_scaled<BackendType>());
-    res |= test_function(brown_badly_scaled<BackendType>());
+    //This function is too extreme in terms of round-off error for numerical differenciation
+    //res |= test_function(brown_badly_scaled<BackendType>());
     res |= test_function(helical_valley<BackendType>());
     res |= test_function(rosenbrock<BackendType>(80));
     res |= test_function(watson<BackendType>(6));
