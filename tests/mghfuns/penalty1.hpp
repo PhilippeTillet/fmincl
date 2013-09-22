@@ -41,13 +41,12 @@ public:
     }
     void fill_ym(VectorType const & V, ScalarType * res) const
     {
-        for(std::size_t m = 0 ; m < N_ ; ++m){
+        for(std::size_t m = 0 ; m < N_ ; ++m)
             res[m] = sqrt(a)*(V[m]-1);
-        }
         ScalarType sum = 0;
         for(std::size_t n = 0 ; n < N_ ; ++n)
             sum+=V[n]*V[n];
-        res[N_] = sum - 1.4;
+        res[N_] = sum - 0.25;
     }
 };
 

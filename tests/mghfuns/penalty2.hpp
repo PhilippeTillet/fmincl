@@ -21,7 +21,7 @@ public:
         if(n==4)
             global_minimum_ = 9.37629e-6;
         else if(n==10)
-            global_minimum_ = 2.93660e-6;
+            global_minimum_ = 2.93660e-4;
         else
             throw "Not allowed dimensionality";
     }
@@ -37,8 +37,8 @@ public:
             RES(i,i) = sqrt(a)*0.1*exp(0.1*V[i]);
             RES(i,i-1) = sqrt(a)*0.1*exp(0.1*V[i-1]);
         }
-        for(std::size_t i = 0 ; i < N_ ; ++i){
-            RES(i+N_,i) = sqrt(a)*0.1*exp(0.1*V[i]);
+        for(std::size_t i = N_ ; i < M_-1; ++i){
+            RES(i,i-N_) = sqrt(a)*0.1*(exp(0.1*V[(i-N_)]));
         }
         for(std::size_t i = 0 ; i < N_ ; ++i)
             RES(M_-1,i)=2*(N_ - i)*V[i];
@@ -49,10 +49,10 @@ public:
         res[0] = V[0] - 0.2;
         for(std::size_t i = 1 ; i < N_ ; ++i){
             ScalarType y = exp(0.1*(i+1)) + exp(0.1*i);
-            res[i] = sqrt(a)*(exp(0.1*V[i]) + exp(0.1*V[i-1])) - y;
+            res[i] = sqrt(a)*((exp(0.1*V[i]) + exp(0.1*V[i-1])) - y);
         }
-        for(std::size_t i = 0 ; i < N_ ; ++i){
-            res[N_+i] = sqrt(a)*(exp(0.1*V[i]) - exp(-0.1));
+        for(std::size_t i = N_ ; i < M_-1; ++i){
+            res[i] = sqrt(a)*(exp(0.1*V[(i-N_)]) - exp(-0.1));
         }
         ScalarType sum = 0;
         for(std::size_t i = 0 ; i < N_ ; ++i)

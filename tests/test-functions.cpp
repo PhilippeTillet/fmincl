@@ -50,6 +50,9 @@ int test_function(FunctionType const & fun, double eps=1e-6)
     typedef typename BackendType::VectorType VectorType;
     std::size_t N = fun.N();
     VectorType X0 = BackendType::create_vector(N);
+    for(std::size_t i = 0 ; i < N ; ++i){
+        X0[i] = (double)rand()/RAND_MAX - 0.5;
+    }
     fun.init(X0);
     std::cout << "- Testing " << fun.name() << "..." << std::flush;
     double diff = fmincl::check_grad<BackendType>(fun,X0,N,eps);
@@ -67,13 +70,13 @@ int main(){
     typedef double ScalarType;
     typedef fmincl::backend::cblas_types<ScalarType> BackendType;
     int res = EXIT_SUCCESS;
-    res |= test_function(beale<BackendType>());
-    res |= test_function(rosenbrock<BackendType>(2));
-    res |= test_function(powell_badly_scaled<BackendType>());
-    //This function is too extreme in terms of round-off error for numerical differenciation
-    //res |= test_function(brown_badly_scaled<BackendType>());
-    res |= test_function(helical_valley<BackendType>());
-    res |= test_function(rosenbrock<BackendType>(80));
+//    res |= test_function(beale<BackendType>());
+//    res |= test_function(rosenbrock<BackendType>(2));
+//    res |= test_function(powell_badly_scaled<BackendType>());
+//    //This function is too extreme in terms of round-off error for numerical differenciation
+//    //res |= test_function(brown_badly_scaled<BackendType>());
+//    res |= test_function(helical_valley<BackendType>());
+//    res |= test_function(rosenbrock<BackendType>(80));
     res |= test_function(watson<BackendType>(6));
     res |= test_function(box_3d<BackendType>());
     res |= test_function(variably_dimensioned<BackendType>(20));

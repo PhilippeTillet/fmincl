@@ -64,7 +64,6 @@ namespace fmincl{
             double aj = 0;
             double dphi_aj = 0;
             bool twice_close_to_boundary=false;
-            std::map<double, double> record;
             for(unsigned int i = 0 ; i < 40 ; ++i){
               double xmin = std::min(alo,ahi);
               double xmax = std::max(alo,ahi);
@@ -73,12 +72,7 @@ namespace fmincl{
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
-                  if(record.empty()==false){
-                      current_phi = phi(N_, c.fun(), current_x, x0_, record.begin()->second, p, current_g, &dphi_aj);
-                  }
-                  else{
-                    res.has_failed=true;
-                  }
+                  res.has_failed=true;
                   return;
               }
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
@@ -104,7 +98,6 @@ namespace fmincl{
 
               }
               else{
-                record[current_phi] = aj;
                 if(curvature(dphi_aj, c.dphi_0())){
                     res.has_failed = false;
                     return;
@@ -119,11 +112,7 @@ namespace fmincl{
                 dphi_alo = dphi_aj;
               }
             }
-            if(record.empty()==false){
-                current_phi = phi(N_, c.fun(), current_x, x0_, record.begin()->second, p, current_g, &dphi_aj);
-            }
-            else
-                res.has_failed=true;
+            res.has_failed=true;
           }
 
 
@@ -142,9 +131,9 @@ namespace fmincl{
             if(dynamic_cast<quasi_newton::implementation<BackendType>*>(direction))
               c2_ = 0.9;
             else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
-              c2_ = 0.2;
+              c2_ = 0.5;
             else
-              c2_ = 0.8;
+              c2_ = 0.9;
 
             double aim1 = 0;
             double phi_0 = c.val();

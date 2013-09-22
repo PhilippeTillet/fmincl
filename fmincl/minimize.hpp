@@ -58,7 +58,6 @@ namespace fmincl{
         tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,state));
         tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,state));
 
-        line_search_result<BackendType> search_res(N);
         //double last_dphi_0;
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_context_infos(state,options);
@@ -77,7 +76,7 @@ namespace fmincl{
                 state.dphi_0() = BackendType::dot(N,state.p(),state.g());
              }
 
-
+            line_search_result<BackendType> search_res(N);
             (*line_search)(search_res, current_direction.get(), state, current_direction->line_search_first_trial(state));
 
             if(search_res.has_failed)

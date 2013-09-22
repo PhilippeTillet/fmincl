@@ -34,11 +34,9 @@ namespace fmincl{
         }
         for(unsigned int i=0 ; i < N ; ++i){
             double denom = std::max(std::abs(numgrad[i]),std::abs(fgrad[i]));
-            double diff;
-            if(denom==0)
-                diff=(numgrad[i]==fgrad[i])?0:INFINITY;
-            else
-                diff = std::abs(numgrad[i]-fgrad[i])/denom;
+            double diff = std::abs(numgrad[i]-fgrad[i]);
+            if(denom>1)
+                diff/=denom;
             res = std::max(res,diff);
         }
         return res;

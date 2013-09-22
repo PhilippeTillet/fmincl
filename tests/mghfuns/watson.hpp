@@ -45,7 +45,7 @@ public:
                 sum2 += V[j]*pow(t,j);
             }
 
-            get(res,m,0) = 2*1*sum2;
+            get(res,m,0) = -2*1*sum2;
             for(std::size_t n = 1 ; n < N_ ; ++n){
                 get(res,m,n) = n*pow(t,n-1) -  2*pow(t,n)*sum2;
             }

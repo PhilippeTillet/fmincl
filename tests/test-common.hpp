@@ -57,15 +57,22 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
     std::size_t dimension = fun.N();
     VectorType X0 = BackendType::create_vector(dimension);
     fun.init(X0);
+    double true_minimum = fun.global_minimum();
     //fmincl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
     VectorType S = BackendType::create_vector(dimension);
     double found_minimum = fmincl::minimize<BackendType>(S,fun,X0,dimension,options);
-    if((diff = std::fabs(fun.global_minimum() - found_minimum))>epsilon){ \
+    diff = std::fabs(fun.global_minimum() - found_minimum);
+    if(true_minimum>1)
+        diff/=std::max(true_minimum,found_minimum);
+    if(diff>epsilon){ \
         std::vector<double> local_minima = fun.local_minima();
         double min_local_minima_diff = INFINITY;
-        for(typename std::vector<double>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it)
-            min_local_minima_diff = std::min(min_local_minima_diff,std::fabs(found_minimum - *it));
-
+        for(typename std::vector<double>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it){
+            double new_diff = std::fabs(found_minimum - *it);
+            if(*it>1)
+                new_diff/=std::max(found_minimum,*it);
+            min_local_minima_diff = std::min(min_local_minima_diff,new_diff);
+        }
         if(min_local_minima_diff<=epsilon){
 #ifndef DISABLE_WARNING
             std::cout << "#Warning for " << function_name << " : Converge to local minimum!" << std::flush ;
@@ -74,9 +81,9 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
         }
         else{
             if(min_local_minima_diff<diff)
-                std::cout << "## Fail! Diff = " << min_local_minima_diff << std::endl; \
+                std::cout << " Fail! /* Diff = " << min_local_minima_diff << "*/" << std::endl; \
             else
-                std::cout << "## Fail! Diff = " << diff << std::endl; \
+                std::cout << " Fail! /* Diff = " << diff << "*/" << std::endl; \
             res = EXIT_FAILURE;
         }\
     }
@@ -102,7 +109,7 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
     res |= test_function(variably_dimensioned<BackendType>(20),options);
     res |= test_function(watson<BackendType>(6),options);
     res |= test_function(penalty1<BackendType>(10),options);
-    res |= test_function(penalty2<BackendType>(4),options);
+    res |= test_function(penalty2<BackendType>(10),options);
     res |= test_function(brown_badly_scaled<BackendType>(),options);
     res |= test_function(brown_dennis<BackendType>(),options);
     res |= test_function(gulf<BackendType>(20),options);
@@ -112,8 +119,8 @@ int test_option(std::string const & options_name, fmincl::direction * direction)
     res |= test_function(rosenbrock<BackendType>(20),options);
     res |= test_function(powell_singular<BackendType>(40),options);
 
-    res |= test_function(beale<BackendType>(),options);
-    res |= test_function(wood<BackendType>(),options);
+//    res |= test_function(beale<BackendType>(),options);
+//    res |= test_function(wood<BackendType>(),options);
     //res |= test_function(chebyquad<BackendType>(),options);
 
     return res;
