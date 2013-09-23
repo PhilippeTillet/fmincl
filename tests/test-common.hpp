@@ -48,31 +48,42 @@ template<class FunctionType>
 int test_function(FunctionType const & fun, fmincl::optimization_options const & options)
 {
     typedef typename FunctionType::BackendType BackendType;
+    typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
+
     int res = EXIT_SUCCESS;
-    double epsilon = 1e-4;
-    double diff = 0;
+    ScalarType epsilon = 1e-4;
+    ScalarType diff = 0;
 
     std::cout << "- Testing " << fun.name() << "..." << std::flush;
+
     std::size_t dimension = fun.N();
     VectorType X0 = BackendType::create_vector(dimension);
     fun.init(X0);
-    double true_minimum = fun.global_minimum();
+
+    ScalarType true_minimum = fun.global_minimum();
+
     //fmincl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
     VectorType S = BackendType::create_vector(dimension);
-    double found_minimum = fmincl::minimize<BackendType>(S,fun,X0,dimension,options);
-    diff = std::fabs(fun.global_minimum() - found_minimum);
+    fmincl::optimization_result result = fmincl::minimize<BackendType>(S,fun,X0,dimension,options);
+
+    ScalarType numerical_minimum = (ScalarType)result.f;
+
+    diff = std::fabs(fun.global_minimum() - numerical_minimum);
+
     if(true_minimum>1)
-        diff/=std::max(true_minimum,found_minimum);
+        diff/=std::max(true_minimum,numerical_minimum);
+
     if(diff>epsilon){ \
-        std::vector<double> local_minima = fun.local_minima();
-        double min_local_minima_diff = INFINITY;
-        for(typename std::vector<double>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it){
-            double new_diff = std::fabs(found_minimum - *it);
+        std::vector<ScalarType> local_minima = fun.local_minima();
+        ScalarType min_local_minima_diff = INFINITY;
+        for(typename std::vector<ScalarType>::iterator it = local_minima.begin() ; it != local_minima.end() ; ++it){
+            ScalarType new_diff = std::fabs(numerical_minimum - *it);
             if(*it>1)
-                new_diff/=std::max(found_minimum,*it);
+                new_diff/=std::max(numerical_minimum,*it);
             min_local_minima_diff = std::min(min_local_minima_diff,new_diff);
         }
+
         if(min_local_minima_diff<=epsilon){
 #ifndef DISABLE_WARNING
             std::cout << "#Warning for " << function_name << " : Converge to local minimum!" << std::flush ;
@@ -86,18 +97,21 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
                 std::cout << " Fail! /* Diff = " << diff << "*/" << std::endl; \
             res = EXIT_FAILURE;
         }\
+
     }
     else
         std::cout << std::endl;
+
     BackendType::delete_if_dynamically_allocated(X0);
     BackendType::delete_if_dynamically_allocated(S);
+
     return res;
 }
 template<class ScalarType>
 int test_option(std::string const & options_name, fmincl::direction * direction){
     typedef fmincl::backend::cblas_types<ScalarType> BackendType;
-    static const std::size_t max_iter = 4096;
-    static const unsigned int verbosity = 0;
+    const std::size_t max_iter = 4096;
+    const unsigned int verbosity = 0;
     optimization_options options(direction, new gradient_treshold(), max_iter, verbosity);
     std::cout << "Testing " << options_name << "..." << std::endl;
     int res = EXIT_SUCCESS;

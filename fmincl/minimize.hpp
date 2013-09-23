@@ -12,6 +12,7 @@
 #define FMINCL_MINIMIZE_HPP_
 
 #include "fmincl/optimization_options.hpp"
+#include "fmincl/optimization_result.hpp"
 
 #include "fmincl/utils.hpp"
 
@@ -34,68 +35,80 @@ namespace fmincl{
         std::cout << "iter " << context.iter() << " | cost : " << context.val() << "| NVal : " << context.fun().n_value_calc() << std::endl;
     }
 
+    template<class BackendType>
+    optimization_result terminate(optimization_result::termination_cause_type termination_cause, typename BackendType::VectorType & res, std::size_t N, detail::optimization_context<BackendType> & context){
+        optimization_result result;
+        BackendType::copy(N,context.x(),res);
+        result.f = context.val();
+        result.iteration = context.iter();
+        result.n_functions_eval = context.fun().n_value_calc();
+        result.n_gradient_eval = context.fun().n_derivative_calc();
+        result.termination_cause = termination_cause;
+        return result;
+    }
 
     template<class BackendType, class Fun>
-    typename BackendType::ScalarType minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+    optimization_result minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient,steepest_descent> direction_mapping;
         typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
         typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
-
         typedef typename BackendType::VectorType VectorType;
 
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
-        detail::optimization_context<BackendType> state(x0, N, fun);
-        state.fun()(state.x(), &state.val(), &state.g());
+        detail::optimization_context<BackendType> c(x0, N, fun);
 
-        if(options.verbosity_level >= 1){
-          std::cout << options.info();
-        }
-
-        tools::shared_ptr<direction::implementation<BackendType> > fallback_direction(direction_mapping::create(fmincl::steepest_descent(),state));
-        tools::shared_ptr<direction::implementation<BackendType> > default_direction(direction_mapping::create(*options.direction,state));
+        tools::shared_ptr<direction::implementation<BackendType> > fallback_direction(direction_mapping::create(fmincl::steepest_descent(),c));
+        tools::shared_ptr<direction::implementation<BackendType> > default_direction(direction_mapping::create(*options.direction,c));
         tools::shared_ptr<direction::implementation<BackendType> > current_direction = default_direction;
 
-        tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,state));
-        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,state));
+        tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,c));
+        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,c));
 
-        for( ; state.iter() < options.max_iter ; ++state.iter()){
-            print_context_infos(state,options);
+        if(options.verbosity_level >= 1)
+          std::cout << options.info();
+
+        //First evaluation
+        c.fun()(c.x(), &c.val(), &c.g());
+
+        //Main loop
+        for( ; c.iter() < options.max_iter ; ++c.iter()){
+            print_context_infos(c,options);
             current_direction = default_direction;
-            if(state.iter()==0 || current_direction->restart(state)){
+            if(c.iter()==0 || current_direction->restart(c)){
                 current_direction = fallback_direction;
             }
 
-            (*current_direction)(state);
-            state.dphi_0() = BackendType::dot(N,state.p(),state.g());
+            (*current_direction)(c);
+            c.dphi_0() = BackendType::dot(N,c.p(),c.g());
 
             //Not a descent direction...
-            if(state.dphi_0()>0){
+            if(c.dphi_0()>0){
                 current_direction = fallback_direction;
-                (*current_direction)(state);
-                state.dphi_0() = BackendType::dot(N,state.p(),state.g());
+                (*current_direction)(c);
+                c.dphi_0() = BackendType::dot(N,c.p(),c.g());
              }
 
             line_search_result<BackendType> search_res(N);
-            (*line_search)(search_res, current_direction.get(), state, current_direction->line_search_first_trial(state));
+            (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
 
             if(search_res.has_failed)
-                break;
+                return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
 
-            BackendType::copy(N,state.x(),state.xm1());
-            BackendType::copy(N,search_res.best_x,state.x());
+            BackendType::copy(N,c.x(),c.xm1());
+            BackendType::copy(N,search_res.best_x,c.x());
 
-            BackendType::copy(N,state.g(),state.gm1());
-            BackendType::copy(N,search_res.best_g,state.g());
+            BackendType::copy(N,c.g(),c.gm1());
+            BackendType::copy(N,search_res.best_g,c.g());
 
-            state.valm1() = state.val();
-            state.val() = search_res.best_phi;
+            c.valm1() = c.val();
+            c.val() = search_res.best_phi;
 
 
-            if((*stopping)(state))
-              break;
+            if((*stopping)(c))
+                return terminate(optimization_result::STOPPING_CRITERION, res, N, c);
         }
-        BackendType::copy(N,state.x(),res);
-        return state.val();
+
+        return terminate(optimization_result::MAX_ITERATION_REACHED, res, N, c);
     }
 
 }
