@@ -103,7 +103,7 @@ namespace fmincl{
         static void set_to_value(VectorType & V, ScalarType val, std::size_t N)
         { std::memset(V, val, sizeof(ScalarType)*N); }
         static void set_to_diagonal(std::size_t N, MatrixType & A, ScalarType lambda) {
-            std::memset(A,0,N*N);
+            std::memset(A,0,N*N*sizeof(ScalarType));
             for(std::size_t i = 0 ; i < N ; ++i){
                 A[i*N+i] = lambda;
             }
