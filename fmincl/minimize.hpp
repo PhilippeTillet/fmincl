@@ -11,7 +11,7 @@
 #ifndef FMINCL_MINIMIZE_HPP_
 #define FMINCL_MINIMIZE_HPP_
 
-#include "fmincl/optimization_otions.hpp"
+#include "fmincl/optimization_options.hpp"
 
 #include "fmincl/utils.hpp"
 
