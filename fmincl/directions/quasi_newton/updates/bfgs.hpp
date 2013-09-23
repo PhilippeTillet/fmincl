@@ -19,6 +19,7 @@ namespace fmincl{
 struct bfgs : public qn_update{
     template<class BackendType>
     class implementation : public qn_update::implementation<BackendType>{
+        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
     public:
@@ -44,18 +45,18 @@ struct bfgs : public qn_update{
           BackendType::copy(N_,c.g(),y_);
           BackendType::axpy(N_,-1,c.gm1(),y_);
 
-          double ys = BackendType::dot(N_,s_,y_);
+          ScalarType ys = BackendType::dot(N_,s_,y_);
 
           if(is_first_update_)
             BackendType::set_to_diagonal(N_,H_,1);
 
-          double gamma = 1;
+          ScalarType gamma = 1;
 
           {
               BackendType::symv(N_,1,H_,y_,0,Hy_);
-              double yHy = BackendType::dot(N_,y_,Hy_);
-              double sg = BackendType::dot(N_,s_,c.gm1());
-              double gHy = BackendType::dot(N_,c.gm1(),Hy_);
+              ScalarType yHy = BackendType::dot(N_,y_,Hy_);
+              ScalarType sg = BackendType::dot(N_,s_,c.gm1());
+              ScalarType gHy = BackendType::dot(N_,c.gm1(),Hy_);
              if(ys/yHy>1)
                   gamma = ys/yHy;
               else if(sg/gHy<1)
@@ -66,12 +67,12 @@ struct bfgs : public qn_update{
 
           BackendType::scale(N_,N_,gamma,H_);
           BackendType::symv(N_,1,H_,y_,0,Hy_);
-          double yHy = BackendType::dot(N_,y_,Hy_);
+          ScalarType yHy = BackendType::dot(N_,y_,Hy_);
 
           //BFGS UPDATE
           //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
-          double alpha = -1/ys;
-          double beta = 1/ys + yHy/pow(ys,2);
+          ScalarType alpha = -1/ys;
+          ScalarType beta = 1/ys + yHy/pow(ys,2);
           BackendType::syr2(N_,alpha,s_,Hy_,H_);
           BackendType::syr1(N_,beta,s_,H_);
 

@@ -33,10 +33,11 @@ struct quasi_newton : public direction{
     template<class BackendType>
     class implementation : public direction::implementation<BackendType>{
         typedef implementation_of<BackendType,qn_update,bfgs,lbfgs> update_mapping;
+        typedef typename BackendType::ScalarType ScalarType;
       public:
         implementation(quasi_newton const & tag, detail::optimization_context<BackendType> & context) : update(update_mapping::create(*tag.update, context)){ }
 
-        virtual double line_search_first_trial(detail::optimization_context<BackendType> &)
+        virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &)
         {
             return 1;
         }

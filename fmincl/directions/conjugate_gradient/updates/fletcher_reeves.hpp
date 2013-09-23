@@ -20,12 +20,13 @@ struct fletcher_reeves : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
+        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
     public:
         implementation(fletcher_reeves const &, detail::optimization_context<BackendType> & context){
             N_ = context.N();
         }
-        double operator()(detail::optimization_context<BackendType> & c){
+        ScalarType operator()(detail::optimization_context<BackendType> & c){
             return BackendType::dot(N_,c.g(),c.g())/BackendType::dot(N_,c.gm1(),c.gm1());
         }
     private:

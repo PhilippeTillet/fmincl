@@ -36,7 +36,7 @@ namespace fmincl{
 
 
     template<class BackendType, class Fun>
-    double minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
+    typename BackendType::ScalarType minimize(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N, optimization_options const & options){
         typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient,steepest_descent> direction_mapping;
         typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
         typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
@@ -45,7 +45,7 @@ namespace fmincl{
 
         detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
         detail::optimization_context<BackendType> state(x0, N, fun);
-        state.val() = state.fun()(state.x(), &state.g());
+        state.fun()(state.x(), &state.val(), &state.g());
 
         if(options.verbosity_level >= 1){
           std::cout << options.info();
@@ -58,7 +58,6 @@ namespace fmincl{
         tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,state));
         tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,state));
 
-        //double last_dphi_0;
         for( ; state.iter() < options.max_iter ; ++state.iter()){
             print_context_infos(state,options);
             current_direction = default_direction;

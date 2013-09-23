@@ -34,7 +34,7 @@ public:
     virtual void init(VectorType &X) const = 0;
     virtual void fill_dym_dxn(VectorType const & V, ScalarType * res) const = 0;
     virtual void fill_ym(VectorType const & V, ScalarType * res) const = 0;
-    ScalarType operator()(VectorType const & V, VectorType * grad)const{
+    void operator()(VectorType const & V, ScalarType * val, VectorType * grad)const{
         ScalarType* y = new ScalarType[M_];
         for(std::size_t m = 0 ; m < M_ ; ++m)
             y[m] = 0;
@@ -44,9 +44,12 @@ public:
             for(std::size_t n = 0 ; n < N_ ; ++n)
                 get(dy_dx,m,n) = 0;
         fill_dym_dxn(V,dy_dx);
-        ScalarType res = 0;
-        for(std::size_t m = 0 ; m < M_ ; ++m)
-            res += std::pow(y[m],2);
+        if(val){
+            ScalarType res = 0;
+            for(std::size_t m = 0 ; m < M_ ; ++m)
+                res += std::pow(y[m],2);
+            *val = res;
+        }
         if(grad){
             for(std::size_t n = 0 ; n < N_ ; ++n){
                 (*grad)[n] = 0;
@@ -57,7 +60,6 @@ public:
         }
         delete[] dy_dx;
         delete[] y;
-        return res;
     }
 protected:
     std::string name_;

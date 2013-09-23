@@ -20,12 +20,13 @@ struct gilbert_nocedal : public cg_update{
     template<class BackendType>
     struct implementation : public cg_update::implementation<BackendType>{
     private:
+        typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
     public:
         implementation(gilbert_nocedal const &, detail::optimization_context<BackendType> &){ }
-        double operator()(detail::optimization_context<BackendType> & context){
-            double betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context)(context);
-            double betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context)(context);
+        ScalarType operator()(detail::optimization_context<BackendType> & context){
+            ScalarType betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context)(context);
+            ScalarType betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context)(context);
             return std::min(betaPR,betaFR);
         }
     };

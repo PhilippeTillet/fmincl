@@ -22,7 +22,8 @@ struct cg_update{
 
     template<class BackendType>
     struct implementation{
-        virtual double operator()(detail::optimization_context<BackendType> &) = 0;
+        typedef typename BackendType::ScalarType ScalarType;
+        virtual ScalarType operator()(detail::optimization_context<BackendType> &) = 0;
         virtual ~implementation(){ }
     };
 };

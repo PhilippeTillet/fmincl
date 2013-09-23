@@ -33,6 +33,7 @@ struct conjugate_gradient : public direction{
     template<class BackendType>
     class implementation : public direction::implementation<BackendType>{
         typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::ScalarType ScalarType;
         typedef implementation_of<BackendType,cg_update,polak_ribiere,fletcher_reeves,gilbert_nocedal> update_mapping;
         typedef implementation_of<BackendType,cg_restart,no_restart,restart_not_orthogonal,restart_on_dim> restart_mapping;
 
@@ -47,7 +48,7 @@ struct conjugate_gradient : public direction{
 
         void operator()(detail::optimization_context<BackendType> & c){
           //p = -g + beta*p;
-          double beta = (*update_implementation_)(c);
+          ScalarType beta = (*update_implementation_)(c);
           BackendType::scale(c.N(),beta,c.p());
           BackendType::axpy(c.N(),-1,c.g(),c.p());
         }
