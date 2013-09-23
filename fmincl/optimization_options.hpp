@@ -34,7 +34,7 @@ namespace fmincl{
       std::string info() const{
         std::ostringstream oss;
         oss << "Verbosity Level : " << verbosity_level << std::endl;
-        oss << "Max Iter : " << max_iter << std::endl;
+        oss << "Maximum number of iterations : " << max_iter << std::endl;
         oss << "Direction : " << typeid(*direction).name() << std::endl;
         oss << "Line Search : " << typeid(*line_search).name() << std::endl;
         oss << std::endl;

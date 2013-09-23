@@ -32,7 +32,7 @@ namespace fmincl{
     inline void print_context_infos(detail::optimization_context<BackendType> & context, optimization_options const & options){
         if(options.verbosity_level <2 )
             return;
-        std::cout << "iter " << context.iter() << " | cost : " << context.val() << "| NVal : " << context.fun().n_value_calc() << std::endl;
+        std::cout << "Ieration  " << context.iter() << " | cost : " << context.val() << "| NVal : " << context.fun().n_value_calc() << std::endl;
     }
 
     template<class BackendType>
@@ -64,6 +64,8 @@ namespace fmincl{
         tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,c));
         tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,c));
 
+        line_search_result<BackendType> search_res(N);
+
         if(options.verbosity_level >= 1)
           std::cout << options.info();
 
@@ -88,7 +90,6 @@ namespace fmincl{
                 c.dphi_0() = BackendType::dot(N,c.p(),c.g());
              }
 
-            line_search_result<BackendType> search_res(N);
             (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
 
             if(search_res.has_failed)
