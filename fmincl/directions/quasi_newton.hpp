@@ -37,13 +37,15 @@ struct quasi_newton : public direction{
       public:
         implementation(quasi_newton const & tag, detail::optimization_context<BackendType> & context) : update(update_mapping::create(*tag.update, context)){ }
 
-        virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &)
-        {
+        virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &){
             return 1;
         }
 
-        virtual void operator()(detail::optimization_context<BackendType> & context)
-        {
+        virtual void reinitialize(){
+            update->erase_memory();
+        }
+
+        virtual void operator()(detail::optimization_context<BackendType> & context){
             (*update)(context);
         }
     private:

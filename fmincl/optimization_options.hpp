@@ -27,6 +27,12 @@
 
 namespace fmincl{
 
+  struct minibatch_options{
+      minibatch_options(std::size_t _n_minibatches, std::size_t _iteration_per_minibatch) : n_minibatches(_n_minibatches), iteration_per_minibatch(_iteration_per_minibatch){ }
+      std::size_t n_minibatches;
+      std::size_t iteration_per_minibatch;
+  };
+
   struct optimization_options{
       optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), line_search(new strong_wolfe_powell()), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){
 

@@ -23,7 +23,7 @@ struct bfgs : public qn_update{
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
     public:
-        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : is_first_update_(true){
+        implementation(bfgs const &, detail::optimization_context<BackendType> & context) : reinitialize_(true){
             N_ = context.N();
             Hy_ = BackendType::create_vector(N_);
             s_ = BackendType::create_vector(N_);
@@ -34,6 +34,10 @@ struct bfgs : public qn_update{
             BackendType::set_to_value(s_,0,N_);
             BackendType::set_to_value(y_,0,N_);
 
+        }
+
+        void erase_memory() {
+            reinitialize_=true;
         }
 
         void operator()(detail::optimization_context<BackendType> & c){
@@ -47,7 +51,7 @@ struct bfgs : public qn_update{
 
           ScalarType ys = BackendType::dot(N_,s_,y_);
 
-          if(is_first_update_)
+          if(reinitialize_)
             BackendType::set_to_diagonal(N_,H_,1);
 
           ScalarType gamma = 1;
@@ -79,7 +83,8 @@ struct bfgs : public qn_update{
           //p = -H_*g
           BackendType::symv(N_,-1,H_,c.g(),0,c.p());
 
-          if(is_first_update_) is_first_update_=false;
+          if(reinitialize_)
+              reinitialize_=false;
         }
 
         ~implementation(){
@@ -99,7 +104,7 @@ struct bfgs : public qn_update{
 
         MatrixType H_;
 
-        bool is_first_update_;
+        bool reinitialize_;
     };
 };
 

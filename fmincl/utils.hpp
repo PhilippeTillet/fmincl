@@ -67,6 +67,8 @@ namespace fmincl{
                 gm1_ = BackendType::create_vector(dim_);
 
                 BackendType::copy(dim_,x0,x_);
+
+                is_reinitializing_ = true;
             }
 
             detail::function_wrapper<BackendType> const & fun() { return fun_; }
@@ -80,6 +82,7 @@ namespace fmincl{
             ScalarType & val() { return valk_; }
             ScalarType & valm1() { return valkm1_; }
             ScalarType & dphi_0() { return dphi_0_; }
+            bool & is_reinitializing() { return is_reinitializing_; }
 
             ~optimization_context(){
                 BackendType::delete_if_dynamically_allocated(x_);
@@ -104,6 +107,8 @@ namespace fmincl{
             ScalarType valk_;
             ScalarType valkm1_;
             ScalarType dphi_0_;
+
+            bool is_reinitializing_;
         };
     }
 

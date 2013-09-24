@@ -45,19 +45,23 @@ struct lbfgs : public qn_update{
                 vecs_[i].s = BackendType::create_vector(N_);
                 vecs_[i].y = BackendType::create_vector(N_);
             }
+
+            n_valid_pairs_ = 0;
+        }
+
+        void erase_memory() {
+            n_valid_pairs_ = 0;
         }
 
         void operator()(detail::optimization_context<BackendType> & c){
-            unsigned int const & m = tag_.m;
-
-            std::vector<ScalarType> rhos(m);
-            std::vector<ScalarType> alphas(m);
+            std::vector<ScalarType> rhos(tag_.m);
+            std::vector<ScalarType> alphas(tag_.m);
 
             //Algorithm
-
+            n_valid_pairs_ = std::min(n_valid_pairs_+1,tag_.m);
 
             //Updates storage
-            for(unsigned int i = std::min(c.iter(),m)-1 ; i > 0  ; --i){
+            for(unsigned int i = n_valid_pairs_-1 ; i > 0  ; --i){
                 BackendType::copy(N_,s(i-1), s(i));
                 BackendType::copy(N_,y(i-1), y(i));
             }
@@ -73,7 +77,7 @@ struct lbfgs : public qn_update{
 
             BackendType::copy(N_,c.g(),q_);
             int i = 0;
-            for(; i < (int)std::min(c.iter(),m) ; ++i){
+            for(; i < (int)n_valid_pairs_ ; ++i){
                 rhos[i] = static_cast<ScalarType>(1)/BackendType::dot(N_,y(i),s(i));
                 alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
                 //q_ = q - alphas[i]*y(i);
@@ -113,6 +117,7 @@ struct lbfgs : public qn_update{
         VectorType q_;
         VectorType r_;
         std::vector<storage_pair> vecs_;
+        unsigned int n_valid_pairs_;
     };
 };
 

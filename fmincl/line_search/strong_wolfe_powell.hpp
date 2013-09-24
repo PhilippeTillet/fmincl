@@ -26,8 +26,8 @@ namespace fmincl{
 
 
   struct strong_wolfe_powell : public line_search{
-      strong_wolfe_powell(){ }
-
+      strong_wolfe_powell(std::size_t _max_searches = 40) : max_searches(_max_searches){ }
+      std::size_t max_searches;
 
 
       template<class BackendType>
@@ -61,11 +61,11 @@ namespace fmincl{
             VectorType & current_g = res.best_g;
             ScalarType & current_phi = res.best_phi;
             VectorType const & p = c.p();
-            ScalarType eps = 1e-16;
+            ScalarType eps = 1e-8;
             ScalarType aj = 0;
             ScalarType dphi_aj = 0;
             bool twice_close_to_boundary=false;
-            for(unsigned int i = 0 ; i < 40 ; ++i){
+            for(unsigned int i = 0 ; i < max_searches_ ; ++i){
               ScalarType xmin = std::min(alo,ahi);
               ScalarType xmax = std::max(alo,ahi);
               if(alo < ahi)
@@ -119,7 +119,7 @@ namespace fmincl{
 
 
         public:
-          implementation(strong_wolfe_powell const &, detail::optimization_context<BackendType> & context) : N_(context.N()) {
+          implementation(strong_wolfe_powell const & tag, detail::optimization_context<BackendType> & context) : N_(context.N()), max_searches_(tag.max_searches) {
               x0_ = BackendType::create_vector(N_);
           }
 
@@ -153,7 +153,7 @@ namespace fmincl{
             BackendType::copy(N_,c.x(), x0_);
 
 
-            for(unsigned int i = 1 ; i<40; ++i){
+            for(unsigned int i = 1 ; i< max_searches_; ++i){
               current_phi = phi(N_,c.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
 
               //Tests sufficient decrease
@@ -190,6 +190,8 @@ namespace fmincl{
           }
         private:
           int N_;
+
+          std::size_t max_searches_;
 
           ScalarType c1_;
           ScalarType c2_;
