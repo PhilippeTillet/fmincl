@@ -41,10 +41,6 @@ struct quasi_newton : public direction{
             return 1;
         }
 
-        virtual void reinitialize(){
-            update->erase_memory();
-        }
-
         virtual void operator()(detail::optimization_context<BackendType> & context){
             (*update)(context);
         }

@@ -27,7 +27,6 @@ struct direction{
                 return std::min((ScalarType)1,2*(c.val() - c.valm1())/c.dphi_0());
         }
         virtual bool restart(detail::optimization_context<BackendType> &){ return false; }
-        virtual void reinitialize(){ }
         virtual ~implementation(){ }
     };
     virtual ~direction(){}

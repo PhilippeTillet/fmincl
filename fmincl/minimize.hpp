@@ -82,6 +82,7 @@ namespace fmincl{
             current_direction = default_direction;
             if(c.is_reinitializing() || current_direction->restart(c)){
                 current_direction = fallback_direction;
+                c.is_reinitializing()=false;
             }
 
             (*current_direction)(c);
@@ -118,87 +119,6 @@ namespace fmincl{
         return terminate(optimization_result::MAX_ITERATION_REACHED, res, N, c);
     }
 
-
-    //MiniBatch//
-    template<class BackendType, class Fun>
-    optimization_result minimize_minibatch(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N
-                                           , optimization_options const & options, minibatch_options const & mb_options){
-        typedef implementation_of<BackendType,direction,quasi_newton,conjugate_gradient,steepest_descent> direction_mapping;
-        typedef implementation_of<BackendType,line_search,strong_wolfe_powell> line_search_mapping;
-        typedef implementation_of<BackendType,stopping_criterion,gradient_treshold,value_treshold> stopping_criterion_mapping;
-        typedef typename BackendType::VectorType VectorType;
-
-        detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
-        detail::optimization_context<BackendType> c(x0, N, fun);
-
-        tools::shared_ptr<direction::implementation<BackendType> > fallback_direction(direction_mapping::create(fmincl::steepest_descent(),c));
-        tools::shared_ptr<direction::implementation<BackendType> > default_direction(direction_mapping::create(*options.direction,c));
-        tools::shared_ptr<direction::implementation<BackendType> > current_direction = default_direction;
-
-        tools::shared_ptr<line_search::implementation<BackendType> > line_search(line_search_mapping::create(*options.line_search,c));
-        tools::shared_ptr<stopping_criterion::implementation<BackendType> > stopping(stopping_criterion_mapping::create(*options.stopping_criterion,c));
-
-        line_search_result<BackendType> search_res(N);
-
-
-        if(options.verbosity_level >= 1)
-          std::cout << options.info();
-
-        //Main loop
-        for( c.iter() = 0; c.iter()< options.max_iter ; ++c.iter()){
-            user_fun.new_minibatch_callback(c.iter()%mb_options.n_minibatches);
-            c.fun()(c.x(), &c.val(), &c.g());
-
-
-            std::size_t max_n_eval = 10;
-            for(std::size_t k = 0 ; k < 10 ; ++k){
-                print_context_infos(c,options);
-
-                current_direction = default_direction;
-                if(c.is_reinitializing() || current_direction->restart(c)){
-                    current_direction = fallback_direction;
-                    c.is_reinitializing()=false;
-                }
-
-                (*current_direction)(c);
-                c.dphi_0() = BackendType::dot(N,c.p(),c.g());
-
-                //Not a descent direction...
-                if(c.dphi_0()>0){
-                    current_direction = fallback_direction;
-                    (*current_direction)(c);
-                    c.dphi_0() = BackendType::dot(N,c.p(),c.g());
-                }
-
-
-                (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
-                if(search_res.has_failed){
-                    c.is_reinitializing()=true;
-                    current_direction->reinitialize();
-                    break;
-                }
-
-                BackendType::copy(N,c.x(),c.xm1());
-                BackendType::copy(N,search_res.best_x,c.x());
-
-                BackendType::copy(N,c.g(),c.gm1());
-                BackendType::copy(N,search_res.best_g,c.g());
-
-                c.valm1() = c.val();
-                c.val() = search_res.best_phi;
-
-
-                if((*stopping)(c))
-                    return terminate(optimization_result::STOPPING_CRITERION, res, N, c);
-                //            for(std::size_t i = 0 ; i < c.N() ; ++i)
-                //                std::cout << c.x()[i] << " " << std::flush;
-                //            std::cout << std::endl;
-            }
-
-        }
-
-        return terminate(optimization_result::MAX_ITERATION_REACHED, res, N, c);
-    }
 }
 
 #endif

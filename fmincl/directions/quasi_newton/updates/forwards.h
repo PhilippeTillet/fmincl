@@ -21,7 +21,6 @@ struct qn_update{
     struct implementation{
         virtual void operator()(detail::optimization_context<BackendType> &) = 0;
         virtual ~implementation(){ }
-        virtual void erase_memory() = 0;
     };
 
     virtual ~qn_update(){ }

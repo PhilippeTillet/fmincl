@@ -49,10 +49,6 @@ struct lbfgs : public qn_update{
             n_valid_pairs_ = 0;
         }
 
-        void erase_memory() {
-            n_valid_pairs_ = 0;
-        }
-
         void operator()(detail::optimization_context<BackendType> & c){
             std::vector<ScalarType> rhos(tag_.m);
             std::vector<ScalarType> alphas(tag_.m);

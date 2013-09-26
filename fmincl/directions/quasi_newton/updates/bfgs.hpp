@@ -36,10 +36,6 @@ struct bfgs : public qn_update{
 
         }
 
-        void erase_memory() {
-            reinitialize_=true;
-        }
-
         void operator()(detail::optimization_context<BackendType> & c){
           //s = x - xm1;
           BackendType::copy(N_,c.x(),s_);
@@ -61,8 +57,8 @@ struct bfgs : public qn_update{
               ScalarType yHy = BackendType::dot(N_,y_,Hy_);
               ScalarType sg = BackendType::dot(N_,s_,c.gm1());
               ScalarType gHy = BackendType::dot(N_,c.gm1(),Hy_);
-             if(ys/yHy>1)
-                  gamma = ys/yHy;
+              if(ys/yHy>1)
+                gamma = ys/yHy;
               else if(sg/gHy<1)
                  gamma = sg/gHy;
               else

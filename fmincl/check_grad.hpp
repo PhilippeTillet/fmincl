@@ -14,6 +14,8 @@
 #include "tools/shared_ptr.hpp"
 #include <iostream>
 
+#include <cmath>
+
 namespace fmincl{
 
     template<class BackendType, class FUN>
@@ -35,8 +37,9 @@ namespace fmincl{
             x[i]=vx;
         }
         for(unsigned int i=0 ; i < N ; ++i){
-            ScalarType denom = std::max(std::abs(numgrad[i]),std::abs(fgrad[i]));
-            ScalarType diff = std::abs(numgrad[i]-fgrad[i]);
+            ScalarType denom = std::max(std::fabs((double)numgrad[i]),std::abs((double)fgrad[i]));
+            ScalarType diff = std::fabs(numgrad[i]-fgrad[i]);
+            std::cout << numgrad[i] << " " << fgrad[i] << std::endl;
             if(denom>1)
                 diff/=denom;
             res = std::max(res,diff);

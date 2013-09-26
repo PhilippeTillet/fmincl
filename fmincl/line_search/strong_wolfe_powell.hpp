@@ -73,6 +73,7 @@ namespace fmincl{
               else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
               if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
+
                   res.has_failed=true;
                   return;
               }
@@ -132,7 +133,7 @@ namespace fmincl{
             if(dynamic_cast<quasi_newton::implementation<BackendType>*>(direction))
               c2_ = 0.9;
             else if(dynamic_cast<conjugate_gradient::implementation<BackendType>*>(direction))
-              c2_ = 0.5;
+              c2_ = 0.3;
             else
               c2_ = 0.9;
 
