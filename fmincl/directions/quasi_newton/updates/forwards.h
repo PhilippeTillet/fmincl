@@ -16,14 +16,12 @@
 
 namespace fmincl{
 
+template<class BackendType>
 struct qn_update{
-    template<class BackendType>
-    struct implementation{
-        virtual void operator()(detail::optimization_context<BackendType> &) = 0;
-        virtual ~implementation(){ }
-    };
-
     virtual ~qn_update(){ }
+    virtual void init(detail::optimization_context<BackendType> &){ }
+    virtual void clean(detail::optimization_context<BackendType> &){ }
+    virtual void operator()(detail::optimization_context<BackendType> &) = 0;
 };
 
 }

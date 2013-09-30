@@ -29,38 +29,34 @@
 
 namespace fmincl{
 
-struct conjugate_gradient : public direction{
-    template<class BackendType>
-    class implementation : public direction::implementation<BackendType>{
-        typedef typename BackendType::VectorType VectorType;
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef implementation_of<BackendType,cg_update,polak_ribiere,fletcher_reeves,gilbert_nocedal> update_mapping;
-        typedef implementation_of<BackendType,cg_restart,no_restart,restart_not_orthogonal,restart_on_dim> restart_mapping;
+template<class BackendType>
+struct conjugate_gradient : public direction<BackendType>{
+    typedef typename BackendType::VectorType VectorType;
+    typedef typename BackendType::ScalarType ScalarType;
+    conjugate_gradient(cg_update<BackendType> * _update = new gilbert_nocedal<BackendType>(), cg_restart<BackendType> * _restart = new restart_not_orthogonal<BackendType>()) : update(_update), restart(_restart){ }
 
+    virtual void init(detail::optimization_context<BackendType> & c){
+        update->init(c);
+        restart->init(c);
+    }
 
-    public:
-        implementation(conjugate_gradient const & cg_params, detail::optimization_context<BackendType> & context) : update_implementation_(update_mapping::create(*cg_params.update, context))
-                                                                                                                   ,restart_implementation_(restart_mapping::create(*cg_params.restart,context)){ }
+    virtual void clean(detail::optimization_context<BackendType> & c){
+        update->clean(c);
+        restart->clean(c);
+    }
 
-        virtual bool restart(detail::optimization_context<BackendType> & c){
-            return (*restart_implementation_)(c);
-        }
+    void operator()(detail::optimization_context<BackendType> & c){
+        ScalarType beta;
+        if((*restart)(c))
+            beta = 0;
+        else
+            beta = (*update)(c);
+        BackendType::scale(c.N(),beta,c.p());
+        BackendType::axpy(c.N(),-1,c.g(),c.p());
+    }
 
-        void operator()(detail::optimization_context<BackendType> & c){
-          //p = -g + beta*p;
-          ScalarType beta = (*update_implementation_)(c);
-          BackendType::scale(c.N(),beta,c.p());
-          BackendType::axpy(c.N(),-1,c.g(),c.p());
-        }
-    private:
-        tools::shared_ptr<cg_update::implementation<BackendType> > update_implementation_;
-        tools::shared_ptr<cg_restart::implementation<BackendType> > restart_implementation_;
-    };
-
-
-    conjugate_gradient(cg_update * _update = new gilbert_nocedal(), cg_restart * _restart = new restart_not_orthogonal()) : update(_update), restart(_restart){ }
-    tools::shared_ptr<cg_update> update;
-    tools::shared_ptr<cg_restart> restart;
+    tools::shared_ptr< cg_update<BackendType> > update;
+    tools::shared_ptr< cg_restart<BackendType> > restart;
 };
 
 }

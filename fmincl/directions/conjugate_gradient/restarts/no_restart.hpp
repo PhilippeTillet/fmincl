@@ -15,12 +15,9 @@
 
 namespace fmincl{
 
-struct no_restart : public cg_restart{
-    template<class BackendType>
-    struct implementation : public cg_restart::implementation<BackendType>{
-        implementation(no_restart const & /*tag*/, detail::optimization_context<BackendType> &){ }
-        bool operator()(detail::optimization_context<BackendType> &) { return false; }
-    };
+template<class BackendType>
+struct no_restart : public cg_restart<BackendType>{
+    bool operator()(detail::optimization_context<BackendType> &) { return false; }
 };
 
 

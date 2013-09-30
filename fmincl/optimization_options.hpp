@@ -27,14 +27,11 @@
 
 namespace fmincl{
 
-  struct minibatch_options{
-      minibatch_options(std::size_t _n_minibatches, std::size_t _iteration_per_minibatch) : n_minibatches(_n_minibatches), iteration_per_minibatch(_iteration_per_minibatch){ }
-      std::size_t n_minibatches;
-      std::size_t iteration_per_minibatch;
-  };
-
+  template<class BackendType>
   struct optimization_options{
-      optimization_options(fmincl::direction * _direction = new quasi_newton(), fmincl::stopping_criterion * _stopping_criterion = new gradient_treshold(), unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), line_search(new strong_wolfe_powell()), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){
+      optimization_options(fmincl::direction<BackendType> * _direction = new quasi_newton<BackendType>()
+                           , fmincl::stopping_criterion<BackendType> * _stopping_criterion = new gradient_treshold<BackendType>()
+                           , unsigned int iter = 1024, unsigned int verbosity = 0) : direction(_direction), line_search(new strong_wolfe_powell<BackendType>()), stopping_criterion(_stopping_criterion), verbosity_level(verbosity), max_iter(iter){
 
       }
       std::string info() const{
@@ -46,9 +43,9 @@ namespace fmincl{
         oss << std::endl;
         return oss.str();
       }
-      mutable tools::shared_ptr<fmincl::direction> direction;
-      mutable tools::shared_ptr<fmincl::line_search> line_search;
-      mutable tools::shared_ptr<fmincl::stopping_criterion> stopping_criterion;
+      mutable tools::shared_ptr<fmincl::direction<BackendType> > direction;
+      mutable tools::shared_ptr<fmincl::line_search<BackendType> > line_search;
+      mutable tools::shared_ptr<fmincl::stopping_criterion<BackendType> > stopping_criterion;
 
       double tolerance;
 

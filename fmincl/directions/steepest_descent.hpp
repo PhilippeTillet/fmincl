@@ -21,18 +21,13 @@
 
 namespace fmincl{
 
-struct steepest_descent : public direction{
-    template<class BackendType>
-    class implementation : public direction::implementation<BackendType>{
-        typedef typename BackendType::VectorType VectorType;
-    public:
-        implementation(steepest_descent const &, detail::optimization_context<BackendType> &){ }
-        void operator()(detail::optimization_context<BackendType> & c){
-            std::size_t N = c.N();
-            BackendType::copy(N,c.g(),c.p());
-            BackendType::scale(N,-1,c.p());
-        }
-    };
+template<class BackendType>
+struct steepest_descent : public direction<BackendType>{
+    void operator()(detail::optimization_context<BackendType> & c){
+        std::size_t N = c.N();
+        BackendType::copy(N,c.g(),c.p());
+        BackendType::scale(N,-1,c.p());
+    }
 };
 
 }

@@ -16,14 +16,12 @@
 
 namespace fmincl{
 
+template<class BackendType>
 struct stopping_criterion{
     virtual ~stopping_criterion(){ }
-
-    template<class BackendType>
-    struct implementation{
-        virtual bool operator()(detail::optimization_context<BackendType> & context) = 0;
-        virtual ~implementation(){ }
-    };
+    virtual void init(detail::optimization_context<BackendType> &){ }
+    virtual void clean(detail::optimization_context<BackendType> &){ }
+    virtual bool operator()(detail::optimization_context<BackendType> & context) = 0;
 };
 
 

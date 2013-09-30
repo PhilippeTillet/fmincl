@@ -111,6 +111,5 @@ namespace fmincl{
             bool is_reinitializing_;
         };
     }
-
 }
 #endif

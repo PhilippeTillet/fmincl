@@ -63,17 +63,13 @@ namespace fmincl{
       VectorType best_g;
   };
 
+  template<class BackendType>
   struct line_search{
-      template<class BackendType>
-      struct implementation{
-          typedef typename BackendType::ScalarType ScalarType;
-      public:
-          virtual void operator()(line_search_result<BackendType> & res,fmincl::direction::implementation<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai) = 0;
-          virtual ~implementation(){ }
-      };
-
-
+      typedef typename BackendType::ScalarType ScalarType;
       virtual ~line_search(){ }
+      virtual void init(detail::optimization_context<BackendType> &){ }
+      virtual void clean(detail::optimization_context<BackendType> &){ }
+      virtual void operator()(line_search_result<BackendType> & res,fmincl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai) = 0;
   };
 
 

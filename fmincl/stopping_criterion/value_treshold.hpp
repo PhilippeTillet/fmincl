@@ -18,19 +18,14 @@
 
 namespace fmincl{
 
-struct value_treshold : public stopping_criterion{
+template<class BackendType>
+struct value_treshold : public stopping_criterion<BackendType>{
     value_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
 
-    template<class BackendType>
-    struct implementation : public stopping_criterion::implementation<BackendType>{
-        implementation(value_treshold const & _tag, detail::optimization_context<BackendType> &) : tag(_tag){ }
-        bool operator()(detail::optimization_context<BackendType> & c){
-            return std::fabs(c.val() - c.valm1()) < tag.tolerance;
-        }
-    private:
-        value_treshold const & tag;
-    };
+    bool operator()(detail::optimization_context<BackendType> & c){
+        return std::fabs(c.val() - c.valm1()) < tolerance;
+    }
 };
 
 }

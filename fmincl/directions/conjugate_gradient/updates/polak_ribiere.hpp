@@ -16,31 +16,27 @@
 
 namespace fmincl{
 
+template<class BackendType>
+struct polak_ribiere : public cg_update<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
+    typedef typename BackendType::VectorType VectorType;
 
-struct polak_ribiere : public cg_update{
-    template<class BackendType>
-    struct implementation : public cg_update::implementation<BackendType>{
-    private:
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
-    public:
-        implementation(polak_ribiere const &, detail::optimization_context<BackendType> & context){
-            N_ = context.N();
-            tmp_ = BackendType::create_vector(N_);
-        }
+    void init(detail::optimization_context<BackendType> & c){
+        tmp_ = BackendType::create_vector(c.N());
+    }
 
-        ~implementation(){  BackendType::delete_if_dynamically_allocated(tmp_); }
+    void clean(detail::optimization_context<BackendType> &){
+        BackendType::delete_if_dynamically_allocated(tmp_);
+    }
 
-        ScalarType operator()(detail::optimization_context<BackendType> & c){
-            //tmp_ = g - gm1;
-            BackendType::copy(N_,c.g(), tmp_);
-            BackendType::axpy(N_,-1,c.gm1(),tmp_);
-            return std::max(BackendType::dot(N_,c.g(),tmp_)/BackendType::dot(N_,c.gm1(),c.gm1()),(ScalarType)0);
-        }
-    private:
-        std::size_t N_;
-        VectorType tmp_;
-    };
+    ScalarType operator()(detail::optimization_context<BackendType> & c){
+        //tmp_ = g - gm1;
+        BackendType::copy(c.N(),c.g(), tmp_);
+        BackendType::axpy(c.N(),-1,c.gm1(),tmp_);
+        return std::max(BackendType::dot(c.N(),c.g(),tmp_)/BackendType::dot(c.N(),c.gm1(),c.gm1()),(ScalarType)0);
+    }
+private:
+    VectorType tmp_;
 };
 
 }

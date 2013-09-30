@@ -15,13 +15,12 @@
 
 namespace fmincl{
 
+template<class BackendType>
 struct cg_restart{
-    template<class BackendType>
-    struct implementation {
-        virtual bool operator()(detail::optimization_context<BackendType> & c) = 0;
-        virtual ~implementation(){ }
-    };
     virtual ~cg_restart(){ }
+    virtual void init(detail::optimization_context<BackendType> &){ }
+    virtual void clean(detail::optimization_context<BackendType> &){ }
+    virtual bool operator()(detail::optimization_context<BackendType> & c) = 0;
 };
 
 }

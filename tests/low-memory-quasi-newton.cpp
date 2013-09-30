@@ -16,13 +16,13 @@ using namespace fmincl;
 
 int main(){
     srand(0);
-
     int result = EXIT_SUCCESS;
+    typedef typename get_backend<double>::type BackendType;
 
-    result |= test_option<double>("LBFGS [Double, M=2]", new quasi_newton(new lbfgs(2)));
-//    result |= test_option<double>("LBFGS [Double, M=4]", new quasi_newton(new lbfgs(4)));
-//    result |= test_option<double>("LBFGS [Double, M=8]", new quasi_newton(new lbfgs(8)));
-//    result |= test_option<double>("LBFGS [Double, M=32]", new quasi_newton(new lbfgs(32)));
+    result |= test_option("lbfgs [Double, M=2]", new quasi_newton<BackendType>(new lbfgs<BackendType>(2)));
+    result |= test_option("lbfgs [Double, M=4]", new quasi_newton<BackendType>(new lbfgs<BackendType>(4)));
+    result |= test_option("lbfgs [Double, M=8]", new quasi_newton<BackendType>(new lbfgs<BackendType>(8)));
+    result |= test_option("lbfgs [Double, M=32]", new quasi_newton<BackendType>(new lbfgs<BackendType>(32)));
 
     return result;
 

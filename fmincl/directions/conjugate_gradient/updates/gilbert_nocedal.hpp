@@ -12,24 +12,34 @@
 #define FMINCL_CONJUGATE_GRADIENT_UPDATES_GILBERT_NOCEDAL_HPP_
 
 #include "forwards.h"
+#include "polak_ribiere.hpp"
+#include "fletcher_reeves.hpp"
 #include <cmath>
 
 namespace fmincl{
 
-struct gilbert_nocedal : public cg_update{
-    template<class BackendType>
-    struct implementation : public cg_update::implementation<BackendType>{
-    private:
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
-    public:
-        implementation(gilbert_nocedal const &, detail::optimization_context<BackendType> &){ }
-        ScalarType operator()(detail::optimization_context<BackendType> & context){
-            ScalarType betaPR = polak_ribiere::implementation<BackendType>(polak_ribiere(),context)(context);
-            ScalarType betaFR = fletcher_reeves::implementation<BackendType>(fletcher_reeves(),context)(context);
-            return std::min(betaPR,betaFR);
-        }
-    };
+template<class BackendType>
+struct gilbert_nocedal : public cg_update<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
+
+    void init(detail::optimization_context<BackendType> & c){
+        pr_.init(c);
+        fr_.init(c);
+    }
+
+    void clean(detail::optimization_context<BackendType> & c){
+        pr_.clean(c);
+        fr_.clean(c);
+    }
+
+    ScalarType operator()(detail::optimization_context<BackendType> & context){
+        ScalarType betaPR = pr_(context);
+        ScalarType betaFR = fr_(context);
+        return std::min(betaPR,betaFR);
+    }
+private:
+    polak_ribiere<BackendType> pr_;
+    fletcher_reeves<BackendType> fr_;
 };
 
 

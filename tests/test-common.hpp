@@ -44,10 +44,9 @@ struct get_backend{
 };
 
 
-template<class FunctionType>
-int test_function(FunctionType const & fun, fmincl::optimization_options const & options)
+template<class FunctionType, class BackendType>
+int test_function(FunctionType const & fun, fmincl::minimizer<BackendType> & minimizer)
 {
-    typedef typename FunctionType::BackendType BackendType;
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
 
@@ -65,10 +64,9 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
 
     //fmincl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
     VectorType S = BackendType::create_vector(dimension);
-    fmincl::optimization_result result = fmincl::minimize<BackendType>(S,fun,X0,dimension,options);
+    fmincl::optimization_result result = minimizer(S,fun,X0,dimension);
 
     ScalarType numerical_minimum = (ScalarType)result.f;
-
     diff = std::fabs(fun.global_minimum() - numerical_minimum);
 
     if(true_minimum>1)
@@ -107,31 +105,30 @@ int test_function(FunctionType const & fun, fmincl::optimization_options const &
 
     return res;
 }
-template<class ScalarType>
-int test_option(std::string const & options_name, fmincl::direction * direction){
-    typedef fmincl::backend::cblas_types<ScalarType> BackendType;
+template<class BackendType>
+int test_option(std::string const & options_name, fmincl::direction<BackendType> * direction){
+    std::cout << "Testing " << options_name << "..." << std::endl;
     const std::size_t max_iter = 4096;
     const unsigned int verbosity = 0;
-    optimization_options options(direction, new gradient_treshold(), max_iter, verbosity);
-    std::cout << "Testing " << options_name << "..." << std::endl;
+    fmincl::minimizer<BackendType> minimizer(direction, new gradient_treshold<BackendType>(), max_iter, verbosity);
     int res = EXIT_SUCCESS;
-    res |= test_function(helical_valley<BackendType>(),options);
-    res |= test_function(biggs_exp6<BackendType>(),options);
-    res |= test_function(gaussian<BackendType>(),options);
-    res |= test_function(powell_badly_scaled<BackendType>(),options);
-    res |= test_function(box_3d<BackendType>(),options);
-    res |= test_function(variably_dimensioned<BackendType>(20),options);
-    res |= test_function(watson<BackendType>(6),options);
-    res |= test_function(penalty1<BackendType>(10),options);
-    res |= test_function(penalty2<BackendType>(10),options);
-    res |= test_function(brown_badly_scaled<BackendType>(),options);
-    res |= test_function(brown_dennis<BackendType>(),options);
-    res |= test_function(gulf<BackendType>(20),options);
-    res |= test_function(trigonometric<BackendType>(10),options);
-    res |= test_function(rosenbrock<BackendType>(2),options);
-    res |= test_function(powell_singular<BackendType>(4),options);
-    res |= test_function(rosenbrock<BackendType>(20),options);
-    res |= test_function(powell_singular<BackendType>(40),options);
+    res |= test_function(helical_valley<BackendType>(),minimizer);
+    res |= test_function(biggs_exp6<BackendType>(),minimizer);
+    res |= test_function(gaussian<BackendType>(),minimizer);
+    res |= test_function(powell_badly_scaled<BackendType>(),minimizer);
+    res |= test_function(box_3d<BackendType>(),minimizer);
+    res |= test_function(variably_dimensioned<BackendType>(20),minimizer);
+    res |= test_function(watson<BackendType>(6),minimizer);
+    res |= test_function(penalty1<BackendType>(10),minimizer);
+    res |= test_function(penalty2<BackendType>(10),minimizer);
+    res |= test_function(brown_badly_scaled<BackendType>(),minimizer);
+    res |= test_function(brown_dennis<BackendType>(),minimizer);
+    res |= test_function(gulf<BackendType>(20),minimizer);
+    res |= test_function(trigonometric<BackendType>(10),minimizer);
+    res |= test_function(rosenbrock<BackendType>(2),minimizer);
+    res |= test_function(powell_singular<BackendType>(4),minimizer);
+    res |= test_function(rosenbrock<BackendType>(20),minimizer);
+    res |= test_function(powell_singular<BackendType>(40),minimizer);
 
 //    res |= test_function(beale<BackendType>(),options);
 //    res |= test_function(wood<BackendType>(),options);

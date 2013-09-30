@@ -26,27 +26,28 @@
 
 namespace fmincl{
 
-struct quasi_newton : public direction{
-    quasi_newton(qn_update * _update = new lbfgs()) : update(_update){ }
-    tools::shared_ptr<qn_update> update;
+template<class BackendType>
+struct quasi_newton : public direction<BackendType>{
+    typedef typename BackendType::ScalarType ScalarType;
 
-    template<class BackendType>
-    class implementation : public direction::implementation<BackendType>{
-        typedef implementation_of<BackendType,qn_update,bfgs,lbfgs> update_mapping;
-        typedef typename BackendType::ScalarType ScalarType;
-      public:
-        implementation(quasi_newton const & tag, detail::optimization_context<BackendType> & context) : update(update_mapping::create(*tag.update, context)){ }
+    quasi_newton(qn_update<BackendType> * _update = new lbfgs<BackendType>()) : update(_update){ }
 
-        virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &){
-            return 1;
-        }
+    virtual void init(detail::optimization_context<BackendType> & c){
+        update->init(c);
+    }
+    virtual void clean(detail::optimization_context<BackendType> & c){
+        update->clean(c);
+    }
 
-        virtual void operator()(detail::optimization_context<BackendType> & context){
-            (*update)(context);
-        }
-    private:
-        tools::shared_ptr<qn_update::implementation<BackendType> > update;
-    };
+    virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &){
+        return 1;
+    }
+
+    virtual void operator()(detail::optimization_context<BackendType> & context){
+        (*update)(context);
+    }
+
+    tools::shared_ptr<qn_update<BackendType> > update;
 };
 
 }

@@ -19,20 +19,14 @@
 
 namespace fmincl{
 
-struct gradient_treshold : public stopping_criterion{
+template<class BackendType>
+struct gradient_treshold : public stopping_criterion<BackendType>{
     gradient_treshold(double _tolerance = 1e-4) : tolerance(_tolerance){ }
     double tolerance;
 
-    template<class BackendType>
-    struct implementation : public stopping_criterion::implementation<BackendType>{
-        implementation(gradient_treshold const & _tag, detail::optimization_context<BackendType> &) : tag(_tag){ }
-        bool operator()(detail::optimization_context<BackendType> & c){
-            return BackendType::nrm2(c.N(),c.g()) < tag.tolerance;
-        }
-    private:
-        gradient_treshold const & tag;
-    };
-
+    bool operator()(detail::optimization_context<BackendType> & c){
+        return BackendType::nrm2(c.N(),c.g()) < tolerance;
+    }
 };
 
 
