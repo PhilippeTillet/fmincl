@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
  *
- * FMinCL - Unconstrained Function Minimization on OpenCL
+ * umintl - Unconstrained Function Minimization on OpenCL
  *
  * License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
@@ -12,7 +12,7 @@
 
 #include "test-common.hpp"
 
-using namespace fmincl;
+using namespace umintl;
 
 int main(){
     srand(0);

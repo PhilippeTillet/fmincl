@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
  *
- * FMinCL - Unconstrained Function Minimization on OpenCL
+ * umintl - Unconstrained Function Minimization on OpenCL
  *
  * License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
@@ -13,9 +13,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "fmincl/backends/cblas.hpp"
-#include "fmincl/minimize.hpp"
-#include "fmincl/utils.hpp"
+#include "umintl/backends/cblas.hpp"
+#include "umintl/minimize.hpp"
+#include "umintl/utils.hpp"
 
 #include "mghfuns/beale.hpp"
 #include "mghfuns/powell_badly_scaled.hpp"
@@ -36,16 +36,16 @@
 #include "mghfuns/brown_dennis.hpp"
 #include "mghfuns/gaussian.hpp"
 
-using namespace fmincl;
+using namespace umintl;
 
 template<class ScalarType>
 struct get_backend{
-    typedef fmincl::backend::cblas_types<ScalarType> type;
+    typedef umintl::backend::cblas_types<ScalarType> type;
 };
 
 
 template<class FunctionType, class BackendType>
-int test_function(FunctionType const & fun, fmincl::minimizer<BackendType> & minimizer)
+int test_function(FunctionType const & fun, umintl::minimizer<BackendType> & minimizer)
 {
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
@@ -62,9 +62,9 @@ int test_function(FunctionType const & fun, fmincl::minimizer<BackendType> & min
 
     ScalarType true_minimum = fun.global_minimum();
 
-    //fmincl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
+    //umintl::utils::check_grad<BackendType>(FunctionType(),X0,dimension);
     VectorType S = BackendType::create_vector(dimension);
-    fmincl::optimization_result result = minimizer(S,fun,X0,dimension);
+    umintl::optimization_result result = minimizer(S,fun,X0,dimension);
 
     ScalarType numerical_minimum = (ScalarType)result.f;
     diff = std::fabs(fun.global_minimum() - numerical_minimum);
@@ -106,11 +106,11 @@ int test_function(FunctionType const & fun, fmincl::minimizer<BackendType> & min
     return res;
 }
 template<class BackendType>
-int test_option(std::string const & options_name, fmincl::direction<BackendType> * direction){
+int test_option(std::string const & options_name, umintl::direction<BackendType> * direction){
     std::cout << "Testing " << options_name << "..." << std::endl;
     const std::size_t max_iter = 4096;
     const unsigned int verbosity = 0;
-    fmincl::minimizer<BackendType> minimizer(direction, new gradient_treshold<BackendType>(), max_iter, verbosity);
+    umintl::minimizer<BackendType> minimizer(direction, new gradient_treshold<BackendType>(), max_iter, verbosity);
     int res = EXIT_SUCCESS;
     res |= test_function(helical_valley<BackendType>(),minimizer);
     res |= test_function(biggs_exp6<BackendType>(),minimizer);

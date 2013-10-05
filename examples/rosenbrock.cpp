@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
  *
- * FMinCL - Unconstrained Function Minimization on OpenCL
+ * umintl - Unconstrained Function Minimization on OpenCL
  *
  * License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
@@ -11,8 +11,8 @@
 
 #include "common/rosenbrock.hpp"
 
-#include "fmincl/backends/cblas.hpp"
-#include "fmincl/minimize.hpp"
+#include "umintl/backends/cblas.hpp"
+#include "umintl/minimize.hpp"
 
 #include "timer.hpp"
 
@@ -24,7 +24,7 @@ void print_vector(ScalarType * x, std::size_t N){
 
 int main(){
     srand(0);
-    static const std::size_t N = rosenbrock<2,fmincl::backend::cblas_types<ScalarType> >::N;
+    static const std::size_t N = rosenbrock<2,umintl::backend::cblas_types<ScalarType> >::N;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
@@ -39,14 +39,14 @@ int main(){
     print_vector(X0,N);
     std::cout << "--------------" << std::endl;
 
-    fmincl::optimization_options options;
-    //options.direction = new fmincl::quasi_newton_tag(new fmincl::lbfgs_tag()); //You can select the number of storage pairs in the constructor of lbfgs_tag()
-    options.direction = new fmincl::quasi_newton(new fmincl::bfgs()); //Uncomment for BFGS
-    //options.direction = new fmincl::cg_tag(); //Uncomment for ConjugateGradient
+    umintl::optimization_options options;
+    //options.direction = new umintl::quasi_newton_tag(new umintl::lbfgs_tag()); //You can select the number of storage pairs in the constructor of lbfgs_tag()
+    options.direction = new umintl::quasi_newton(new umintl::bfgs()); //Uncomment for BFGS
+    //options.direction = new umintl::cg_tag(); //Uncomment for ConjugateGradient
     options.max_iter = 1000;
     options.verbosity_level=2;
-    options.stopping_criterion = new fmincl::gradient_treshold(1e-4); //Stops when the gradient is below 1e-4
-    fmincl::minimize<fmincl::backend::cblas_types<ScalarType> >(S,rosenbrock<2,fmincl::backend::cblas_types<ScalarType> >(),X0,N,options);
+    options.stopping_criterion = new umintl::gradient_treshold(1e-4); //Stops when the gradient is below 1e-4
+    umintl::minimize<umintl::backend::cblas_types<ScalarType> >(S,rosenbrock<2,umintl::backend::cblas_types<ScalarType> >(),X0,N,options);
     std::cout << "--------------" << std::endl;
     std::cout << "Solution : " << std::endl;
     print_vector(S,N);

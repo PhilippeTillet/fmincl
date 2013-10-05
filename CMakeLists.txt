@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(FMinCL)
+project(UMinTL)
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)

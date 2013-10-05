@@ -1,11 +1,11 @@
-#ifndef FMINCL_TEST_COMMON_HPP_
-#define FMINCL_TEST_COMMON_HPP_
+#ifndef UMINTL_TEST_COMMON_HPP_
+#define UMINTL_TEST_COMMON_HPP_
 
 /* ===========================
  *
  * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
  *
- * FMinCL - Unconstrained Function Minimization on OpenCL
+ * umintl - Unconstrained Function Minimization on OpenCL
  *
  * License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
@@ -13,10 +13,10 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "fmincl/backends/cblas.hpp"
-#include "fmincl/minimize.hpp"
-#include "fmincl/utils.hpp"
-#include "fmincl/check_grad.hpp"
+#include "umintl/backends/cblas.hpp"
+#include "umintl/minimize.hpp"
+#include "umintl/utils.hpp"
+#include "umintl/check_grad.hpp"
 #include "mghfuns/beale.hpp"
 #include "mghfuns/powell_badly_scaled.hpp"
 #include "mghfuns/brown_badly_scaled.hpp"
@@ -36,11 +36,11 @@
 #include "mghfuns/brown_dennis.hpp"
 #include "mghfuns/gaussian.hpp"
 
-using namespace fmincl;
+using namespace umintl;
 
 template<class ScalarType>
 struct get_backend{
-    typedef fmincl::backend::cblas_types<ScalarType> type;
+    typedef umintl::backend::cblas_types<ScalarType> type;
 };
 
 template<class FunctionType>
@@ -55,7 +55,7 @@ int test_function(FunctionType const & fun, double eps=1e-6)
     }
     fun.init(X0);
     std::cout << "- Testing " << fun.name() << "..." << std::flush;
-    double diff = fmincl::check_grad<BackendType>(fun,X0,N,eps);
+    double diff = umintl::check_grad<BackendType>(fun,X0,N,eps);
     if(diff>1e-5){
         std::cout << " Fail ! Diff = " << diff << "." << std::endl;
         return EXIT_FAILURE;
@@ -68,7 +68,7 @@ int test_function(FunctionType const & fun, double eps=1e-6)
 
 int main(){
     typedef double ScalarType;
-    typedef fmincl::backend::cblas_types<ScalarType> BackendType;
+    typedef umintl::backend::cblas_types<ScalarType> BackendType;
     int res = EXIT_SUCCESS;
 //    res |= test_function(beale<BackendType>());
 //    res |= test_function(rosenbrock<BackendType>(2));
