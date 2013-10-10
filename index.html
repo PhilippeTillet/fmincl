@@ -4,11 +4,11 @@
   <head>
     <meta charset='utf-8' />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Umintl : Generic unconstrained optimization framework. Supports custom linear-algebra backends, as well as custom directions/stopping criterions" />
+    <meta name="description" content="UMinTL : Unconstrained Minimization Template Library" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Umintl</title>
+    <title>UMinTL</title>
   </head>
 
   <body>
@@ -18,8 +18,8 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/PhilippeTillet/UMinTL">View on GitHub</a>
 
-          <h1 id="project_title">Umintl</h1>
-          <h2 id="project_tagline">Generic unconstrained optimization framework. Supports custom linear-algebra backends, as well as custom directions/stopping criterions</h2>
+          <h1 id="project_title">UMinTL</h1>
+          <h2 id="project_tagline">Unconstrained Minimization Template Library</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/PhilippeTillet/UMinTL/zipball/master">Download this project as a .zip file</a>
@@ -36,8 +36,8 @@
 
 <p>This project is a generic unconstrained minimization library relying heavily on template metaprogramming.</p>
 
-<h1>
-<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h1>
+<h2>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
 
 <ul>
 <li>Use <strong>any</strong> Linear Algebra backend</li>
@@ -46,24 +46,29 @@ You can pass a custom backend in the optimization procedure. This backend should
 For now, cblas and ViennaCL are available, for using either CPU or OpenCL in the optimization procedure and the objective function.</p>
 
 <ul>
-<li>Multiple procedures available</li>
-</ul><p>The library supports BFGS, L-BFGS, and Nonlinear Conjugate Gradient. Several updates and restart procedures are available for the conjugate gradient method.
-The line-search is done using the strong wolfe-powell conditions.</p>
-
-<ul>
-<li>Extend the library yourself</li>
+<li>An <strong>extendable</strong> library</li>
 </ul><p>UMinTL relies on template. You may therefore write your own stopping criterion (eg a cross-validation error if you're doing machine learning). More experienced user may also write their own restarting condition for the conjugate gradient, or their own update direction.</p>
 
 <ul>
-<li>A clear interface</li>
+<li>A <strong>clear</strong> interface</li>
 </ul><p>UMinTL provides a clear API, where any functor can be passed to the optimization algorithm. The cumbersomeness of the templates is softened using type-erasure mechanism.</p>
+
+<ul>
+<li>A <strong>robust</strong> package</li>
+</ul><p>UMinTL was extensively tested on the test suite described in "Testing Unconstrained Optimization Software" (JJ Moré and al.). However, it will never be robust enough. If the procedure fails on your particular problem, please <em>report</em>.</p>
+
+<ul>
+<li>
+<strong>Multiple procedures</strong> available</li>
+</ul><p>The library supports BFGS, L-BFGS, and Nonlinear Conjugate Gradient. Several updates and restart procedures are available for the conjugate gradient method.
+The line-search is done using the strong wolfe-powell conditions.</p>
       </section>
     </div>
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">Umintl maintained by <a href="https://github.com/PhilippeTillet">PhilippeTillet</a></p>
+        <p class="copyright">UMinTL maintained by <a href="https://github.com/PhilippeTillet">PhilippeTillet</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
