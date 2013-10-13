@@ -129,7 +129,7 @@ private:
         VectorType & current_g = res.best_g;
         ScalarType & current_phi = res.best_phi;
         VectorType const & p = c.p();
-        ScalarType eps = 1e-8;
+        ScalarType eps = 1e-10;
         ScalarType aj = 0;
         ScalarType dphi_aj = 0;
         bool twice_close_to_boundary=false;

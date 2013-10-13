@@ -21,7 +21,7 @@ namespace umintl{
 
 template<class BackendType>
 struct gradient_treshold : public stopping_criterion<BackendType>{
-    gradient_treshold(double _tolerance = 1e-4) : tolerance(_tolerance){ }
+    gradient_treshold(double _tolerance = 1e-8) : tolerance(_tolerance){ }
     double tolerance;
 
     bool operator()(detail::optimization_context<BackendType> & c){
