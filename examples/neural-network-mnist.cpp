@@ -19,6 +19,14 @@ inline void sigmoid(MatrixType const & in, MatrixType & out)
     out = 1/(1+out.array().exp());
 }
 
+inline void softmax(MatrixType const & in, MatrixType & out)
+{
+    out = in.array().exp();
+    VectorType sum_exp = out.colwise().sum();
+    for(std::size_t i = 0 ; i < out.rows() ; ++i)
+        out.row(i) = out.row(i).array() / sum_exp.transpose().array();
+}
+
 inline void swap(int &val)
 {
         val = (val<<24) | ((val<<8) & 0x00ff0000) | ((val>>8) & 0x0000ff00) | (val>>24);
@@ -87,55 +95,56 @@ LabelType read_mnist_labels(std::string  filename)
   return Y;
 }
 
-
-struct temporaries_holder{
-
-};
-
-
-
 class neural_net{
 private:
 
 
     template<class T>
     void feedforward(Eigen::MatrixBase<T> const & data) const{
-        //Hidden
-        Z1 = weights_1*data;
-        Z1.colwise() += bias_1;
-        sigmoid(Z1,A1);
+        for(std::size_t L = 0 ; L < n_layers_; ++L){
+            if(L==0)
+                Z[L] = weights[L]*data;
+            else
+                Z[L] = weights[L]*A[L-1];
+            Z[L].colwise() += bias[L];
 
-        //Final output
-        Z2 = weights_2*A1;
-        Z2.colwise() += bias_2;
-        A2 = Z2.array().exp();
-        VectorType sum_exp = A2.colwise().sum();
-
-        for(std::size_t i = 0 ; i < A2.rows() ; ++i)
-            A2.row(i) = A2.row(i).array() / sum_exp.transpose().array();
+            if(L==n_layers_-1)
+                softmax(Z[L],A[L]);
+            else
+                sigmoid(Z[L],A[L]);
+        }
     }
 
     template<class T, class U>
     void backpropagate(Eigen::MatrixBase<T> const & data, Eigen::MatrixBase<U> const & labels) const{
-        D2 = A2;
-        for(std::size_t j = 0 ; j < block_size_ ; ++j){
-            D2(labels(j),j)-=1;
+        for(int L = n_layers_-1 ; L>=0 ; --L){
+            //Compute delta
+            if(L==n_layers_-1){
+                D[L] = A[L];
+                for(std::size_t j = 0 ; j < block_size_ ; ++j){
+                    D[L](labels(j),j)-=1;
+                }
+            }
+            else{
+                D[L] = weights[L+1].transpose()*D[L+1];
+                D[L] = D[L].array()*A[L].array()*(1-A[L].array());
+            }
+
+            //Compute derivatives
+            if(L==0)
+                dweights[L] = D[L]*data.transpose();
+            else
+                dweights[L] = D[L]*A[L-1].transpose();
+
+            dbias[L] = D[L].rowwise().sum();
         }
-
-        dbias_2 = D2.rowwise().sum();
-        dweights_2 = D2*A1.transpose();
-
-        D1 = weights_2.transpose()*D2;
-        D1 = D1.array()*A1.array()*(1-A1.array());
-        dweights_1 = D1*data.transpose();
-        dbias_1 = D1.rowwise().sum();
     }
 
     template<class T>
     ScalarType get_cost(Eigen::MatrixBase<T> const & labels) const{
         ScalarType cross_entropy = 0;
-        for(int j = 0 ; j < Z2.cols() ; ++j){
-            cross_entropy-=log(A2(labels(j),j));
+        for(int j = 0 ; j < A.back().cols() ; ++j){
+            cross_entropy-=log(A.back()(labels(j),j));
         }
         return cross_entropy;
     }
@@ -155,7 +164,15 @@ public:
                     best_x_=c.x();
                 }
                 best_cost_ = std::min(best_cost_, cross_entropy);
-                std::cout << "Current validation error : " << cross_entropy << std::endl;
+
+                unsigned int n_misclassified = 0;
+                for(std::size_t j = 0 ; j < validation_labels_.rows() ; ++j){
+                    unsigned int prediction;
+                    net_.A.back().col(j).maxCoeff(&prediction);
+                    n_misclassified+= static_cast<unsigned int>(validation_labels_(j)!=prediction);
+                }
+                std::cout << "Misclassified on test set : " << (float)n_misclassified/validation_labels_.rows()*100 << "%" << std::endl;
+
                 return stop;
             }
             return false;
@@ -180,31 +197,37 @@ public:
 
 public:
     neural_net(MatrixType const & data, LabelType const & labels,
-       std::size_t n_hidden, std::size_t block_size) :
+       std::vector<std::size_t> const & hidden_sizes, std::size_t block_size) :
         data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols()-1,block_size)), block_size_(default_block_size_), offset_(1)
-      ,n_in_(data.rows()), n_hidden_(n_hidden), n_out_(labels.maxCoeff()+1)
     {
-        weights_1.resize(n_hidden_,n_in_);
-        bias_1.resize(n_hidden_);
-        weights_2.resize(n_out_,n_hidden_);
-        bias_2.resize(n_out_);
+        layer_sizes_.push_back(data.rows());
+        for(std::size_t i = 0 ; i < hidden_sizes.size() ; ++i)
+            layer_sizes_.push_back(hidden_sizes[i]);
+        layer_sizes_.push_back(labels.maxCoeff()+1);
+        n_layers_ = layer_sizes_.size() - 1;
+        weights.resize(n_layers_);
+        bias.resize(n_layers_);
+        dweights.resize(n_layers_);
+        dbias.resize(n_layers_);
+        A.resize(n_layers_);
+        Z.resize(n_layers_);
+        D.resize(n_layers_);
+
+        for(std::size_t L = 0 ; L < n_layers_; ++L){
+            weights[L].resize(layer_sizes_[L+1], layer_sizes_[L]);
+            bias[L].resize(layer_sizes_[L+1]);
+        }
     }
 
     void set_weights(VectorType const & X) const{
         std::size_t offset = 0;
-        //Layer1
-        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-            for(std::size_t j = 0 ; j < n_in_ ; ++j)
-                weights_1(i,j) = X[offset++];
-        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-            bias_1(i) = X[offset++];
-
-        //Layer2
-        for(std::size_t i = 0 ; i < n_out_ ; ++i)
-            for(std::size_t j = 0 ; j < n_hidden_ ; ++j)
-                weights_2(i,j) = X[offset++];
-        for(std::size_t i = 0 ; i < n_out_ ; ++i)
-            bias_2(i) = X[offset++];
+        for(std::size_t L = 0 ; L < n_layers_ ; ++L){
+            for(std::size_t i = 0 ; i < weights[L].rows() ; ++i)
+                for(std::size_t j = 0 ; j < weights[L].cols() ; ++j)
+                    weights[L](i,j) = X[offset++];
+            for(std::size_t i = 0 ; i < bias[L].rows() ; ++i)
+                bias[L](i) = X[offset++];
+        }
 
     }
 
@@ -213,14 +236,17 @@ public:
         unsigned int n_misclassified = 0;
         for(std::size_t j = 0 ; j < labels.rows() ; ++j){
             unsigned int prediction;
-            A2.col(j).maxCoeff(&prediction);
+            A.back().col(j).maxCoeff(&prediction);
             n_misclassified+= static_cast<unsigned int>(labels(j)!=prediction);
         }
         return (float)n_misclassified/labels.rows()*100;
     }
 
     std::size_t n_params() const{
-        return n_hidden_*n_in_+n_hidden_ + n_out_*n_hidden_+n_out_;
+        std::size_t res=0;
+        for(std::size_t L = 0 ; L < n_layers_ ; ++L)
+            res+=weights[L].rows()*weights[L].cols() + bias[L].rows();
+        return res;
     }
 
     void set_current_minibatch(std::size_t id) const{
@@ -229,56 +255,47 @@ public:
     }
 
     void operator()(VectorType const & X, ScalarType * val, VectorType * grad)const{
-        //Unroll
         set_weights(X);
-        //Hidden
         feedforward(data_.block(0,offset_,data_.rows(),block_size_));
-        if(val){
+        if(val)
             *val = get_cost(labels_.segment(offset_,block_size_));
-        }
+
+
+//        unsigned int n_misclassified = 0;
+//        for(std::size_t j = 0 ; j < labels_.rows() ; ++j){
+//            unsigned int prediction;
+//            A.back().col(j).maxCoeff(&prediction);
+//            n_misclassified+= static_cast<unsigned int>(labels_(j)!=prediction);
+//        }
+//        std::cout << "Misclassified on training set : " << (float)n_misclassified/labels_.rows()*100 << "%" << std::endl;
+
+
         if(grad){
             backpropagate(data_.block(0,offset_,data_.rows(),block_size_),labels_.segment(offset_,block_size_));
-
-            //Reroll
             std::size_t offset = 0;
-            //Layer1
-            for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-                for(std::size_t j = 0 ; j < n_in_ ; ++j)
-                    (*grad)[offset++] = dweights_1(i,j);
-            for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-                (*grad)[offset++] = dbias_1(i);
-
-            //Layer2
-            for(std::size_t i = 0 ; i < n_out_ ; ++i)
-                for(std::size_t j = 0 ; j < n_hidden_ ; ++j)
-                    (*grad)[offset++] = dweights_2(i,j);
-            for(std::size_t i = 0 ; i < n_out_ ; ++i)
-                (*grad)[offset++] = dbias_2(i);
+            for(std::size_t L = 0 ; L < n_layers_ ; ++L){
+                for(std::size_t i = 0 ; i < dweights[L].rows() ; ++i)
+                    for(std::size_t j = 0 ; j < dweights[L].cols() ; ++j)
+                        (*grad)[offset++] = dweights[L](i,j);
+                for(std::size_t i = 0 ; i < layer_sizes_[L+1] ; ++i)
+                    (*grad)[offset++] = dbias[L](i);
+            }
         }
     }
 
 private:
     friend class early_stopper;
 
-    mutable MatrixType weights_1;
-    mutable VectorType bias_1;
+    mutable std::vector<MatrixType> weights;
+    mutable std::vector<VectorType> bias;
 
-    mutable  MatrixType weights_2;
-    mutable VectorType bias_2;
+    mutable std::vector<MatrixType> dweights;
+    mutable std::vector<VectorType> dbias;
 
-    mutable MatrixType Z1;
-    mutable MatrixType A1;
-    mutable MatrixType Z2;
-    mutable MatrixType A2;
+    mutable std::vector<MatrixType> Z;
+    mutable std::vector<MatrixType> A;
 
-    mutable MatrixType D2;
-    mutable MatrixType D1;
-
-    mutable MatrixType dweights_1;
-    mutable MatrixType dbias_1;
-
-    mutable MatrixType dweights_2;
-    mutable MatrixType dbias_2;
+    mutable std::vector<MatrixType> D;
 
     MatrixType const & data_;
     LabelType const & labels_;
@@ -288,9 +305,8 @@ private:
     mutable std::size_t block_size_;
     mutable std::size_t offset_;
 
-    std::size_t n_in_;
-    std::size_t n_hidden_;
-    std::size_t n_out_;
+    mutable std::vector<std::size_t> layer_sizes_;
+    std::size_t n_layers_;
 };
 
 int main(int argc, char* argv[]){
@@ -309,12 +325,12 @@ int main(int argc, char* argv[]){
     MatrixType testing_data = read_mnist_images(path + "/t10k-images.idx3-ubyte");
     LabelType testing_label = read_mnist_labels(path + "/t10k-labels.idx1-ubyte");
 
-//    MatrixType training_data = MatrixType::Random(5,10);
-//    LabelType training_label = LabelType::Zero(10);
+//    MatrixType training_data = MatrixType::Random(5,100);
+//    LabelType training_label = LabelType::Zero(100);
 //    for(std::size_t i = 0 ; i < 10 ; ++i)
 //        training_label(i) = rand()%10;
-//    MatrixType testing_data = MatrixType::Random(5,10);
-//    LabelType testing_label = LabelType::Zero(10);
+//    MatrixType testing_data = MatrixType::Random(5,100);
+//    LabelType testing_label = LabelType::Zero(100);
 //    for(std::size_t i = 0 ; i < 10 ; ++i)
 //        testing_label(i) = rand()%10;
 
@@ -323,8 +339,11 @@ int main(int argc, char* argv[]){
 
 
     std::cout << "#Initializing the network..." << std::flush;
-    std::size_t block_size = training_data.cols();
-    neural_net network(training_data,training_label,500,block_size);
+    std::size_t block_size = 5000;
+    std::vector<std::size_t> hidden_sizes;
+    hidden_sizes.push_back(300);
+    hidden_sizes.push_back(500);
+    neural_net network(training_data,training_label,hidden_sizes,block_size);
     VectorType Res(network.n_params());
     for(std::size_t i = 0 ; i < Res.rows() ; ++i)
         Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
@@ -337,7 +356,7 @@ int main(int argc, char* argv[]){
     umintl::minimizer<BackendType> optimization;
     //optimization.direction = new umintl::conjugate_gradient<BackendType>();
     //optimization.direction = new umintl::steepest_descent<BackendType>();
-    optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
+    //optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
     neural_net::early_stopper * stop = network.create_early_stopping(testing_data,testing_label);
     optimization.stopping_criterion = stop;
     optimization.max_iter = 1000;
@@ -347,7 +366,5 @@ int main(int argc, char* argv[]){
     network.set_weights(stop->best_x());
     std::cout << "Training complete!" << std::endl;
     std::cout << "Test error rate : " << network.misclassified_rate(testing_data, testing_label) << "%" << std::endl;
-
-
-
+    std::cout << "Training error rate : " << network.misclassified_rate(training_data, training_label) << "%" << std::endl;
 }
