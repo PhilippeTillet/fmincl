@@ -319,29 +319,16 @@ int main(int argc, char* argv[]){
     LabelType training_label = read_mnist_labels(path + "/train-labels.idx1-ubyte");
     MatrixType testing_data = read_mnist_images(path + "/t10k-images.idx3-ubyte");
     LabelType testing_label = read_mnist_labels(path + "/t10k-labels.idx1-ubyte");
-
-//    MatrixType training_data = MatrixType::Random(5,100);
-//    LabelType training_label = LabelType::Zero(100);
-//    for(int i = 0 ; i < 10 ; ++i)
-//        training_label(i) = rand()%10;
-//    MatrixType testing_data = MatrixType::Random(5,100);
-//    LabelType testing_label = LabelType::Zero(100);
-//    for(int i = 0 ; i < 10 ; ++i)
-//        testing_label(i) = rand()%10;
-
     std::cout << "done!" << std::endl;
-
-
 
     std::cout << "#Initializing the network..." << std::flush;
     std::vector<std::size_t> hidden_sizes;
-    hidden_sizes.push_back(10);
-    hidden_sizes.push_back(20);
-    neural_net network(training_data,training_label,hidden_sizes,1);
+    hidden_sizes.push_back(300);
+    hidden_sizes.push_back(100);
+    neural_net network(training_data,training_label,hidden_sizes,0.01);
     VectorType Res(network.n_params());
     for(int i = 0 ; i < Res.rows() ; ++i)
         Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
-
     std::cout << "done!" << std::endl;
 
     //std::cout << "#Checking gradient..." << std::flush;
@@ -350,7 +337,7 @@ int main(int argc, char* argv[]){
     umintl::minimizer<BackendType> optimization;
     //optimization.direction = new umintl::conjugate_gradient<BackendType>();
     //optimization.direction = new umintl::steepest_descent<BackendType>();
-    //optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
+    optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(5));
     neural_net::early_stopper * stop = network.create_early_stopping(testing_data,testing_label);
     optimization.stopping_criterion = stop;
     optimization.max_iter = 1000;
