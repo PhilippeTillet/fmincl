@@ -6,7 +6,7 @@
 #include "umintl/backends/eigen.hpp"
 #include "umintl/minimize.hpp"
 
-typedef double ScalarType;
+typedef float ScalarType;
 typedef Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> MatrixType;
 typedef Eigen::Matrix<ScalarType,Eigen::Dynamic,1> VectorType;
 typedef Eigen::Matrix<int,Eigen::Dynamic,1> LabelType;
