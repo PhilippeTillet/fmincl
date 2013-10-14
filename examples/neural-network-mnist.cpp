@@ -121,7 +121,7 @@ private:
             //Compute delta
             if(L==n_layers_-1){
                 D[L] = A[L];
-                for(std::size_t j = 0 ; j < block_size_ ; ++j){
+                for(std::size_t j = 0 ; j < data.cols() ; ++j){
                     D[L](labels(j),j)-=1;
                 }
             }
@@ -197,8 +197,8 @@ public:
 
 public:
     neural_net(MatrixType const & data, LabelType const & labels,
-       std::vector<std::size_t> const & hidden_sizes, std::size_t block_size) :
-        data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols(),block_size)), block_size_(default_block_size_), offset_(1)
+       std::vector<std::size_t> const & hidden_sizes) :
+        data_(data), labels_(labels)
     {
         layer_sizes_.push_back(data.rows());
         for(std::size_t i = 0 ; i < hidden_sizes.size() ; ++i)
@@ -249,16 +249,11 @@ public:
         return res;
     }
 
-    void set_current_minibatch(std::size_t id) const{
-        offset_ = id*default_block_size_+1;
-        block_size_ = std::min(default_block_size_, data_.cols()-offset_);
-    }
-
     void operator()(VectorType const & X, ScalarType * val, VectorType * grad)const{
         set_weights(X);
-        feedforward(data_.block(0,offset_,data_.rows(),block_size_));
+        feedforward(data_);
         if(val)
-            *val = get_cost(labels_.segment(offset_,block_size_));
+            *val = get_cost(labels_);
 
 
 //        unsigned int n_misclassified = 0;
@@ -271,7 +266,7 @@ public:
 
 
         if(grad){
-            backpropagate(data_.block(0,offset_,data_.rows(),block_size_),labels_.segment(offset_,block_size_));
+            backpropagate(data_,labels_);
             std::size_t offset = 0;
             for(std::size_t L = 0 ; L < n_layers_ ; ++L){
                 for(std::size_t i = 0 ; i < dweights[L].rows() ; ++i)
@@ -299,11 +294,6 @@ private:
 
     MatrixType const & data_;
     LabelType const & labels_;
-
-    std::size_t default_block_size_;
-
-    mutable std::size_t block_size_;
-    mutable std::size_t offset_;
 
     mutable std::vector<std::size_t> layer_sizes_;
     std::size_t n_layers_;
@@ -339,11 +329,10 @@ int main(int argc, char* argv[]){
 
 
     std::cout << "#Initializing the network..." << std::flush;
-    std::size_t block_size = 5000;
     std::vector<std::size_t> hidden_sizes;
     hidden_sizes.push_back(300);
     hidden_sizes.push_back(500);
-    neural_net network(training_data,training_label,hidden_sizes,block_size);
+    neural_net network(training_data,training_label,hidden_sizes);
     VectorType Res(network.n_params());
     for(std::size_t i = 0 ; i < Res.rows() ; ++i)
         Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
@@ -361,7 +350,6 @@ int main(int argc, char* argv[]){
     optimization.stopping_criterion = stop;
     optimization.max_iter = 1000;
     optimization.verbosity_level=2;
-    //optimization.minibatch_policy = new umintl::with_minibatch<neural_net>(training_data.cols()/block_size,network);
     optimization(Res,network,Res,Res.rows());
     network.set_weights(stop->best_x());
     std::cout << "Training complete!" << std::endl;
