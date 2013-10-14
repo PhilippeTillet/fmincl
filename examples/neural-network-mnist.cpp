@@ -96,58 +96,6 @@ LabelType read_mnist_labels(std::string  filename)
 }
 
 class neural_net{
-private:
-
-
-    template<class T>
-    void feedforward(Eigen::MatrixBase<T> const & data) const{
-        for(std::size_t L = 0 ; L < n_layers_; ++L){
-            if(L==0)
-                Z[L] = weights[L]*data;
-            else
-                Z[L] = weights[L]*A[L-1];
-            Z[L].colwise() += bias[L];
-
-            if(L==n_layers_-1)
-                softmax(Z[L],A[L]);
-            else
-                sigmoid(Z[L],A[L]);
-        }
-    }
-
-    template<class T, class U>
-    void backpropagate(Eigen::MatrixBase<T> const & data, Eigen::MatrixBase<U> const & labels) const{
-        for(int L = (int)n_layers_-1 ; L>=0 ; --L){
-            //Compute delta
-            if(L==(int)n_layers_-1){
-                D[L] = A[L];
-                for(int j = 0 ; j < data.cols() ; ++j){
-                    D[L](labels(j),j)-=1;
-                }
-            }
-            else{
-                D[L] = weights[L+1].transpose()*D[L+1];
-                D[L] = D[L].array()*A[L].array()*(1-A[L].array());
-            }
-
-            //Compute derivatives
-            if(L==0)
-                dweights[L] = D[L]*data.transpose();
-            else
-                dweights[L] = D[L]*A[L-1].transpose();
-
-            dbias[L] = D[L].rowwise().sum();
-        }
-    }
-
-    template<class T>
-    ScalarType get_cost(Eigen::MatrixBase<T> const & labels) const{
-        ScalarType cross_entropy = 0;
-        for(int j = 0 ; j < A.back().cols() ; ++j){
-            cross_entropy-=log(A.back()(labels(j),j));
-        }
-        return cross_entropy;
-    }
 
 public:
     class early_stopper : public umintl::stopping_criterion<BackendType>{
@@ -194,11 +142,66 @@ public:
         return new early_stopper(*this,validation_data,validation_labels);
     }
 
+private:
+
+
+    template<class T>
+    void feedforward(Eigen::MatrixBase<T> const & data) const{
+        for(std::size_t L = 0 ; L < n_layers_; ++L){
+            if(L==0)
+                Z[L] = weights[L]*data;
+            else
+                Z[L] = weights[L]*A[L-1];
+            Z[L].colwise() += bias[L];
+
+            if(L==n_layers_-1)
+                softmax(Z[L],A[L]);
+            else
+                sigmoid(Z[L],A[L]);
+        }
+    }
+
+    template<class T, class U>
+    void backpropagate(Eigen::MatrixBase<T> const & data, Eigen::MatrixBase<U> const & labels) const{
+        for(int L = (int)n_layers_-1 ; L>=0 ; --L){
+            //Compute delta
+            if(L==(int)n_layers_-1){
+                D[L] = A[L];
+                for(int j = 0 ; j < data.cols() ; ++j){
+                    D[L](labels(j),j)-=1;
+                }
+            }
+            else{
+                D[L] = weights[L+1].transpose()*D[L+1];
+                D[L] = D[L].array()*A[L].array()*(1-A[L].array());
+            }
+
+            //Compute derivatives
+            if(L==0)
+                dweights[L] = D[L]*data.transpose() + lambda_*weights[L];
+            else
+                dweights[L] = D[L]*A[L-1].transpose() + lambda_*weights[L];
+
+            dbias[L] = D[L].rowwise().sum();
+        }
+    }
+
+    template<class T>
+    ScalarType get_cost(Eigen::MatrixBase<T> const & labels) const{
+        ScalarType cross_entropy = 0;
+        for(int j = 0 ; j < A.back().cols() ; ++j){
+            cross_entropy-=log(A.back()(labels(j),j));
+        }
+        ScalarType regularizer = 0;
+        for(std::size_t L = 0 ; L < n_layers_ ; ++L)
+            regularizer+=0.5*lambda_*weights[L].array().pow(2).sum();
+        return cross_entropy+regularizer;
+    }
 
 public:
     neural_net(MatrixType const & data, LabelType const & labels,
-       std::vector<std::size_t> const & hidden_sizes) :
-        data_(data), labels_(labels)
+       std::vector<std::size_t> const & hidden_sizes, ScalarType lambda = 0.01) :
+        data_(data), labels_(labels), lambda_(lambda)
     {
         layer_sizes_.push_back(data.rows());
         for(std::size_t i = 0 ; i < hidden_sizes.size() ; ++i)
@@ -295,6 +298,8 @@ private:
     MatrixType const & data_;
     LabelType const & labels_;
 
+    ScalarType lambda_;
+
     mutable std::vector<std::size_t> layer_sizes_;
     std::size_t n_layers_;
 };
@@ -330,9 +335,9 @@ int main(int argc, char* argv[]){
 
     std::cout << "#Initializing the network..." << std::flush;
     std::vector<std::size_t> hidden_sizes;
-    hidden_sizes.push_back(300);
-    hidden_sizes.push_back(500);
-    neural_net network(training_data,training_label,hidden_sizes);
+    hidden_sizes.push_back(10);
+    hidden_sizes.push_back(20);
+    neural_net network(training_data,training_label,hidden_sizes,1);
     VectorType Res(network.n_params());
     for(int i = 0 ; i < Res.rows() ; ++i)
         Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
@@ -340,7 +345,7 @@ int main(int argc, char* argv[]){
     std::cout << "done!" << std::endl;
 
     //std::cout << "#Checking gradient..." << std::flush;
-    //std::cout << "Maximum relative error : " << umintl::check_grad<BackendType>(network,Res,Res.rows(),1e-6) << std::endl;
+    std::cout << "Maximum relative error : " << umintl::check_grad<BackendType>(network,Res,Res.rows(),1e-6) << std::endl;
 
     umintl::minimizer<BackendType> optimization;
     //optimization.direction = new umintl::conjugate_gradient<BackendType>();
