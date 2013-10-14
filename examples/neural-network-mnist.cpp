@@ -40,7 +40,7 @@ MatrixType read_mnist_images(std::string filename)
       swap(num_rows);
       swap(num_columns);
     }
-    //num_images = 10000;
+    //num_images = 1000;
     X = MatrixType::Zero(num_rows*num_columns, num_images);
 
     for (int i=0; i<num_images; ++i) {
@@ -70,7 +70,7 @@ LabelType read_mnist_labels(std::string  filename)
       swap(magic_number);
       swap(num_images);
     }
-    //num_images = 10000;
+    //num_images = 1000;
 
     Y = LabelType::Zero(num_images);
 
@@ -214,7 +214,7 @@ public:
         for(std::size_t j = 0 ; j < labels.rows() ; ++j){
             unsigned int prediction;
             A2.col(j).maxCoeff(&prediction);
-            n_misclassified+= static_cast<unsigned int>(labels(j)==prediction);
+            n_misclassified+= static_cast<unsigned int>(labels(j)!=prediction);
         }
         return (float)n_misclassified/labels.rows()*100;
     }
@@ -345,7 +345,8 @@ int main(int argc, char* argv[]){
     //optimization.minibatch_policy = new umintl::with_minibatch<neural_net>(training_data.cols()/block_size,network);
     optimization(Res,network,Res,Res.rows());
     network.set_weights(stop->best_x());
-    std::cout << network.misclassified_rate(testing_data, testing_label) << std::endl;
+    std::cout << "Training complete!" << std::endl;
+    std::cout << "Test error rate : " << network.misclassified_rate(testing_data, testing_label) << "%" << std::endl;
 
 
 

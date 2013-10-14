@@ -27,6 +27,7 @@ add_custom_target( MAKE_HEADERS_VISIBLE SOURCES ${MAKE_HEADERS_VISIBLE_SRC} )
 #Set Warning level
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-fopenmp -msse4 -O3")
+set(CMAKE_BUILD_TYPE release)
 
 if(BUILD_EXAMPLES)
    add_subdirectory(examples)
