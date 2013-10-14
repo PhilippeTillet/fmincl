@@ -65,10 +65,16 @@ namespace umintl{
   template<class BackendType>
   struct line_search{
       typedef typename BackendType::ScalarType ScalarType;
+      line_search(unsigned int _max_evals) : max_evals(_max_evals){ }
       virtual ~line_search(){ }
       virtual void init(detail::optimization_context<BackendType> &){ }
       virtual void clean(detail::optimization_context<BackendType> &){ }
-      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai) = 0;
+      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai,  unsigned int max_evaluations) = 0;
+      void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai){
+          (*this)(res,direction,context,ai,max_evals);
+      }
+  private:
+      unsigned int max_evals;
   };
 
 

@@ -40,7 +40,7 @@ MatrixType read_mnist_images(std::string filename)
       swap(num_rows);
       swap(num_columns);
     }
-    num_images = 5000;
+    //num_images = 10000;
     X = MatrixType::Zero(num_rows*num_columns, num_images);
 
     for (int i=0; i<num_images; ++i) {
@@ -70,7 +70,7 @@ LabelType read_mnist_labels(std::string  filename)
       swap(magic_number);
       swap(num_images);
     }
-    num_images = 5000;
+    //num_images = 10000;
 
     Y = LabelType::Zero(num_images);
 
@@ -96,23 +96,7 @@ struct temporaries_holder{
 
 class neural_net{
 private:
-    void unroll(VectorType const & X) const{
-        std::size_t offset = 0;
-        //Layer1
-        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-            for(std::size_t j = 0 ; j < n_in_ ; ++j)
-                weights_1(i,j) = X[offset++];
-        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
-            bias_1(i) = X[offset++];
 
-        //Layer2
-        for(std::size_t i = 0 ; i < n_out_ ; ++i)
-            for(std::size_t j = 0 ; j < n_hidden_ ; ++j)
-                weights_2(i,j) = X[offset++];
-        for(std::size_t i = 0 ; i < n_out_ ; ++i)
-            bias_2(i) = X[offset++];
-
-    }
 
     template<class T>
     void feedforward(Eigen::MatrixBase<T> const & data) const{
@@ -159,21 +143,33 @@ private:
 public:
     class early_stopper : public umintl::stopping_criterion<BackendType>{
     public:
-        early_stopper(neural_net const & net, MatrixType const & validation_data, LabelType const & validation_labels) : net_(net), validation_data_(validation_data), validation_labels_(validation_labels){ }
+        early_stopper(neural_net const & net, MatrixType const & validation_data, LabelType const & validation_labels) : net_(net), validation_data_(validation_data), validation_labels_(validation_labels), best_cost_(INFINITY){ }
         bool operator()(umintl::detail::optimization_context<BackendType> & c){
-            //Unroll
-            net_.unroll(c.x());
-            net_.feedforward(validation_data_);
-            ScalarType cross_entropy = net_.get_cost(validation_labels_);
-            std::cout << cross_entropy << std::endl;
+            if(c.iter()%10==0){
+                net_.set_weights(c.x());
+                net_.feedforward(validation_data_);
+                ScalarType cross_entropy = net_.get_cost(validation_labels_);
+                bool stop = (cross_entropy/best_cost_)>1.05;
+                if(cross_entropy<best_cost_){
+                    best_cost_ = cross_entropy;
+                    best_x_=c.x();
+                }
+                best_cost_ = std::min(best_cost_, cross_entropy);
+                std::cout << "Current validation error : " << cross_entropy << std::endl;
+                return stop;
+            }
             return false;
         }
+        VectorType const & best_x(){ return best_x_; }
 
     private:
         neural_net const & net_;
 
         MatrixType const & validation_data_;
         LabelType const & validation_labels_;
+
+        VectorType best_x_;
+        ScalarType best_cost_;
     };
 
     early_stopper * create_early_stopping(MatrixType const & validation_data, LabelType const & validation_labels)
@@ -185,7 +181,7 @@ public:
 public:
     neural_net(MatrixType const & data, LabelType const & labels,
        std::size_t n_hidden, std::size_t block_size) :
-        data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols(),block_size)), offset_(0)
+        data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols()-1,block_size)), block_size_(default_block_size_), offset_(1)
       ,n_in_(data.rows()), n_hidden_(n_hidden), n_out_(labels.maxCoeff()+1)
     {
         weights_1.resize(n_hidden_,n_in_);
@@ -194,19 +190,47 @@ public:
         bias_2.resize(n_out_);
     }
 
+    void set_weights(VectorType const & X) const{
+        std::size_t offset = 0;
+        //Layer1
+        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
+            for(std::size_t j = 0 ; j < n_in_ ; ++j)
+                weights_1(i,j) = X[offset++];
+        for(std::size_t i = 0 ; i < n_hidden_ ; ++i)
+            bias_1(i) = X[offset++];
+
+        //Layer2
+        for(std::size_t i = 0 ; i < n_out_ ; ++i)
+            for(std::size_t j = 0 ; j < n_hidden_ ; ++j)
+                weights_2(i,j) = X[offset++];
+        for(std::size_t i = 0 ; i < n_out_ ; ++i)
+            bias_2(i) = X[offset++];
+
+    }
+
+    float misclassified_rate(MatrixType const & data, LabelType const & labels){
+        feedforward(data);
+        unsigned int n_misclassified = 0;
+        for(std::size_t j = 0 ; j < labels.rows() ; ++j){
+            unsigned int prediction;
+            A2.col(j).maxCoeff(&prediction);
+            n_misclassified+= static_cast<unsigned int>(labels(j)==prediction);
+        }
+        return (float)n_misclassified/labels.rows()*100;
+    }
+
     std::size_t n_params() const{
         return n_hidden_*n_in_+n_hidden_ + n_out_*n_hidden_+n_out_;
     }
 
-    void set_current_minibatch(std::size_t id)
-    {
-        offset_ = id*default_block_size_;
+    void set_current_minibatch(std::size_t id) const{
+        offset_ = id*default_block_size_+1;
         block_size_ = std::min(default_block_size_, data_.cols()-offset_);
     }
 
     void operator()(VectorType const & X, ScalarType * val, VectorType * grad)const{
         //Unroll
-        unroll(X);
+        set_weights(X);
         //Hidden
         feedforward(data_.block(0,offset_,data_.rows(),block_size_));
         if(val){
@@ -261,8 +285,8 @@ private:
 
     std::size_t default_block_size_;
 
-    std::size_t offset_;
-    std::size_t block_size_;
+    mutable std::size_t block_size_;
+    mutable std::size_t offset_;
 
     std::size_t n_in_;
     std::size_t n_hidden_;
@@ -299,7 +323,7 @@ int main(int argc, char* argv[]){
 
 
     std::cout << "#Initializing the network..." << std::flush;
-    std::size_t block_size = 1000;
+    std::size_t block_size = training_data.cols();
     neural_net network(training_data,training_label,500,block_size);
     VectorType Res(network.n_params());
     for(std::size_t i = 0 ; i < Res.rows() ; ++i)
@@ -314,16 +338,14 @@ int main(int argc, char* argv[]){
     //optimization.direction = new umintl::conjugate_gradient<BackendType>();
     //optimization.direction = new umintl::steepest_descent<BackendType>();
     optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
-    optimization.stopping_criterion = network.create_early_stopping(testing_data,testing_label);
-    optimization.max_iter = 10;
+    neural_net::early_stopper * stop = network.create_early_stopping(testing_data,testing_label);
+    optimization.stopping_criterion = stop;
+    optimization.max_iter = 1000;
     optimization.verbosity_level=2;
-
-    std::size_t num_blocks = training_data.cols()/block_size;
-    for(std::size_t b = 0 ; b < num_blocks ; ++b){
-        network.set_current_minibatch(b);
-        optimization(Res,network,Res,Res.rows());
-    }
-
+    //optimization.minibatch_policy = new umintl::with_minibatch<neural_net>(training_data.cols()/block_size,network);
+    optimization(Res,network,Res,Res.rows());
+    network.set_weights(stop->best_x());
+    std::cout << network.misclassified_rate(testing_data, testing_label) << std::endl;
 
 
 

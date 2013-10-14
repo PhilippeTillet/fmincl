@@ -28,6 +28,33 @@
 
 namespace umintl{
 
+
+    class minibatch_handler{
+    public:
+        virtual void operator()(std::size_t iter) const = 0;
+        virtual ~minibatch_handler(){ }
+    };
+
+    class no_minibatch : public minibatch_handler{
+    public:
+        void operator()(std::size_t) const { }
+    };
+
+    class with_minibatch_base : public minibatch_handler{
+    };
+
+    template<class Fun>
+    class with_minibatch : public with_minibatch_base{
+    public:
+        with_minibatch(std::size_t n_minibatches, Fun & fun) : n_minibatches_(n_minibatches), fun_(fun){
+            fun.set_current_minibatch(0);
+        }
+        void operator()(std::size_t iter) const { fun_.set_current_minibatch(iter%n_minibatches_); }
+    private:
+        std::size_t n_minibatches_;
+        Fun & fun_;
+    };
+
     template<class BackendType>
     class minimizer{
     public:
@@ -38,6 +65,7 @@ namespace umintl{
           , fallback_direction(new steepest_descent<BackendType>())
           , line_search(new strong_wolfe_powell<BackendType>())
           , stopping_criterion(_stopping_criterion)
+          , minibatch_policy(new no_minibatch())
           , verbosity_level(verbosity), max_iter(iter){
 
         }
@@ -47,6 +75,7 @@ namespace umintl{
         tools::shared_ptr<umintl::direction<BackendType> > fallback_direction;
         tools::shared_ptr<umintl::line_search<BackendType> > line_search;
         tools::shared_ptr<umintl::stopping_criterion<BackendType> > stopping_criterion;
+        tools::shared_ptr<umintl::minibatch_handler> minibatch_policy;
 
         double tolerance;
 
@@ -112,6 +141,8 @@ namespace umintl{
             //Main loop
             for( ; c.iter() < max_iter ; ++c.iter()){
 
+                (*minibatch_policy)(c.iter());
+
                 if(verbosity_level >= 2 )
                     std::cout << "Ieration  " << c.iter() << " | cost : " << c.val() << "| NVal : " << c.fun().n_value_calc() << std::endl;
 
@@ -132,10 +163,20 @@ namespace umintl{
                     c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 }
 
-                (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
+                if(dynamic_cast<with_minibatch_base*>(minibatch_policy.get())){
+                    c.fun()(c.x(), &c.val(), &c.g());
+                    (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
+                    if(search_res.has_failed){
+                        return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
+                    }
+                }
+                else{
+                    (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
+                    if(search_res.has_failed){
+                        return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
+                    }
+                }
 
-                if(search_res.has_failed)
-                    return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
 
                 BackendType::copy(N,c.x(),c.xm1());
                 BackendType::copy(N,search_res.best_x,c.x());
