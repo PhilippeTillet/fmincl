@@ -198,7 +198,7 @@ public:
 public:
     neural_net(MatrixType const & data, LabelType const & labels,
        std::vector<std::size_t> const & hidden_sizes, std::size_t block_size) :
-        data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols()-1,block_size)), block_size_(default_block_size_), offset_(1)
+        data_(data), labels_(labels),default_block_size_(std::min((std::size_t)data.cols(),block_size)), block_size_(default_block_size_), offset_(1)
     {
         layer_sizes_.push_back(data.rows());
         for(std::size_t i = 0 ; i < hidden_sizes.size() ; ++i)
