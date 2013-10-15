@@ -31,32 +31,58 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h2>
-<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
+        <h1>
+<a name="umintl" class="anchor" href="#umintl"><span class="octicon octicon-link"></span></a>UMinTL</h1>
+
+<p>This project is a generic unconstrained minimization library relying heavily on template metaprogramming.</p>
+
+<h2>
+<a name="features--umintl-10-" class="anchor" href="#features--umintl-10-"><span class="octicon octicon-link"></span></a>Features [ UMinTL 1.0 ]</h2>
 
 <ul>
 <li>Compatible with <strong>any</strong> Linear Algebra backend</li>
-</ul><p>The linear algebra routines are well separated from the algorithmic implementations.
-You can pass a custom backend in the optimization procedure. This backend just needs to include a few typedefs, linear algebra routines and some procedures to allocate/delete  vectors/matrices.
-For now, cblas and ViennaCL are available, for using either CPU or OpenCL in the optimization procedure and the objective function.</p>
-
-<ul>
-<li>An <strong>extendable</strong> library</li>
-</ul><p>UMinTL relies on templates. You may therefore write your own stopping criterion (eg a cross-validation error if you're doing machine learning). More experienced user may also write their own restarting condition/update direction for the nonlinear conjugate gradient.</p>
-
-<ul>
-<li>A <strong>clear</strong> interface</li>
-</ul><p>UMinTL provides a clear API, where any functor can be passed to the optimization procedure. The cumbersomeness of the templates is softened using a type-erasure mechanism.</p>
-
-<ul>
-<li>A <strong>robust</strong> package</li>
-</ul><p>UMinTL was extensively tested on the test suite described in "Testing Unconstrained Optimization Software" (JJ Moré and al.). However, it will never be robust enough. If the procedure fails on your particular problem, please <em>report</em>.</p>
+</ul><p>The linear algebra routines are well separated from the algorithm implementations.
+You can plug your own linear algebra backend into the optimization procedure. This backend should just include a few typedefs, linear algebra routine and procedures to allocate/delete a Vector/Matrix.
+For now, backends for BLAS (tested on mwblas provided by matlab), cBLAS (tested on OpenBlas) and Eigen are supported. CuBlas or ViennaCL backends should also work out-of-the box, but are not provided, yet.</p>
 
 <ul>
 <li>
-<strong>Multiple algorithms</strong> available</li>
-</ul><p>The library supports BFGS, L-BFGS, and Nonlinear Conjugate Gradient. Several updates and restart procedures are available for the conjugate gradient methods.
-The line-search is done using the strong wolfe-powell conditions.</p>
+<strong>Lightweight</strong>, <strong>portable</strong> and <strong>headers-only</strong>
+</li>
+</ul><p>UMinTL is C++03-compliant and does not require any external package.</p>
+
+<ul>
+<li>An <strong>extendable</strong> library</li>
+</ul><p>UMinTL relies on C++ templates. You may therefore write your own stopping criterion (eg a cross-validation error if you're doing machine learning). More experienced user may also write their own restarting condition for the conjugate gradient, or their own update direction.</p>
+
+<ul>
+<li>A <strong>clear</strong> interface</li>
+</ul><p>UMinTL provides a clear C++ API, relying on functors rather than functions..</p>
+
+<ul>
+<li>A <strong>robust</strong> package</li>
+</ul><p>UMinTL was extensively tested on the test suite described in "Testing Unconstrained Optimization Software" (JJ Moré and al.). However, I am aware that it will never be robust enough. If the procedure fails on your particular problem, please <em>report</em>.</p>
+
+<ul>
+<li>**Efficient* optimization routines</li>
+</ul><p>The library supports BFGS, L-BFGS, and Nonlinear Conjugate Gradient (Several updates and restart procedures).
+The line-search is done using the strong wolfe-powell conditions.
+The implementations are inspired from the renowed minfunc package for MATLAB (<a href="http://www.di.ens.fr/%7Emschmidt/Software/minFunc.html%E2%80%8E">www.di.ens.fr/~mschmidt/Software/minFunc.html‎</a>)</p>
+
+<h2>
+<a name="incoming-features--umintl-11-" class="anchor" href="#incoming-features--umintl-11-"><span class="octicon octicon-link"></span></a>Incoming Features [ UMinTL 1.1 ]</h2>
+
+<ul>
+<li>Hessian-free optimization</li>
+</ul><p>Hessian-free optimization has shown encouraging results in the Machine Learning litterature. It is a fundamental building block of the unconstrained optimization framework, which should absolutely be provided.</p>
+
+<ul>
+<li>Mini-batch / Stochastic and Semi-Stochastic procedures</li>
+</ul><p>For now, UMinTL only provides batch methods. Mini-Batch/Stochastic/Semi-stochastic approaches should also be provided.</p>
+
+<ul>
+<li>Supported GPU backend(s)</li>
+</ul><p>At least ViennaCL backend should be provided, in order to carry out the optimization process on heterogeneous devices, or to avoid CPU-to-GPU transfers (when optimizing on the CPU and evaluating the objective function on the GPU)</p>
       </section>
     </div>
 
