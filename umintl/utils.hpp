@@ -39,14 +39,14 @@ namespace umintl{
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::ScalarType ScalarType;
         public:
-            function_wrapper_impl(Fun const & fun) : fun_(fun){ }
+            function_wrapper_impl(Fun & fun) : fun_(fun){ }
             void operator()(VectorType const & x, ScalarType * value, VectorType * grad) const {
                 ++function_wrapper<BackendType>::n_value_calc_;
                 if(grad) ++function_wrapper<BackendType>::n_derivative_calc_;
                 return fun_(x, value, grad);
             }
         private:
-            Fun const & fun_;
+            Fun & fun_;
         };
 
         template<class BackendType>
@@ -59,7 +59,7 @@ namespace umintl{
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::MatrixType MatrixType;
 
-            optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> const & fun) : fun_(fun), iter_(0), dim_(dim){
+            optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> & fun) : fun_(fun), iter_(0), dim_(dim){
                 x_ = BackendType::create_vector(dim_);
                 g_ = BackendType::create_vector(dim_);
                 p_ = BackendType::create_vector(dim_);
@@ -71,7 +71,7 @@ namespace umintl{
                 is_reinitializing_ = true;
             }
 
-            detail::function_wrapper<BackendType> const & fun() { return fun_; }
+            detail::function_wrapper<BackendType> & fun() { return fun_; }
             unsigned int & iter() { return iter_; }
             unsigned int & N() { return dim_; }
             VectorType & x() { return x_; }
@@ -93,7 +93,7 @@ namespace umintl{
             }
 
         private:
-            detail::function_wrapper<BackendType> const & fun_;
+            detail::function_wrapper<BackendType> & fun_;
 
             unsigned int iter_;
             unsigned int dim_;

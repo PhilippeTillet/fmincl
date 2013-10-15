@@ -19,7 +19,7 @@
 namespace umintl{
 
     template<class BackendType, class FUN>
-    typename BackendType::ScalarType check_grad(FUN const & fun, typename BackendType::VectorType const & x0, std::size_t N, typename BackendType::ScalarType h){
+    typename BackendType::ScalarType check_grad(FUN & fun, typename BackendType::VectorType const & x0, std::size_t N, typename BackendType::ScalarType h){
         typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
         VectorType x = BackendType::create_vector(N);
@@ -39,7 +39,7 @@ namespace umintl{
         for(unsigned int i=0 ; i < N ; ++i){
             ScalarType denom = std::max(std::fabs((double)numgrad[i]),std::abs((double)fgrad[i]));
             ScalarType diff = std::fabs(numgrad[i]-fgrad[i]);
-            std::cout << numgrad[i] << " " << fgrad[i] << std::endl;
+            //std::cout << numgrad[i] << " " << fgrad[i] << std::endl;
             if(denom>1)
                 diff/=denom;
             res = std::max(res,diff);

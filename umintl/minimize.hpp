@@ -123,7 +123,7 @@ namespace umintl{
 
     public:
         template<class Fun>
-        optimization_result operator()(typename BackendType::VectorType & res, Fun const & user_fun, typename BackendType::VectorType const & x0, std::size_t N){
+        optimization_result operator()(typename BackendType::VectorType & res, Fun & user_fun, typename BackendType::VectorType const & x0, std::size_t N){
             typedef typename BackendType::VectorType VectorType;
             detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
             detail::optimization_context<BackendType> c(x0, N, fun);

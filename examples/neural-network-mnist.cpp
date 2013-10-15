@@ -100,7 +100,7 @@ class neural_net{
 public:
     class early_stopper : public umintl::stopping_criterion<BackendType>{
     public:
-        early_stopper(neural_net const & net, MatrixType const & validation_data, LabelType const & validation_labels) : net_(net), validation_data_(validation_data), validation_labels_(validation_labels), best_cost_(INFINITY){ }
+        early_stopper(neural_net & net, MatrixType const & validation_data, LabelType const & validation_labels) : net_(net), validation_data_(validation_data), validation_labels_(validation_labels), best_cost_(INFINITY){ }
         bool operator()(umintl::detail::optimization_context<BackendType> & c){
             if(c.iter()%10==0){
                 net_.set_weights(c.x());
@@ -128,7 +128,7 @@ public:
         VectorType const & best_x(){ return best_x_; }
 
     private:
-        neural_net const & net_;
+        neural_net & net_;
 
         MatrixType const & validation_data_;
         LabelType const & validation_labels_;
@@ -143,17 +143,14 @@ public:
     }
 
 private:
-
-
     template<class T>
-    void feedforward(Eigen::MatrixBase<T> const & data) const{
+    void feedforward(Eigen::MatrixBase<T> const & data) {
         for(std::size_t L = 0 ; L < n_layers_; ++L){
             if(L==0)
                 Z[L] = weights[L]*data;
             else
                 Z[L] = weights[L]*A[L-1];
             Z[L].colwise() += bias[L];
-
             if(L==n_layers_-1)
                 softmax(Z[L],A[L]);
             else
@@ -162,7 +159,7 @@ private:
     }
 
     template<class T, class U>
-    void backpropagate(Eigen::MatrixBase<T> const & data, Eigen::MatrixBase<U> const & labels) const{
+    void backpropagate(Eigen::MatrixBase<T> const & data, Eigen::MatrixBase<U> const & labels) {
         for(int L = (int)n_layers_-1 ; L>=0 ; --L){
             //Compute delta
             if(L==(int)n_layers_-1){
@@ -222,7 +219,7 @@ public:
         }
     }
 
-    void set_weights(VectorType const & X) const{
+    void set_weights(VectorType const & X) {
         std::size_t offset = 0;
         for(std::size_t L = 0 ; L < n_layers_ ; ++L){
             for(int i = 0 ; i < weights[L].rows() ; ++i)
@@ -252,7 +249,7 @@ public:
         return res;
     }
 
-    void operator()(VectorType const & X, ScalarType * val, VectorType * grad)const{
+    void operator()(VectorType const & X, ScalarType * val, VectorType * grad) {
         set_weights(X);
         feedforward(data_);
         if(val)
@@ -284,23 +281,23 @@ public:
 private:
     friend class early_stopper;
 
-    mutable std::vector<MatrixType> weights;
-    mutable std::vector<VectorType> bias;
+    std::vector<MatrixType> weights;
+    std::vector<VectorType> bias;
 
-    mutable std::vector<MatrixType> dweights;
-    mutable std::vector<VectorType> dbias;
+    std::vector<MatrixType> dweights;
+    std::vector<VectorType> dbias;
 
-    mutable std::vector<MatrixType> Z;
-    mutable std::vector<MatrixType> A;
+    std::vector<MatrixType> Z;
+    std::vector<MatrixType> A;
 
-    mutable std::vector<MatrixType> D;
+    std::vector<MatrixType> D;
 
     MatrixType const & data_;
     LabelType const & labels_;
 
     ScalarType lambda_;
 
-    mutable std::vector<std::size_t> layer_sizes_;
+    std::vector<std::size_t> layer_sizes_;
     std::size_t n_layers_;
 };
 
