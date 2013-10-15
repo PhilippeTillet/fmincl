@@ -323,25 +323,26 @@ int main(int argc, char* argv[]){
     hidden_sizes.push_back(300);
     hidden_sizes.push_back(100);
     neural_net network(training_data,training_label,hidden_sizes,0.01);
-    VectorType Res(network.n_params());
-    for(int i = 0 ; i < Res.rows() ; ++i)
-        Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
     std::cout << "done!" << std::endl;
 
     //std::cout << "#Checking gradient..." << std::flush;
-    std::cout << "Maximum relative error : " << umintl::check_grad<BackendType>(network,Res,Res.rows(),1e-6) << std::endl;
+    //std::cout << "Maximum relative error : " << umintl::check_grad<BackendType>(network,Res,Res.rows(),1e-6) << std::endl;
 
     umintl::minimizer<BackendType> optimization;
-    //optimization.direction = new umintl::conjugate_gradient<BackendType>();
+    optimization.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(),new umintl::no_restart<BackendType>());
     //optimization.direction = new umintl::steepest_descent<BackendType>();
     optimization.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(5));
-    neural_net::early_stopper * stop = network.create_early_stopping(testing_data,testing_label);
-    optimization.stopping_criterion = stop;
+    optimization.stopping_criterion = network.create_early_stopping(testing_data,testing_label);
     optimization.max_iter = 1000;
     optimization.verbosity_level=2;
+    VectorType Res(network.n_params());
+    for(int i = 0 ; i < Res.rows() ; ++i)
+        Res(i) = (ScalarType)rand()/RAND_MAX - 0.5;
+
+    std::cout << "Optimizing... [Verbose]" << std::endl;
     optimization(Res,network,Res,Res.rows());
-    network.set_weights(stop->best_x());
     std::cout << "Training complete!" << std::endl;
+    network.set_weights(((neural_net::early_stopper *)optimization.stopping_criterion.get())->best_x());
     std::cout << "Test error rate : " << network.misclassified_rate(testing_data, testing_label) << "%" << std::endl;
     std::cout << "Training error rate : " << network.misclassified_rate(training_data, training_label) << "%" << std::endl;
 }
