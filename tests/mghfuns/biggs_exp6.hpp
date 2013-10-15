@@ -1,3 +1,10 @@
+/* ===========================
+  Copyright (c) 2013 Philippe Tillet
+  UMinTL - Unconstrained Minimization Template Library
+
+  License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
 #ifndef FMINCL_BIGGS_EXP6_HPP_
 #define FMINCL_BIGGS_EXP6_HPP_
 

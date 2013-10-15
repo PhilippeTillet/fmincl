@@ -1,12 +1,9 @@
 /* ===========================
- *
- * Copyright (c) 2013 Philippe Tillet - National Chiao Tung University
- *
- * umintl - Unconstrained Function Minimization on OpenCL
- *
- * License : MIT X11 - See the LICENSE file in the root folder
- * ===========================*/
+  Copyright (c) 2013 Philippe Tillet
+  UMinTL - Unconstrained Minimization Template Library
 
+  License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
 
 #ifndef UMINTL_STOPPING_CRITERION_VALUE_TRESHOLD_HPP_
 #define UMINTL_STOPPING_CRITERION_VALUE_TRESHOLD_HPP_
