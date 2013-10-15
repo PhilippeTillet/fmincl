@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef FMINCL_BROWN_DENNIS_HPP_
-#define FMINCL_BROWN_DENNIS_HPP_
+#ifndef UMINTL_BROWN_DENNIS_HPP_
+#define UMINTL_BROWN_DENNIS_HPP_
 
 #include <cmath>
 #include <vector>

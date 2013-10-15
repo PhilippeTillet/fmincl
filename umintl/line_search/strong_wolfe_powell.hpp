@@ -30,11 +30,11 @@ struct strong_wolfe_powell : public line_search<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::MatrixType MatrixType;
 
-    virtual void init(detail::optimization_context<BackendType> & c){
+    virtual void init(optimization_context<BackendType> & c){
         x0_ = BackendType::create_vector(c.N());
     }
 
-    virtual void clean(detail::optimization_context<BackendType> &){
+    virtual void clean(optimization_context<BackendType> &){
         BackendType::delete_if_dynamically_allocated(x0_);
     }
 
@@ -59,7 +59,7 @@ private:
         return std::abs(dphi_ai) <= c2_*std::abs(dphi_0);
     }
 
-    void zoom(line_search_result<BackendType> & res, ScalarType alo, ScalarType phi_alo, ScalarType dphi_alo, ScalarType ahi, ScalarType phi_ahi, ScalarType dphi_ahi, detail::optimization_context<BackendType> & c, unsigned int max_evaluations) const{
+    void zoom(line_search_result<BackendType> & res, ScalarType alo, ScalarType phi_alo, ScalarType dphi_alo, ScalarType ahi, ScalarType phi_ahi, ScalarType dphi_ahi, optimization_context<BackendType> & c, unsigned int max_evaluations) const{
         VectorType & current_x = res.best_x;
         VectorType & current_g = res.best_g;
         ScalarType & current_phi = res.best_phi;
@@ -121,7 +121,7 @@ private:
     }
 
 public:
-    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & c, ScalarType ai, unsigned int max_evaluations) {
+    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c, ScalarType ai, unsigned int max_evaluations) {
         c1_ = 1e-4;
         if(dynamic_cast<quasi_newton<BackendType>*>(direction))
             c2_ = 0.9;

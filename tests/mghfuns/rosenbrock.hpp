@@ -1,5 +1,12 @@
-#ifndef FMINCL_ROSENBROCK_HPP_
-#define FMINCL_ROSENBROCK_HPP_
+/* ===========================
+  Copyright (c) 2013 Philippe Tillet
+  UMinTL - Unconstrained Minimization Template Library
+
+  License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+#ifndef UMINTL_ROSENBROCK_HPP_
+#define UMINTL_ROSENBROCK_HPP_
 
 #include <cmath>
 #include <vector>

@@ -14,7 +14,7 @@ namespace umintl{
 
 template<class BackendType>
 struct restart_on_dim : public cg_restart<BackendType>{
-    bool operator()(detail::optimization_context<BackendType> & c) { return c.iter()==c.N(); }
+    bool operator()(optimization_context<BackendType> & c) { return c.iter()==c.N(); }
 };
 
 

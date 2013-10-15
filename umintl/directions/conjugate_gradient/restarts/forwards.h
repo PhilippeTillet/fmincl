@@ -15,9 +15,9 @@ namespace umintl{
 template<class BackendType>
 struct cg_restart{
     virtual ~cg_restart(){ }
-    virtual void init(detail::optimization_context<BackendType> &){ }
-    virtual void clean(detail::optimization_context<BackendType> &){ }
-    virtual bool operator()(detail::optimization_context<BackendType> & c) = 0;
+    virtual void init(optimization_context<BackendType> &){ }
+    virtual void clean(optimization_context<BackendType> &){ }
+    virtual bool operator()(optimization_context<BackendType> & c) = 0;
 };
 
 }

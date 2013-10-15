@@ -10,8 +10,6 @@
 
 #include "umintl/utils.hpp"
 
-#include "umintl/mapping.hpp"
-
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/directions/forwards.h"
 
@@ -32,17 +30,17 @@ struct conjugate_gradient : public direction<BackendType>{
     typedef typename BackendType::ScalarType ScalarType;
     conjugate_gradient(cg_update<BackendType> * _update = new gilbert_nocedal<BackendType>(), cg_restart<BackendType> * _restart = new restart_not_orthogonal<BackendType>()) : update(_update), restart(_restart){ }
 
-    virtual void init(detail::optimization_context<BackendType> & c){
+    virtual void init(optimization_context<BackendType> & c){
         update->init(c);
         restart->init(c);
     }
 
-    virtual void clean(detail::optimization_context<BackendType> & c){
+    virtual void clean(optimization_context<BackendType> & c){
         update->clean(c);
         restart->clean(c);
     }
 
-    void operator()(detail::optimization_context<BackendType> & c){
+    void operator()(optimization_context<BackendType> & c){
         ScalarType beta;
         if((*restart)(c))
             beta = 0;

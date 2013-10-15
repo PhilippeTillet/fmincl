@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(UMinTL)
 
-set(VERSION_MAJOR 0)
+set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
 
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
@@ -10,8 +10,8 @@ set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 # User options
+option(BUILD_EXAMPLES "Build the examples" ON)
 option(BUILD_TESTING "Build the tests " ON)
-option(BUILD_EXAMPLES "Build the examples " ON)
 
 # Includes
 include_directories(BEFORE ${PROJECT_SOURCE_DIR})
@@ -29,8 +29,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-fopenmp -msse4 -O3 -DNDEBUG")
 set(CMAKE_BUILD_TYPE Release)
 
+find_package(OpenBlas QUIET REQUIRED)
+
 if(BUILD_EXAMPLES)
-   add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()
 
 if(BUILD_TESTING)

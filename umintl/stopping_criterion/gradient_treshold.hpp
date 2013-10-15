@@ -21,7 +21,7 @@ struct gradient_treshold : public stopping_criterion<BackendType>{
     gradient_treshold(double _tolerance = 1e-8) : tolerance(_tolerance){ }
     double tolerance;
 
-    bool operator()(detail::optimization_context<BackendType> & c){
+    bool operator()(optimization_context<BackendType> & c){
         return BackendType::nrm2(c.N(),c.g()) < tolerance;
     }
 };

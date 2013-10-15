@@ -19,7 +19,7 @@ struct bfgs : public qn_update<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::MatrixType MatrixType;
 
-    virtual void init(detail::optimization_context<BackendType> & c)
+    virtual void init(optimization_context<BackendType> & c)
     {
         reinitialize_ = true;
 
@@ -34,7 +34,7 @@ struct bfgs : public qn_update<BackendType>{
         BackendType::set_to_value(y_,0,N_);
     }
 
-    virtual void clean(detail::optimization_context<BackendType> &)
+    virtual void clean(optimization_context<BackendType> &)
     {
         BackendType::delete_if_dynamically_allocated(Hy_);
         BackendType::delete_if_dynamically_allocated(s_);
@@ -43,7 +43,7 @@ struct bfgs : public qn_update<BackendType>{
         BackendType::delete_if_dynamically_allocated(H_);
     }
 
-    void operator()(detail::optimization_context<BackendType> & c){
+    void operator()(optimization_context<BackendType> & c){
       //s = x - xm1;
       BackendType::copy(N_,c.x(),s_);
       BackendType::axpy(N_,-1,c.xm1(),s_);

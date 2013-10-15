@@ -30,18 +30,18 @@ struct quasi_newton : public direction<BackendType>{
 
     quasi_newton(qn_update<BackendType> * _update = new lbfgs<BackendType>()) : update(_update){ }
 
-    virtual void init(detail::optimization_context<BackendType> & c){
+    virtual void init(optimization_context<BackendType> & c){
         update->init(c);
     }
-    virtual void clean(detail::optimization_context<BackendType> & c){
+    virtual void clean(optimization_context<BackendType> & c){
         update->clean(c);
     }
 
-    virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> &){
+    virtual ScalarType line_search_first_trial(optimization_context<BackendType> &){
         return 1;
     }
 
-    virtual void operator()(detail::optimization_context<BackendType> & context){
+    virtual void operator()(optimization_context<BackendType> & context){
         (*update)(context);
     }
 

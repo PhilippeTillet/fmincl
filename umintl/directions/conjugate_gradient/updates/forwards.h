@@ -17,9 +17,9 @@ namespace umintl{
 template<class BackendType>
 struct cg_update{
     virtual ~cg_update(){ }
-    virtual void init(detail::optimization_context<BackendType> &){ }
-    virtual void clean(detail::optimization_context<BackendType> &){ }
-    virtual typename BackendType::ScalarType operator()(detail::optimization_context<BackendType> &) = 0;
+    virtual void init(optimization_context<BackendType> &){ }
+    virtual void clean(optimization_context<BackendType> &){ }
+    virtual typename BackendType::ScalarType operator()(optimization_context<BackendType> &) = 0;
 };
 
 }

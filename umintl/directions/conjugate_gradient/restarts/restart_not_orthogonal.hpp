@@ -17,7 +17,7 @@ struct restart_not_orthogonal : public cg_restart<BackendType>{
     restart_not_orthogonal(double _threshold = 0.1) : threshold(_threshold){ }
     double threshold;
 
-    bool operator()(detail::optimization_context<BackendType> & c){
+    bool operator()(optimization_context<BackendType> & c){
         return std::abs(BackendType::dot(c.N(),c.g(),c.gm1()))/BackendType::dot(c.N(),c.g(),c.g()) > threshold;
     }
 };

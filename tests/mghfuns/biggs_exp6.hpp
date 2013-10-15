@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef FMINCL_BIGGS_EXP6_HPP_
-#define FMINCL_BIGGS_EXP6_HPP_
+#ifndef UMINTL_BIGGS_EXP6_HPP_
+#define UMINTL_BIGGS_EXP6_HPP_
 
 #include <cmath>
 #include <vector>

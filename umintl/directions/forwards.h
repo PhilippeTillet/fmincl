@@ -16,10 +16,10 @@ template<class BackendType>
 struct direction{
     typedef typename BackendType::ScalarType ScalarType;
     virtual ~direction(){ }
-    virtual void operator()(detail::optimization_context<BackendType> &) = 0;
-    virtual void init(detail::optimization_context<BackendType> &){ }
-    virtual void clean(detail::optimization_context<BackendType> &){ }
-    virtual ScalarType line_search_first_trial(detail::optimization_context<BackendType> & c){
+    virtual void operator()(optimization_context<BackendType> &) = 0;
+    virtual void init(optimization_context<BackendType> &){ }
+    virtual void clean(optimization_context<BackendType> &){ }
+    virtual ScalarType line_search_first_trial(optimization_context<BackendType> & c){
         if(c.is_reinitializing()==0)
             return std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
         else

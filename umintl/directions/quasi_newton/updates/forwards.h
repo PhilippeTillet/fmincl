@@ -8,7 +8,6 @@
 #ifndef UMINTL_DIRECTIONS_QUASI_NEWTON_FORWARDS_H
 #define UMINTL_DIRECTIONS_QUASI_NEWTON_FORWARDS_H
 
-#include "umintl/mapping.hpp"
 #include "umintl/utils.hpp"
 
 namespace umintl{
@@ -16,9 +15,9 @@ namespace umintl{
 template<class BackendType>
 struct qn_update{
     virtual ~qn_update(){ }
-    virtual void init(detail::optimization_context<BackendType> &){ }
-    virtual void clean(detail::optimization_context<BackendType> &){ }
-    virtual void operator()(detail::optimization_context<BackendType> &) = 0;
+    virtual void init(optimization_context<BackendType> &){ }
+    virtual void clean(optimization_context<BackendType> &){ }
+    virtual void operator()(optimization_context<BackendType> &) = 0;
 };
 
 }

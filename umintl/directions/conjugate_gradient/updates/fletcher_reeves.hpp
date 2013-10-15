@@ -17,7 +17,7 @@ template<class BackendType>
 struct fletcher_reeves : public cg_update<BackendType>{
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
-    ScalarType operator()(detail::optimization_context<BackendType> & c){
+    ScalarType operator()(optimization_context<BackendType> & c){
         return BackendType::dot(c.N(),c.g(),c.g())/BackendType::dot(c.N(),c.gm1(),c.gm1());
     }
 };

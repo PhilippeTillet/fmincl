@@ -17,9 +17,9 @@ namespace umintl{
 template<class BackendType>
 struct stopping_criterion{
     virtual ~stopping_criterion(){ }
-    virtual void init(detail::optimization_context<BackendType> &){ }
-    virtual void clean(detail::optimization_context<BackendType> &){ }
-    virtual bool operator()(detail::optimization_context<BackendType> & context) = 0;
+    virtual void init(optimization_context<BackendType> &){ }
+    virtual void clean(optimization_context<BackendType> &){ }
+    virtual bool operator()(optimization_context<BackendType> & context) = 0;
 };
 
 

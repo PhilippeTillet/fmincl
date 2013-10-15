@@ -1,5 +1,12 @@
-#ifndef FMINCL_VARIABLY_DIMENSIONED_HPP_
-#define FMINCL_VARIABLY_DIMENSIONED_HPP_
+/* ===========================
+  Copyright (c) 2013 Philippe Tillet
+  UMinTL - Unconstrained Minimization Template Library
+
+  License : MIT X11 - See the LICENSE file in the root folder
+ * ===========================*/
+
+#ifndef UMINTL_VARIABLY_DIMENSIONED_HPP_
+#define UMINTL_VARIABLY_DIMENSIONED_HPP_
 
 #include <cmath>
 #include <vector>

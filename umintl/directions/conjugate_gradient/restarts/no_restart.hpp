@@ -14,7 +14,7 @@ namespace umintl{
 
 template<class BackendType>
 struct no_restart : public cg_restart<BackendType>{
-    bool operator()(detail::optimization_context<BackendType> &) { return false; }
+    bool operator()(optimization_context<BackendType> &) { return false; }
 };
 
 

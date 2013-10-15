@@ -19,17 +19,17 @@ template<class BackendType>
 struct gilbert_nocedal : public cg_update<BackendType>{
     typedef typename BackendType::ScalarType ScalarType;
 
-    void init(detail::optimization_context<BackendType> & c){
+    void init(optimization_context<BackendType> & c){
         pr_.init(c);
         fr_.init(c);
     }
 
-    void clean(detail::optimization_context<BackendType> & c){
+    void clean(optimization_context<BackendType> & c){
         pr_.clean(c);
         fr_.clean(c);
     }
 
-    ScalarType operator()(detail::optimization_context<BackendType> & context){
+    ScalarType operator()(optimization_context<BackendType> & context){
         ScalarType betaPR = pr_(context);
         ScalarType betaFR = fr_(context);
         return std::min(betaPR,betaFR);

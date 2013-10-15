@@ -34,7 +34,7 @@ private:
 
 public:
 
-    virtual void init(detail::optimization_context<BackendType> & context){
+    virtual void init(optimization_context<BackendType> & context){
         vecs_.resize(m);
         N_ = context.N();
         q_ = BackendType::create_vector(N_);
@@ -46,7 +46,7 @@ public:
         n_valid_pairs_ = 0;
     }
 
-    virtual void clean(detail::optimization_context<BackendType> &){
+    virtual void clean(optimization_context<BackendType> &){
         BackendType::delete_if_dynamically_allocated(q_);
         BackendType::delete_if_dynamically_allocated(r_);
         for(unsigned int i = 0 ; i < m ; ++i){
@@ -57,7 +57,7 @@ public:
     }
 
 
-    void operator()(detail::optimization_context<BackendType> & c){
+    void operator()(optimization_context<BackendType> & c){
         std::vector<ScalarType> rhos(m);
         std::vector<ScalarType> alphas(m);
 

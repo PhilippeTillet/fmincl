@@ -20,7 +20,7 @@ struct value_treshold : public stopping_criterion<BackendType>{
     value_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
 
-    bool operator()(detail::optimization_context<BackendType> & c){
+    bool operator()(optimization_context<BackendType> & c){
         return std::fabs(c.val() - c.valm1()) < tolerance;
     }
 };

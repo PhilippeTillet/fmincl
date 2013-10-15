@@ -46,67 +46,68 @@ namespace umintl{
             Fun & fun_;
         };
 
-        template<class BackendType>
-        class optimization_context{
-        private:
-            optimization_context(optimization_context const & other);
-            optimization_context& operator=(optimization_context const & other);
-        public:
-            typedef typename BackendType::ScalarType ScalarType;
-            typedef typename BackendType::VectorType VectorType;
-            typedef typename BackendType::MatrixType MatrixType;
-
-            optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> & fun) : fun_(fun), iter_(0), dim_(dim){
-                x_ = BackendType::create_vector(dim_);
-                g_ = BackendType::create_vector(dim_);
-                p_ = BackendType::create_vector(dim_);
-                xm1_ = BackendType::create_vector(dim_);
-                gm1_ = BackendType::create_vector(dim_);
-
-                BackendType::copy(dim_,x0,x_);
-
-                is_reinitializing_ = true;
-            }
-
-            detail::function_wrapper<BackendType> & fun() { return fun_; }
-            unsigned int & iter() { return iter_; }
-            unsigned int & N() { return dim_; }
-            VectorType & x() { return x_; }
-            VectorType & g() { return g_; }
-            VectorType & xm1() { return xm1_; }
-            VectorType & gm1() { return gm1_; }
-            VectorType & p() { return p_; }
-            ScalarType & val() { return valk_; }
-            ScalarType & valm1() { return valkm1_; }
-            ScalarType & dphi_0() { return dphi_0_; }
-            bool & is_reinitializing() { return is_reinitializing_; }
-
-            ~optimization_context(){
-                BackendType::delete_if_dynamically_allocated(x_);
-                BackendType::delete_if_dynamically_allocated(g_);
-                BackendType::delete_if_dynamically_allocated(p_);
-                BackendType::delete_if_dynamically_allocated(xm1_);
-                BackendType::delete_if_dynamically_allocated(gm1_);
-            }
-
-        private:
-            detail::function_wrapper<BackendType> & fun_;
-
-            unsigned int iter_;
-            unsigned int dim_;
-
-            VectorType x_;
-            VectorType g_;
-            VectorType p_;
-            VectorType xm1_;
-            VectorType gm1_;
-
-            ScalarType valk_;
-            ScalarType valkm1_;
-            ScalarType dphi_0_;
-
-            bool is_reinitializing_;
-        };
     }
+
+    template<class BackendType>
+    class optimization_context{
+    private:
+        optimization_context(optimization_context const & other);
+        optimization_context& operator=(optimization_context const & other);
+    public:
+        typedef typename BackendType::ScalarType ScalarType;
+        typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::MatrixType MatrixType;
+
+        optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> & fun) : fun_(fun), iter_(0), dim_(dim){
+            x_ = BackendType::create_vector(dim_);
+            g_ = BackendType::create_vector(dim_);
+            p_ = BackendType::create_vector(dim_);
+            xm1_ = BackendType::create_vector(dim_);
+            gm1_ = BackendType::create_vector(dim_);
+
+            BackendType::copy(dim_,x0,x_);
+
+            is_reinitializing_ = true;
+        }
+
+        detail::function_wrapper<BackendType> & fun() { return fun_; }
+        unsigned int & iter() { return iter_; }
+        unsigned int & N() { return dim_; }
+        VectorType & x() { return x_; }
+        VectorType & g() { return g_; }
+        VectorType & xm1() { return xm1_; }
+        VectorType & gm1() { return gm1_; }
+        VectorType & p() { return p_; }
+        ScalarType & val() { return valk_; }
+        ScalarType & valm1() { return valkm1_; }
+        ScalarType & dphi_0() { return dphi_0_; }
+        bool & is_reinitializing() { return is_reinitializing_; }
+
+        ~optimization_context(){
+            BackendType::delete_if_dynamically_allocated(x_);
+            BackendType::delete_if_dynamically_allocated(g_);
+            BackendType::delete_if_dynamically_allocated(p_);
+            BackendType::delete_if_dynamically_allocated(xm1_);
+            BackendType::delete_if_dynamically_allocated(gm1_);
+        }
+
+    private:
+        detail::function_wrapper<BackendType> & fun_;
+
+        unsigned int iter_;
+        unsigned int dim_;
+
+        VectorType x_;
+        VectorType g_;
+        VectorType p_;
+        VectorType xm1_;
+        VectorType gm1_;
+
+        ScalarType valk_;
+        ScalarType valkm1_;
+        ScalarType dphi_0_;
+
+        bool is_reinitializing_;
+    };
 }
 #endif

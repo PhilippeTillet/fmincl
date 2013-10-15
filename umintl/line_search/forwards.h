@@ -14,7 +14,6 @@
 #include "umintl/directions/quasi_newton.hpp"
 
 #include "umintl/utils.hpp"
-#include "umintl/mapping.hpp"
 
 
 namespace umintl{
@@ -64,10 +63,10 @@ namespace umintl{
       typedef typename BackendType::ScalarType ScalarType;
       line_search(unsigned int _max_evals) : max_evals(_max_evals){ }
       virtual ~line_search(){ }
-      virtual void init(detail::optimization_context<BackendType> &){ }
-      virtual void clean(detail::optimization_context<BackendType> &){ }
-      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai,  unsigned int max_evaluations) = 0;
-      void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, detail::optimization_context<BackendType> & context, ScalarType ai){
+      virtual void init(optimization_context<BackendType> &){ }
+      virtual void clean(optimization_context<BackendType> &){ }
+      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context, ScalarType ai,  unsigned int max_evaluations) = 0;
+      void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context, ScalarType ai){
           (*this)(res,direction,context,ai,max_evals);
       }
   private:

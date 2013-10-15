@@ -18,15 +18,15 @@ struct polak_ribiere : public cg_update<BackendType>{
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
 
-    void init(detail::optimization_context<BackendType> & c){
+    void init(optimization_context<BackendType> & c){
         tmp_ = BackendType::create_vector(c.N());
     }
 
-    void clean(detail::optimization_context<BackendType> &){
+    void clean(optimization_context<BackendType> &){
         BackendType::delete_if_dynamically_allocated(tmp_);
     }
 
-    ScalarType operator()(detail::optimization_context<BackendType> & c){
+    ScalarType operator()(optimization_context<BackendType> & c){
         //tmp_ = g - gm1;
         BackendType::copy(c.N(),c.g(), tmp_);
         BackendType::axpy(c.N(),-1,c.gm1(),tmp_);
