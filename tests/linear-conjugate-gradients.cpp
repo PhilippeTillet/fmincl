@@ -12,11 +12,11 @@
 #include "umintl/linear/conjugate_gradient.hpp"
 
 
-typedef float ScalarType;
+typedef double ScalarType;
 typedef umintl::backend::cblas_types<ScalarType> BackendType;
 
 int main(){
-  std::size_t N = 100;
+  std::size_t N = 142;
   ScalarType * b = new ScalarType[N];
   ScalarType * x = new ScalarType[N];
   ScalarType * x0 = new ScalarType[N];
@@ -28,7 +28,7 @@ int main(){
   for(std::size_t i = 0 ; i < N ; ++i)
     b[i] = 1;
   for(std::size_t i = 0 ; i < N*N ; ++i)
-    sqrtA[i] = 0.001*(ScalarType)rand()/RAND_MAX;
+    sqrtA[i] = (ScalarType)rand()/RAND_MAX;
   for(std::size_t i = 0 ; i < N*N ; ++i)
     A[i] = 0;
 
@@ -38,7 +38,7 @@ int main(){
         A[i*N+j]+=sqrtA[i*N+k]*sqrtA[j*N+k];
 
   ScalarType epsilon = 1e-8;
-  umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(100,epsilon);
+  umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(1000,epsilon);
   umintl::linear::conjugate_gradient<BackendType>::return_code ret = conjugate_gradient(N,A,x0,b,x);
 
   if(ret==umintl::linear::conjugate_gradient<BackendType>::SUCCESS)

@@ -61,15 +61,8 @@ namespace umintl{
           BackendType::copy(N,r,p);
           ScalarType rso = BackendType::dot(N,r,r);
 
-//          for(std::size_t i = 0 ; i < N ; ++i){
-//            for(std::size_t j = 0 ; j < N ; ++j)
-//              std::cout << A[i*N+j] << " " << std::flush;
-//            std::cout << std::endl;
-//          }
-
-
           for(std::size_t i = 0 ; i < max_iter ; ++i){
-            BackendType::gemv(N,N,1,A,p,0,Ap); //Ap = A*p
+            BackendType::symv(N,1,A,p,0,Ap); //Ap = A*p
             ScalarType alpha = rso/BackendType::dot(N,p,Ap); //alpha = rso/(p'*Ap)
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
             BackendType::axpy(N,-alpha,Ap,r); //r = r - alpha*Ap
