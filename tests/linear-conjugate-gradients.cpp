@@ -16,7 +16,7 @@ typedef float ScalarType;
 typedef umintl::backend::cblas_types<ScalarType> BackendType;
 
 int main(){
-  std::size_t N = 4;
+  std::size_t N = 100;
   ScalarType * b = new ScalarType[N];
   ScalarType * x = new ScalarType[N];
   ScalarType * x0 = new ScalarType[N];
@@ -26,16 +26,16 @@ int main(){
   for(std::size_t i = 0 ; i < N ; ++i)
     x0[i] = 0;
   for(std::size_t i = 0 ; i < N ; ++i)
-    b[i] = (ScalarType)rand()/RAND_MAX;
+    b[i] = 1;
   for(std::size_t i = 0 ; i < N*N ; ++i)
-    sqrtA[i] = (ScalarType)rand()/RAND_MAX;
+    sqrtA[i] = 0.001*(ScalarType)rand()/RAND_MAX;
   for(std::size_t i = 0 ; i < N*N ; ++i)
     A[i] = 0;
 
   for(std::size_t i = 0 ; i < N ; ++i)
     for(std::size_t j = 0 ; j < N ; ++j)
       for(std::size_t k = 0 ; k < N ; ++k)
-        A[i*N+j]+=sqrtA[i*N+j+k]*sqrtA[j*N+i+k];
+        A[i*N+j]+=sqrtA[i*N+k]*sqrtA[j*N+k];
 
   ScalarType epsilon = 1e-8;
   umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(100,epsilon);
