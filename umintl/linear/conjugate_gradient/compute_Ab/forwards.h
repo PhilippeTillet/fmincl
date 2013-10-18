@@ -19,7 +19,7 @@ namespace umintl{
       template<class BackendType>
       struct compute_Ab{
           virtual ~compute_Ab(){ }
-          virtual void operator()(std::size_t M, std::size_t N, typename BackendType::MatrixType const & A, typename BackendType::VectorType const & b, typename BackendType::VectorType & res) = 0;
+          virtual void operator()(std::size_t N, typename BackendType::VectorType const & b, typename BackendType::VectorType & res) = 0;
       };
 
     }

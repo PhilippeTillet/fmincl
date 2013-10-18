@@ -17,8 +17,6 @@ int main(){
     srand(0);
     int result = EXIT_SUCCESS;
     typedef typename get_backend<double>::type BackendType;
-
-    //result |= test_option<float>("BFGS [Float]", new quasi_newton(new bfgs()));
     result |= test_option("BFGS [Double]", new quasi_newton<BackendType>(new bfgs<BackendType>()));
 
     return result;

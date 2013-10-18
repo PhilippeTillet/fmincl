@@ -12,7 +12,7 @@
 #include "umintl/backends/cblas.hpp"
 #include "umintl/minimize.hpp"
 
-typedef float ScalarType;
+typedef double ScalarType;
 typedef umintl::backend::cblas_types<ScalarType> BackendType;
 
 class custom_stop : public umintl::stopping_criterion<BackendType>{
@@ -68,7 +68,7 @@ void print_solution(umintl::optimization_result const & result, ScalarType * S, 
 int main(){
     srand(0);
 
-    unsigned int D = 12;
+    unsigned int D = 2;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
@@ -92,45 +92,56 @@ int main(){
 
     std::cout << std::endl;
 
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Using steepest descent" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::steepest_descent<BackendType>();
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
+
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Using CG [ beta = polak-ribiere , no restart ]" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(), new umintl::no_restart<BackendType>());
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
+
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Using BFGS" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::bfgs<BackendType>());
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
+
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Using L-BFGS [ memory = 5 ]" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
+
     std::cout << "--------------------" << std::endl;
-    std::cout << "Using steepest descent" << std::endl;
+    std::cout << "Using Truncated Newton" << std::endl;
     std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::steepest_descent<BackendType>();
+    umintl::hessian_free::options<BackendType> opts(10,1e-6);
+    minimizer.verbosity_level=2;
+    minimizer.max_iter=100;
+    minimizer.direction = new umintl::truncated_newton<BackendType>(opts);
+    //minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Using CG [ beta = polak-ribiere , no restart ]" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(), new umintl::no_restart<BackendType>());
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Using BFGS" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::bfgs<BackendType>());
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Using L-BFGS [ memory = 5 ]" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "====================" << std::endl;
-    std::cout << "====================" << std::endl;
-    std::cout << std::endl;
-    std::cout << "--------------------" << std::endl;
-    std::cout << "L-BFGS" << std::endl;
-    std::cout << "Custom Stopping criterion:" << std::endl;
-    std::cout << "Stops when the first dimension is close enough to optimal" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.stopping_criterion = new custom_stop();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
+//    std::cout << "====================" << std::endl;
+//    std::cout << "====================" << std::endl;
+//    std::cout << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "L-BFGS" << std::endl;
+//    std::cout << "Custom Stopping criterion:" << std::endl;
+//    std::cout << "Stops when the first dimension is close enough to optimal" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.stopping_criterion = new custom_stop();
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
 
 
 

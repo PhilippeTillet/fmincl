@@ -10,6 +10,7 @@
 
 #include "umintl/backends/cblas.hpp"
 #include "umintl/linear/conjugate_gradient.hpp"
+#include "umintl/linear/conjugate_gradient/compute_Ab/gemv.hpp"
 
 
 typedef double ScalarType;
@@ -37,9 +38,9 @@ int main(){
       for(std::size_t k = 0 ; k < N ; ++k)
         A[i*N+j]+=sqrtA[i*N+k]*sqrtA[j*N+k];
 
-  ScalarType epsilon = 1e-8;
-  umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(1000,epsilon);
-  umintl::linear::conjugate_gradient<BackendType>::return_code ret = conjugate_gradient(N,A,x0,b,x);
+  umintl::linear::options<BackendType> opts(1000,1e-8, new umintl::linear::conjugate_gradient_detail::symv<BackendType>(A));
+  umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(opts);
+  umintl::linear::conjugate_gradient<BackendType>::return_code ret = conjugate_gradient(N,x0,b,x);
 
   if(ret==umintl::linear::conjugate_gradient<BackendType>::SUCCESS)
     return EXIT_SUCCESS;

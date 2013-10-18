@@ -18,10 +18,18 @@ namespace umintl{
     namespace conjugate_gradient_detail{
 
       template<class BackendType>
-      struct gemv : public compute_Ab<BackendType>{
-          void operator()(std::size_t M, std::size_t N, typename BackendType::MatrixType const & A, typename BackendType::VectorType const & b, typename BackendType::VectorType & res){
-            BackendType::gemv(M,N,1,A,b,0,res);
+      struct symv : public compute_Ab<BackendType>{
+        private:
+          typedef typename BackendType::MatrixType MatrixType;
+          typedef typename BackendType::VectorType VectorType;
+        public:
+          symv(MatrixType const & A) : A_(A){ }
+          void operator()(std::size_t N, VectorType const & b, VectorType & res)
+          {
+            BackendType::symv(N,1,A_,b,0,res);
           }
+        private:
+          MatrixType const & A_;
       };
 
     }
