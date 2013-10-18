@@ -31,14 +31,12 @@ namespace umintl{
       private:
         void allocate_tmp(std::size_t N){
           r = BackendType::create_vector(N);
-          rr = BackendType::create_vector(N);
           p = BackendType::create_vector(N);
           Ap = BackendType::create_vector(N);
         }
 
         return_code clear_terminate(return_code ret){
           BackendType::delete_if_dynamically_allocated(r);
-          BackendType::delete_if_dynamically_allocated(rr);
           BackendType::delete_if_dynamically_allocated(p);
           BackendType::delete_if_dynamically_allocated(Ap);
           return ret;
@@ -52,33 +50,37 @@ namespace umintl{
         return_code operator()(std::size_t N, MatrixType const & A, VectorType const & x0, VectorType const & b, VectorType & x)
         {
           allocate_tmp(N);
+          ScalarType nrm_b = BackendType::nrm2(N,b);
 
           //x = x0;
           BackendType::copy(N,x0,x);
-
-          //r = Ax0 - b
-          BackendType::symv(N,1,A,x0,0,r);
-          BackendType::axpy(N,-1,b,r);
-
-          //p = -r;
+          //r = b - Ax0
+          BackendType::symv(N,-1,A,x,0,r);
+          BackendType::axpy(N,1,b,r);
+          //p = r;
           BackendType::copy(N,r,p);
-          BackendType::scale(N,-1,p);
+          ScalarType rso = BackendType::dot(N,r,r);
+
+//          for(std::size_t i = 0 ; i < N ; ++i){
+//            for(std::size_t j = 0 ; j < N ; ++j)
+//              std::cout << A[i*N+j] << " " << std::flush;
+//            std::cout << std::endl;
+//          }
+
 
           for(std::size_t i = 0 ; i < max_iter ; ++i){
-            BackendType::symv(N,1,A,p,0,Ap); //Ap = A*p
-            ScalarType alpha = BackendType::dot(N,r,r)/BackendType::dot(N,p,Ap); //alpha = r'*r/(p'*Ap)
+            BackendType::gemv(N,N,1,A,p,0,Ap); //Ap = A*p
+            ScalarType alpha = rso/BackendType::dot(N,p,Ap); //alpha = rso/(p'*Ap)
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
-            BackendType::copy(N,r,rr); //rr = r + alpha*Ap
-            BackendType::axpy(N,alpha,Ap,rr);
-            ScalarType beta = BackendType::dot(N,rr,rr)/BackendType::dot(N,r,r); //beta = (rr'.rr)/(r'.r)
-            BackendType::scale(N,beta,p);//pk = -rr + beta*pk
-            BackendType::axpy(N,-1,rr,p);
-
-            BackendType::copy(N,rr,r);//r = rr;
-
-            ScalarType nrm_res = BackendType::nrm2(N,r);
-            if(nrm_res < tolerance)
+            BackendType::axpy(N,-alpha,Ap,r); //r = r - alpha*Ap
+            ScalarType rsn = BackendType::dot(N,r,r);
+            std::cout << std::sqrt(rsn)/nrm_b << std::endl;
+            if(std::sqrt(rsn)/nrm_b < tolerance)
               return clear_terminate(SUCCESS);
+            BackendType::scale(N,rsn/rso,p);//pk = r + rsn/rso*pk
+            BackendType::axpy(N,1,r,p);
+            rso = rsn;
+
           }
           return clear_terminate(FAILURE);
         }
@@ -89,7 +91,6 @@ namespace umintl{
 
       private:
         VectorType r;
-        VectorType rr;
         VectorType p;
         VectorType Ap;
     };
