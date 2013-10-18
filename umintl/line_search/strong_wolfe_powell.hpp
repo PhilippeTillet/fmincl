@@ -128,7 +128,7 @@ public:
         else if(dynamic_cast<conjugate_gradient<BackendType>*>(direction))
             c2_ = 0.3;
         else
-            c2_ = 0.9;
+            c2_ = 0.7;
 
         ScalarType aim1 = 0;
         ScalarType phi_0 = c.val();

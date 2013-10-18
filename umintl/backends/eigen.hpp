@@ -47,6 +47,8 @@ namespace umintl{
         { return x.dot(y); }
         static void symv(std::size_t /*N*/, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
         { y = alpha*A*x + beta*y;  }
+        static void gemv(std::size_t /*M*/, std::size_t /*N*/, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
+        { y = alpha*A*x + beta*y;  }
         static void syr1(std::size_t /*N*/, ScalarType const & alpha, VectorType const & x, MatrixType & A)
         { A+=alpha*x*x.transpose(); }
         static void syr2(std::size_t /*N*/, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)

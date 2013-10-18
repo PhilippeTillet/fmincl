@@ -52,6 +52,8 @@ namespace umintl{
         { return cblas_dsdot(N,x,1,y,1); }
         static void symv(std::size_t N, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
         { cblas_ssymv(CblasRowMajor,CblasUpper,N,alpha,A,N,x,1,beta,y,1);  }
+        static void gemv(std::size_t M, std::size_t N, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
+        { cblas_sgemv(CblasRowMajor,CblasNoTrans,M,N,alpha,A,N,x,1,beta,y,1);  }
         static void syr1(std::size_t N, ScalarType const & alpha, VectorType const & x, MatrixType & A)
         { cblas_ssyr(CblasRowMajor,CblasUpper,N,alpha,x,1,A,N); }
         static void syr2(std::size_t N, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)
@@ -96,6 +98,8 @@ namespace umintl{
         { return cblas_ddot(N,x,1,y,1); }
         static void symv(std::size_t N, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
         { cblas_dsymv(CblasRowMajor,CblasUpper,N,alpha,A,N,x,1,beta,y,1);  }
+        static void gemv(std::size_t M, std::size_t N, ScalarType alpha, MatrixType const& A, VectorType const & x, ScalarType beta, VectorType & y)
+        { cblas_dgemv(CblasRowMajor,CblasNoTrans,M,N,alpha,A,N,x,1,beta,y,1);  }
         static void syr1(std::size_t N, ScalarType const & alpha, VectorType const & x, MatrixType & A)
         { cblas_dsyr(CblasRowMajor,CblasUpper,N,alpha,x,1,A,N); }
         static void syr2(std::size_t N, ScalarType const & alpha, VectorType const & x, VectorType const & y, MatrixType & A)
