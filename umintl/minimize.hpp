@@ -136,6 +136,7 @@ namespace umintl{
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
                 }
 
+                c.alpha() = search_res.best_alpha;
 
                 BackendType::copy(N,c.x(),c.xm1());
                 BackendType::copy(N,search_res.best_x,c.x());

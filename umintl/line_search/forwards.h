@@ -53,6 +53,7 @@ namespace umintl{
           BackendType::delete_if_dynamically_allocated(best_g);
       }
       bool has_failed;
+      ScalarType best_alpha;
       ScalarType best_phi;
       VectorType best_x;
       VectorType best_g;

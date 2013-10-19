@@ -26,27 +26,32 @@ namespace umintl{
       private:
         typedef typename BackendType::ScalarType ScalarType;
       public:
-        options(std::size_t _max_iter, ScalarType _tolerance, hessian_vector_product_base<BackendType> * _Hv_policy = new hessian_vector_product_numerical_diff<BackendType>()) : linear::options<BackendType>(_max_iter, _tolerance, _Hv_policy){ }
+        options(std::size_t _max_iter, hessian_vector_product_base<BackendType> * _Hv_policy = new hessian_vector_product_numerical_diff<BackendType>()) : linear::options<BackendType>(_max_iter, _Hv_policy){ }
     };
 
     template<class BackendType>
     class solver
     {
         typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::ScalarType ScalarType;
+
       public:
+        typedef typename linear::conjugate_gradient<BackendType>::optimization_result optimization_result;
+
+        solver(hessian_free::options<BackendType> _options) : options(_options){ }
+
         void init(optimization_context<BackendType> & c){
           static_cast<hessian_vector_product_base<BackendType>*>(options.compute_Ab.get())->init(c);
           N_ = c.N();
         }
+
         void clean(optimization_context<BackendType> & c){
           static_cast<hessian_vector_product_base<BackendType>*>(options.compute_Ab.get())->clean(c);
         }
 
-        solver(hessian_free::options<BackendType> _options) : options(_options){ }
-
-        void operator()(VectorType const & x0, VectorType const & b, VectorType & res){
+        optimization_result operator()(VectorType const & x0, VectorType const & b, VectorType & res, ScalarType tolerance){
           linear::conjugate_gradient<BackendType> solver(options);
-          solver(N_,x0,b,res);
+          return solver(N_,x0,b,res,tolerance);
         }
 
         hessian_free::options<BackendType> options;

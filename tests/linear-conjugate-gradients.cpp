@@ -38,11 +38,11 @@ int main(){
       for(std::size_t k = 0 ; k < N ; ++k)
         A[i*N+j]+=sqrtA[i*N+k]*sqrtA[j*N+k];
 
-  umintl::linear::options<BackendType> opts(1000,1e-8, new umintl::linear::conjugate_gradient_detail::symv<BackendType>(A));
+  umintl::linear::options<BackendType> opts(1000, new umintl::linear::conjugate_gradient_detail::symv<BackendType>(A));
   umintl::linear::conjugate_gradient<BackendType> conjugate_gradient(opts);
-  umintl::linear::conjugate_gradient<BackendType>::return_code ret = conjugate_gradient(N,x0,b,x);
+  umintl::linear::conjugate_gradient<BackendType>::optimization_result res = conjugate_gradient(N,x0,b,x,1e-8);
 
-  if(ret==umintl::linear::conjugate_gradient<BackendType>::SUCCESS)
+  if(res.ret==umintl::linear::conjugate_gradient<BackendType>::SUCCESS)
     return EXIT_SUCCESS;
 
   return EXIT_FAILURE;

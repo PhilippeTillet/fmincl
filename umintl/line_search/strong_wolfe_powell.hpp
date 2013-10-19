@@ -76,7 +76,7 @@ private:
             else
                 aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
             if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
-
+                res.best_alpha = aj;
                 res.has_failed=true;
                 return;
             }
@@ -104,6 +104,7 @@ private:
             }
             else{
                 if(curvature(dphi_aj, c.dphi_0())){
+                   res.best_alpha = aj;
                     res.has_failed = false;
                     return;
                 }
@@ -117,6 +118,7 @@ private:
                 dphi_alo = dphi_aj;
             }
         }
+        res.best_alpha = aj;
         res.has_failed=true;
     }
 
@@ -128,7 +130,7 @@ public:
         else if(dynamic_cast<conjugate_gradient<BackendType>*>(direction))
             c2_ = 0.3;
         else
-            c2_ = 0.7;
+            c2_ = 0.9;
 
         ScalarType aim1 = 0;
         ScalarType phi_0 = c.val();
@@ -158,6 +160,7 @@ public:
             //Tests curvature
             if(curvature(dphi_ai, dphi_0)){
                 res.has_failed = false;
+                res.best_alpha = ai;
                 return;
             }
             if(dphi_ai>=0){
@@ -179,7 +182,7 @@ public:
             last_phi = old_phi_ai;
             dphi_aim1 = old_dphi_ai;
         }
-
+        res.best_alpha = ai;
         res.has_failed=true;
     }
 
