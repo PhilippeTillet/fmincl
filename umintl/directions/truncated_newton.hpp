@@ -42,10 +42,13 @@ struct truncated_newton : public direction<BackendType>{
 
     void operator()(optimization_context<BackendType> & c){
       ScalarType tol = std::min(0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
-      typename hessian_free::solver<BackendType>::optimization_result res = solver_(c.p(),c.g(),c.p(),tol);
+      VectorType minus_g = BackendType::create_vector(c.N());
+      BackendType::copy(c.N(),c.g(),minus_g);
+      BackendType::scale(c.N(),-1,minus_g);
+      typename hessian_free::solver<BackendType>::optimization_result res = solver_(c.p(),minus_g,c.p(),tol);
       if(res.i==0 && res.ret == umintl::linear::conjugate_gradient<BackendType>::FAILURE_NON_POSITIVE_DEFINITE)
-        BackendType::copy(c.N(),c.g(),c.p());
-      BackendType::scale(c.N(),-1,c.p());
+        BackendType::copy(c.N(),minus_g,c.p());
+      BackendType::delete_if_dynamically_allocated(minus_g);
     }
   private:
     hessian_free::solver<BackendType> solver_;

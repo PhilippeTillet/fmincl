@@ -68,7 +68,7 @@ void print_solution(umintl::optimization_result const & result, ScalarType * S, 
 int main(){
     srand(0);
 
-    unsigned int D = 100;
+    unsigned int D = 2;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
@@ -87,7 +87,7 @@ int main(){
     umintl::minimizer<BackendType> minimizer;
     rosenbrock objective(D);
     minimizer.max_iter = 100000;
-    minimizer.verbosity_level=0;
+    minimizer.verbosity_level=2;
     umintl::optimization_result result;
 
     std::cout << std::endl;
@@ -123,10 +123,7 @@ int main(){
     std::cout << "--------------------" << std::endl;
     std::cout << "Using Truncated Newton" << std::endl;
     std::cout << "--------------------" << std::endl;
-    umintl::hessian_free::options<BackendType> opts(100);
-    minimizer.verbosity_level=2;
-    minimizer.max_iter=1000;
-    minimizer.direction = new umintl::truncated_newton<BackendType>(opts);
+    minimizer.direction = new umintl::truncated_newton<BackendType>();
     //minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
     result = minimizer(S,objective,X0,D);
     //print_solution(result,S,D);
