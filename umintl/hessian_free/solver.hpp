@@ -26,7 +26,7 @@ namespace umintl{
       private:
         typedef typename BackendType::ScalarType ScalarType;
       public:
-        options(std::size_t _max_iter, hessian_vector_product_base<BackendType> * _Hv_policy = new hessian_vector_product_numerical_diff<BackendType>()) : linear::options<BackendType>(_max_iter, _Hv_policy){ }
+        options(std::size_t _max_iter = 0, hessian_vector_product_base<BackendType> * _Hv_policy = new hessian_vector_product_numerical_diff<BackendType>()) : linear::options<BackendType>(_max_iter, _Hv_policy){ }
     };
 
     template<class BackendType>
@@ -43,6 +43,8 @@ namespace umintl{
         void init(optimization_context<BackendType> & c){
           static_cast<hessian_vector_product_base<BackendType>*>(options.compute_Ab.get())->init(c);
           N_ = c.N();
+          if(options.max_iter==0)
+            options.max_iter = N_;
         }
 
         void clean(optimization_context<BackendType> & c){

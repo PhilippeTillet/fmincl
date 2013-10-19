@@ -27,7 +27,7 @@ struct truncated_newton : public direction<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::ScalarType ScalarType;
   public:
-    truncated_newton(hessian_free::options<BackendType> const & _options) : solver_(_options){ }
+    truncated_newton(hessian_free::options<BackendType> const & _options = hessian_free::options<BackendType>()) : solver_(_options){ }
 
     void init(optimization_context<BackendType> & c){
       solver_.init(c);
