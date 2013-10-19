@@ -36,7 +36,7 @@ struct truncated_newton : public direction<BackendType>{
       solver_.clean(c);
     }
 
-    virtual ScalarType line_search_first_trial(optimization_context<BackendType> & c){
+    virtual ScalarType line_search_first_trial(optimization_context<BackendType> &){
       return 1;
     }
 

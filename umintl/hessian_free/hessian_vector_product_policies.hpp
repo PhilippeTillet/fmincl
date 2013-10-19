@@ -19,7 +19,7 @@ namespace umintl{
 
     template<class BackendType>
     struct hessian_vector_product_base : public linear::conjugate_gradient_detail::compute_Ab<BackendType>{
-        virtual void init(optimization_context<BackendType> & c){ }
+        virtual void init(optimization_context<BackendType> &){ }
         virtual void clean(optimization_context<BackendType> &){ }
     };
 
