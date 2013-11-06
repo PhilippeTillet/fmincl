@@ -68,7 +68,7 @@ void print_solution(umintl::optimization_result const & result, ScalarType * S, 
 int main(){
     srand(0);
 
-    unsigned int D = 2;
+    unsigned int D = 45;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;

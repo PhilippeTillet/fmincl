@@ -53,6 +53,25 @@ namespace umintl{
         optimization_context<BackendType>  * c_;
     };
 
+    template<class BackendType, class Fun>
+    struct hessian_vector_product_custom : public hessian_vector_product_base<BackendType>{
+      private:
+        typedef typename BackendType::ScalarType ScalarType;
+        typedef typename BackendType::VectorType VectorType;
+        typedef typename BackendType::MatrixType MatrixType;
+      public:
+        hessian_vector_product_custom(Fun const & fun) : fun_(fun){ }
+        void init(optimization_context<BackendType> & c){ c_ = &c; }
+        void clean(optimization_context<BackendType> &){ c_ = NULL; }
+        void operator()(std::size_t N, VectorType const & b, VectorType & res){
+            fun_.compute_Hv(c_->x(), b, res);
+        }
+
+      private:
+        Fun const & fun_;
+        optimization_context<BackendType>  * c_;
+    };
+
   }
 }
 

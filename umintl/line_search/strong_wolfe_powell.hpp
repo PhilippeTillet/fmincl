@@ -128,7 +128,7 @@ public:
         if(dynamic_cast<quasi_newton<BackendType>*>(direction))
             c2_ = 0.9;
         else if(dynamic_cast<conjugate_gradient<BackendType>*>(direction))
-            c2_ = 0.3;
+            c2_ = 0.2;
         else
             c2_ = 0.9;
 

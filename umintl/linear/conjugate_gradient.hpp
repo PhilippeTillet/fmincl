@@ -106,8 +106,10 @@ namespace umintl{
             ScalarType alpha = rso/pAp; //alpha = rso/(p'*Ap)
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
             BackendType::axpy(N,-alpha,Ap,r); //r = r - alpha*Ap
-            ScalarType rsn = BackendType::dot(N,r,r);
 
+            ScalarType quadval = -0.5*(BackendType::dot(N,x,r) + BackendType::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
+
+            ScalarType rsn = BackendType::dot(N,r,r);
             if(std::sqrt(rsn) < tolerance*nrm_b)
               return clear_terminate(SUCCESS,i);
 

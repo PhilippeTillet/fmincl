@@ -41,7 +41,7 @@ struct truncated_newton : public direction<BackendType>{
     }
 
     void operator()(optimization_context<BackendType> & c){
-      ScalarType tol = std::min(0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
+      ScalarType tol = std::min((ScalarType)0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
       VectorType minus_g = BackendType::create_vector(c.N());
       BackendType::copy(c.N(),c.g(),minus_g);
       BackendType::scale(c.N(),-1,minus_g);
