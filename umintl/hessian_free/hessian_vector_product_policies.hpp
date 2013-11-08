@@ -8,7 +8,7 @@
 #ifndef UMINTL_HESSIAN_FREE_VECTOR_PRODUCT_HPP_
 #define UMINTL_HESSIAN_FREE_VECTOR_PRODUCT_HPP_
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 #include "umintl/linear/conjugate_gradient.hpp"
 #include "umintl/linear/conjugate_gradient/compute_Ab/forwards.h"
 #include <cmath>
@@ -41,9 +41,11 @@ namespace umintl{
         }
         void operator()(std::size_t N, VectorType const & b, VectorType & res)
         {
+            ScalarType dummy;
+
           BackendType::copy(N,c_->x(),tmp_); //tmp = x + hb
           BackendType::axpy(N,h,b,tmp_);
-          c_->fun()(tmp_,NULL,&res); // res = (Grad(tmp) - Grad(x))/h
+          c_->fun().compute_value_gradient(tmp_,dummy,res); // res = (Grad(tmp) - Grad(x))/h
           BackendType::axpy(N,-1,c_->g(),res);
           BackendType::scale(N,1/h,res);
         }
@@ -53,22 +55,20 @@ namespace umintl{
         optimization_context<BackendType>  * c_;
     };
 
-    template<class BackendType, class Fun>
+    template<class BackendType>
     struct hessian_vector_product_custom : public hessian_vector_product_base<BackendType>{
       private:
         typedef typename BackendType::ScalarType ScalarType;
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
       public:
-        hessian_vector_product_custom(Fun const & fun) : fun_(fun){ }
+        hessian_vector_product_custom(){ }
         void init(optimization_context<BackendType> & c){ c_ = &c; }
         void clean(optimization_context<BackendType> &){ c_ = NULL; }
-        void operator()(std::size_t N, VectorType const & b, VectorType & res){
-            fun_.compute_Hv(c_->x(), b, res);
+        void operator()(std::size_t N, VectorType const & v, VectorType & Hv){
+            c_->fun().compute_hessian_vector_product(c_->x(), v, Hv);
         }
-
       private:
-        Fun const & fun_;
         optimization_context<BackendType>  * c_;
     };
 

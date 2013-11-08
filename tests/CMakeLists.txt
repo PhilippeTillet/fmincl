@@ -1,6 +1,6 @@
 IF(OPENBLAS_FOUND)
     set(FUNCTIONS_PATH ${CMAKE_SOURCE_DIR}/common)
-    foreach(F linear-conjugate-gradients nonlinear-conjugate-gradients quasi-newton low-memory-quasi-newton test-functions)
+    foreach(F linear-conjugate-gradients nonlinear-conjugate-gradients quasi-newton low-memory-quasi-newton test-functions truncated-newton)
         add_executable(${F}-test ${F}.cpp)
         target_link_libraries(${F}-test openblas)
         set_target_properties(${F}-test PROPERTIES COMPILE_FLAGS "-DDISABLE_WARNING")

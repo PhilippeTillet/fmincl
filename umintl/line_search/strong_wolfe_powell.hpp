@@ -5,14 +5,14 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_LINE_SEARCH_HPP_
-#define UMINTL_LINE_SEARCH_HPP_
+#ifndef UMINTL_LINE_SEARCH_STRONG_WOLFE_POWELL_HPP_
+#define UMINTL_LINE_SEARCH_STRONG_WOLFE_POWELL_HPP_
 
 #include "umintl/directions/conjugate_gradient.hpp"
 #include "umintl/directions/steepest_descent.hpp"
 #include "umintl/directions/quasi_newton.hpp"
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 #include "forwards.h"
 
 #include <cmath>
@@ -40,21 +40,10 @@ struct strong_wolfe_powell : public line_search<BackendType>{
 
 
 private:
-    ScalarType phi(int N, detail::function_wrapper<BackendType> const & fun, VectorType & x, VectorType const & x0, ScalarType alpha, VectorType const & p, VectorType & grad, ScalarType * dphi) const {
-        ScalarType res = 0;
-        //x = x0 + alpha*p;
-        BackendType::copy(N,x0,x);
-        BackendType::axpy(N,alpha,p,x);
-        fun(x,&res, &grad);
-        if(dphi){
-            *dphi = BackendType::dot(N,grad,p);
-        }
-        return res;
-    }
-
     bool sufficient_decrease(ScalarType ai, ScalarType phi_ai, ScalarType phi_0) const {
         return phi_ai <= (phi_0 + c1_*ai );
     }
+
     bool curvature(ScalarType dphi_ai, ScalarType dphi_0) const{
         return std::abs(dphi_ai) <= c2_*std::abs(dphi_0);
     }
@@ -65,27 +54,27 @@ private:
         ScalarType & current_phi = res.best_phi;
         VectorType const & p = c.p();
         ScalarType eps = 1e-8;
-        ScalarType aj = 0;
-        ScalarType dphi_aj = 0;
+        ScalarType alpha = 0;
+        ScalarType dphi = 0;
         bool twice_close_to_boundary=false;
         for(unsigned int i = 0 ; i < max_evaluations ; ++i){
             ScalarType xmin = std::min(alo,ahi);
             ScalarType xmax = std::max(alo,ahi);
             if(alo < ahi)
-                aj = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
+                alpha = cubicmin(alo, ahi, phi_alo, phi_ahi, dphi_alo, dphi_ahi,xmin,xmax);
             else
-                aj = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
-            if(std::min(xmax - aj, aj - xmin)/(xmax - xmin)  < eps){
-                res.best_alpha = aj;
+                alpha = cubicmin(ahi, alo, phi_ahi, phi_alo, dphi_ahi, dphi_alo,xmin,xmax);
+            if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin)  < eps){
+                res.best_alpha = alpha;
                 res.has_failed=true;
                 return;
             }
-            if(std::min(xmax - aj, aj - xmin)/(xmax - xmin) < 0.1){
+            if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin) < 0.1){
                 if(twice_close_to_boundary){
-                    if(std::abs(aj - xmax) < std::abs(aj - xmin))
-                        aj = xmax - 0.1*(xmax-xmin);
+                    if(std::abs(alpha - xmax) < std::abs(alpha - xmin))
+                        alpha = xmax - 0.1*(xmax-xmin);
                     else
-                        aj = xmin + 0.1*(xmax-xmin);
+                        alpha = xmin + 0.1*(xmax-xmin);
                     twice_close_to_boundary = false;
                 }
                 else{
@@ -95,35 +84,41 @@ private:
             else{
                 twice_close_to_boundary = false;
             }
-            current_phi = phi(c.N(), c.fun(), current_x, x0_, aj, p, current_g, &dphi_aj);
-            if(!sufficient_decrease(aj,current_phi, c.val()) || current_phi >= phi_alo){
-                ahi = aj;
+
+            //Compute phi(alpha) = f(x0 + alpha*p)
+            BackendType::copy(c.N(),x0_,current_x);
+            BackendType::axpy(c.N(),alpha,p,current_x);
+            c.fun().compute_value_gradient(current_x,current_phi,current_g);
+            dphi = BackendType::dot(c.N(),current_g,p);
+
+            if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alo){
+                ahi = alpha;
                 phi_ahi = current_phi;
-                dphi_ahi = dphi_aj;
+                dphi_ahi = dphi;
 
             }
             else{
-                if(curvature(dphi_aj, c.dphi_0())){
-                   res.best_alpha = aj;
+                if(curvature(dphi, c.dphi_0())){
+                    res.best_alpha = alpha;
                     res.has_failed = false;
                     return;
                 }
-                if(dphi_aj*(ahi - alo) >= 0){
+                if(dphi*(ahi - alo) >= 0){
                     ahi = alo;
                     phi_ahi = phi_alo;
                     dphi_ahi = dphi_alo;
                 }
-                alo = aj;
+                alo = alpha;
                 phi_alo = current_phi;
-                dphi_alo = dphi_aj;
+                dphi_alo = dphi;
             }
         }
-        res.best_alpha = aj;
+        res.best_alpha = alpha;
         res.has_failed=true;
     }
 
 public:
-    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c, ScalarType ai, unsigned int max_evaluations) {
+    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c, ScalarType alpha, unsigned int max_evaluations) {
         c1_ = 1e-4;
         if(dynamic_cast<quasi_newton<BackendType>*>(direction))
             c2_ = 0.9;
@@ -132,12 +127,12 @@ public:
         else
             c2_ = 0.9;
 
-        ScalarType aim1 = 0;
+        ScalarType alpham1 = 0;
         ScalarType phi_0 = c.val();
         ScalarType dphi_0 = c.dphi_0();
         ScalarType last_phi = phi_0;
-        ScalarType dphi_aim1 = dphi_0;
-        ScalarType dphi_ai;
+        ScalarType dphim1 = dphi_0;
+        ScalarType dphi;
 
 
         ScalarType & current_phi = res.best_phi;
@@ -145,44 +140,47 @@ public:
         VectorType & current_g = res.best_g;
         VectorType const & p = c.p();
 
-
         BackendType::copy(c.N(),c.x(), x0_);
 
 
         for(unsigned int i = 1 ; i< max_evaluations; ++i){
-            current_phi = phi(c.N(),c.fun(), current_x, x0_, ai, p, current_g, &dphi_ai);
+            //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
+            BackendType::copy(c.N(),x0_,current_x);
+            BackendType::axpy(c.N(),alpha,p,current_x);
+            c.fun().compute_value_gradient(current_x,current_phi,current_g);
+            dphi = BackendType::dot(c.N(),current_g,p);
 
             //Tests sufficient decrease
-            if(!sufficient_decrease(ai, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
-                return zoom(res, aim1, last_phi, dphi_aim1, ai, current_phi, dphi_ai, c, max_evaluations-i);
+            if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
+                return zoom(res, alpham1, last_phi, dphim1, alpha, current_phi, dphi, c, max_evaluations-i);
             }
 
             //Tests curvature
-            if(curvature(dphi_ai, dphi_0)){
+            if(curvature(dphi, dphi_0)){
                 res.has_failed = false;
-                res.best_alpha = ai;
+                res.best_alpha = alpha;
                 return;
             }
-            if(dphi_ai>=0){
-                return zoom(res, ai, current_phi, dphi_ai, aim1, last_phi, dphi_aim1, c, max_evaluations-i);
+            if(dphi>=0){
+                return zoom(res, alpha, current_phi, dphi, alpham1, last_phi, dphim1, c, max_evaluations-i);
             }
 
             //Updates context_s
-            ScalarType old_ai = ai;
-            ScalarType old_phi_ai = current_phi;
-            ScalarType old_dphi_ai = dphi_ai;
+            ScalarType old_alpha = alpha;
+            ScalarType old_phi = current_phi;
+            ScalarType old_dphi = dphi;
 
             //Cubic extrapolation to chose a new value of ai
-            ScalarType xmin = ai + 0.01*(ai-aim1);
-            ScalarType xmax = 10*ai;
-            ai = cubicmin(aim1,ai,last_phi,current_phi,dphi_aim1,dphi_ai,xmin,xmax);
-            if(std::abs(ai-xmin) < 1e-4 || std::abs(ai-xmax) < 1e-4)
-                ai=(xmin+xmax)/2;
-            aim1 = old_ai;
-            last_phi = old_phi_ai;
-            dphi_aim1 = old_dphi_ai;
+            ScalarType xmin = alpha + 0.01*(alpha-alpham1);
+            ScalarType xmax = 10*alpha;
+            alpha = cubicmin(alpham1,alpha,last_phi,current_phi,dphim1,dphi,xmin,xmax);
+            if(std::abs(alpha-xmin) < 1e-4 || std::abs(alpha-xmax) < 1e-4)
+                alpha=(xmin+xmax)/2;
+            alpham1 = old_alpha;
+            last_phi = old_phi;
+            dphim1 = old_dphi;
         }
-        res.best_alpha = ai;
+        res.best_alpha = alpha;
         res.has_failed=true;
     }
 

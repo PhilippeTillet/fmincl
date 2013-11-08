@@ -8,7 +8,7 @@
 #ifndef UMINTL_CONJUGATE_GRADIENT_UPDATES_FORWARDS_HPP_
 #define UMINTL_CONJUGATE_GRADIENT_UPDATES_FORWARDS_HPP_
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 #include <cmath>
 

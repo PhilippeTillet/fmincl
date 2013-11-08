@@ -8,7 +8,7 @@
 #ifndef UMINTL_DIRECTIONS_CONJUGATE_GRADIENT_RESTARTS_FORWARDS_HPP_
 #define UMINTL_DIRECTIONS_CONJUGATE_GRADIENT_RESTARTS_FORWARDS_HPP_
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 namespace umintl{
 

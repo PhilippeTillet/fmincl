@@ -10,7 +10,7 @@
 #define UMINTL_STOPPING_CRITERION_FORWARDS_H
 
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 namespace umintl{
 

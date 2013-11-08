@@ -9,7 +9,7 @@
 #ifndef UMINTL_DIRECTIONS_STEEPEST_DESCENT_HPP_
 #define UMINTL_DIRECTIONS_STEEPEST_DESCENT_HPP_
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/directions/forwards.h"

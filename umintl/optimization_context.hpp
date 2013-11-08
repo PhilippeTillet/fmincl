@@ -5,48 +5,14 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_UTILS_HPP
-#define UMINTL_UTILS_HPP
+#ifndef UMINTL_OPTIMIZATION_CONTEXT_HPP
+#define UMINTL_OPTIMIZATION_CONTEXT_HPP
 
-#include "tools/shared_ptr.hpp"
+#include "umintl/tools/shared_ptr.hpp"
+#include "umintl/function_wrapper.hpp"
 #include <iostream>
 
 namespace umintl{
-
-
-    namespace detail{
-
-
-        template<class BackendType>
-        class function_wrapper{
-        public:
-            typedef typename BackendType::ScalarType ScalarType;
-            typedef typename BackendType::VectorType VectorType;
-            function_wrapper() : n_value_calc_(0), n_derivative_calc_(0){ }
-            virtual void operator()(VectorType const & x, ScalarType * value, VectorType * grad) const = 0;
-            unsigned int n_value_calc() const { return n_value_calc_; }
-            unsigned int n_derivative_calc() const { return n_derivative_calc_; }
-        protected:
-            mutable unsigned int n_value_calc_;
-            mutable unsigned int n_derivative_calc_;
-        };
-
-        template<class BackendType, class Fun>
-        class function_wrapper_impl : public function_wrapper<BackendType>{
-            typedef typename BackendType::VectorType VectorType;
-            typedef typename BackendType::ScalarType ScalarType;
-        public:
-            function_wrapper_impl(Fun & fun) : fun_(fun){ }
-            void operator()(VectorType const & x, ScalarType * value, VectorType * grad) const {
-                ++function_wrapper<BackendType>::n_value_calc_;
-                if(grad) ++function_wrapper<BackendType>::n_derivative_calc_;
-                return fun_(x, value, grad);
-            }
-        private:
-            Fun & fun_;
-        };
-
-    }
 
     template<class BackendType>
     class optimization_context{
@@ -58,7 +24,7 @@ namespace umintl{
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
 
-        optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> & fun) : fun_(fun), iter_(0), dim_(dim){
+        optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> * fun) : fun_(fun), iter_(0), dim_(dim){
             x_ = BackendType::create_vector(dim_);
             g_ = BackendType::create_vector(dim_);
             p_ = BackendType::create_vector(dim_);
@@ -70,7 +36,7 @@ namespace umintl{
             is_reinitializing_ = true;
         }
 
-        detail::function_wrapper<BackendType> & fun() { return fun_; }
+        detail::function_wrapper<BackendType> & fun() { return *fun_; }
         unsigned int & iter() { return iter_; }
         unsigned int & N() { return dim_; }
         VectorType & x() { return x_; }
@@ -93,7 +59,7 @@ namespace umintl{
         }
 
     private:
-        detail::function_wrapper<BackendType> & fun_;
+        tools::shared_ptr< detail::function_wrapper<BackendType> > fun_;
 
         unsigned int iter_;
         unsigned int dim_;

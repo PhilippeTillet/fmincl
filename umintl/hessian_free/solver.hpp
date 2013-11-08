@@ -8,7 +8,7 @@
 #ifndef UMINTL_HESSIAN_FREE_SOLVER_HPP_
 #define UMINTL_HESSIAN_FREE_SOLVER_HPP_
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 #include "umintl/linear/conjugate_gradient.hpp"
 #include "umintl/linear/conjugate_gradient/compute_Ab/forwards.h"

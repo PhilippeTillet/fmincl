@@ -8,7 +8,7 @@
 #ifndef UMINTL_DIRECTIONS_QUASI_NEWTON_FORWARDS_H
 #define UMINTL_DIRECTIONS_QUASI_NEWTON_FORWARDS_H
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 namespace umintl{
 

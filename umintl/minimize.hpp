@@ -12,7 +12,8 @@
 #include "umintl/optimization_options.hpp"
 #include "umintl/optimization_result.hpp"
 
-#include "umintl/utils.hpp"
+#include "umintl/function_wrapper.hpp"
+#include "umintl/optimization_context.hpp"
 
 #include "umintl/directions/conjugate_gradient.hpp"
 #include "umintl/directions/quasi_newton.hpp"
@@ -41,7 +42,6 @@ namespace umintl{
 
         }
 
-
         tools::shared_ptr<umintl::direction<BackendType> > direction;
         tools::shared_ptr<umintl::direction<BackendType> > fallback_direction;
         tools::shared_ptr<umintl::line_search<BackendType> > line_search;
@@ -68,8 +68,8 @@ namespace umintl{
             BackendType::copy(N,context.x(),res);
             result.f = context.val();
             result.iteration = context.iter();
-            result.n_functions_eval = context.fun().n_value_calc();
-            result.n_gradient_eval = context.fun().n_derivative_calc();
+            result.n_functions_eval = context.fun().n_value_computations();
+            result.n_gradient_eval = context.fun().n_gradient_computations();
             result.termination_cause = termination_cause;
 
             clean_all(context);
@@ -93,12 +93,13 @@ namespace umintl{
 
     public:
         template<class Fun>
-        optimization_result operator()(typename BackendType::VectorType & res, Fun & user_fun, typename BackendType::VectorType const & x0, std::size_t N){
+        optimization_result operator()(typename BackendType::VectorType & res, Fun & fun, typename BackendType::VectorType const & x0, std::size_t N){
             typedef typename BackendType::VectorType VectorType;
-            detail::function_wrapper_impl<BackendType, Fun> fun(user_fun);
-            optimization_context<BackendType> c(x0, N, fun);
+
+            ;
             tools::shared_ptr<umintl::direction<BackendType> > current_direction = direction;
             line_search_result<BackendType> search_res(N);
+            optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun));
 
             init_all(c);
 
@@ -106,13 +107,20 @@ namespace umintl{
                 std::cout << info() << std::endl;
 
             //First evaluation
-            c.fun()(c.x(), &c.val(), &c.g());
+            c.fun().compute_value_gradient(c.x(), c.val(), c.g());
 
             //Main loop
             for( ; c.iter() < max_iter ; ++c.iter()){
 
-                if(verbosity_level >= 2 )
-                    std::cout << "Ieration  " << c.iter() << " | cost : " << c.val() << "| NVal : " << c.fun().n_value_calc() << std::endl;
+                if(verbosity_level >= 2 ){
+                    std::cout << "Ieration  " << c.iter() << " | "
+                              << "cost : " << c.val()
+                              << "| NVal : " << c.fun().n_value_computations()
+                              << "| NGrad : " << c.fun().n_gradient_computations();
+                    if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
+                     std::cout<< "| NHv : " << NHv ;
+                    std::cout << std::endl;
+                }
 
                 current_direction = direction;
                 if(c.is_reinitializing()){
@@ -121,8 +129,8 @@ namespace umintl{
                 }
 
                 (*current_direction)(c);
-                c.dphi_0() = BackendType::dot(N,c.p(),c.g());
 
+                c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 //Not a descent direction...
                 if(c.dphi_0()>0){
                     //current_direction->reset(c);
@@ -132,9 +140,9 @@ namespace umintl{
                 }
 
                 (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
-                if(search_res.has_failed){
+
+                if(search_res.has_failed)
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
-                }
 
                 c.alpha() = search_res.best_alpha;
 

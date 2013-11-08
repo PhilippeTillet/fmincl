@@ -14,7 +14,7 @@
 
 
 #include "umintl/tools/shared_ptr.hpp"
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 #include "forwards.h"
 #include "quasi_newton/updates/lbfgs.hpp"

@@ -13,7 +13,7 @@
 
 #include "umintl/backends/cblas.hpp"
 #include "umintl/minimize.hpp"
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 #include "umintl/check_grad.hpp"
 #include "mghfuns/beale.hpp"
 #include "mghfuns/powell_badly_scaled.hpp"

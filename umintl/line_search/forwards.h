@@ -13,7 +13,7 @@
 #include "umintl/directions/forwards.h"
 #include "umintl/directions/quasi_newton.hpp"
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 
 
 namespace umintl{

@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-#include "umintl/utils.hpp"
+#include "umintl/optimization_context.hpp"
 #include "forwards.h"
 
 namespace umintl{
