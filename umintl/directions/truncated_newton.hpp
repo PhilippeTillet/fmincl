@@ -48,15 +48,15 @@ struct truncated_newton : public direction<BackendType>{
       linear::conjugate_gradient<BackendType> solver(max_iter,Hv_policy);
       if(max_iter==0)
           max_iter = c.N();
-      ScalarType tol = std::min((ScalarType)0.5,(BackendType::nrm2(c.N(),c.g())));
-
+      ScalarType tol = std::min((ScalarType)0.1,std::sqrt(BackendType::nrm2(c.N(),c.g())));
       VectorType minus_g = BackendType::create_vector(c.N());
       BackendType::copy(c.N(),c.g(),minus_g);
       BackendType::scale(c.N(),-1,minus_g);
+      BackendType::scale(c.N(),c.alpha(),c.p());
       typename linear::conjugate_gradient<BackendType>::optimization_result res = solver(c.N(),c.p(),minus_g,c.p(),tol);
       if(res.i==0 && res.ret == umintl::linear::conjugate_gradient<BackendType>::FAILURE_NON_POSITIVE_DEFINITE)
         BackendType::copy(c.N(),minus_g,c.p());
-      std::cout << res.ret << " " << res.i << std::endl;
+      //std::cout << res.ret << " " << res.i << std::endl;
       BackendType::delete_if_dynamically_allocated(minus_g);
     }
 

@@ -39,12 +39,14 @@ namespace umintl{
 
       private:
         void allocate_tmp(std::size_t N){
+          best_x = BackendType::create_vector(N);
           r = BackendType::create_vector(N);
           p = BackendType::create_vector(N);
           Ap = BackendType::create_vector(N);
         }
 
         optimization_result clear_terminate(return_code ret, std::size_t i){
+          BackendType::delete_if_dynamically_allocated(best_x);
           BackendType::delete_if_dynamically_allocated(r);
           BackendType::delete_if_dynamically_allocated(p);
           BackendType::delete_if_dynamically_allocated(Ap);
@@ -90,12 +92,16 @@ namespace umintl{
           for(std::size_t i = 0 ; i < max_iter ; ++i){
             (*compute_Ab)(N,p,Ap);
 
+
              //Ap = A*p
             ScalarType pAp = BackendType::dot(N,p,Ap);
 
-            if(pAp<1e-16){
+            if(pAp<0){
+              BackendType::copy(N,best_x,x);
               return clear_terminate(FAILURE_NON_POSITIVE_DEFINITE,i);
             }
+            else
+              BackendType::copy(N,x,best_x);
 
             ScalarType alpha = rso/pAp; //alpha = rso/(p'*Ap)
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
@@ -111,7 +117,7 @@ namespace umintl{
             BackendType::axpy(N,1,r,p);
             rso = rsn;
           }
-          return clear_terminate(FAILURE,std::numeric_limits<size_t>::max());
+          return clear_terminate(FAILURE,max_iter);
         }
 
         std::size_t max_iter;
@@ -120,6 +126,7 @@ namespace umintl{
         VectorType r;
         VectorType p;
         VectorType Ap;
+        VectorType best_x;
     };
 
   }
