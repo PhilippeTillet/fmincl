@@ -25,6 +25,10 @@
 #include "umintl/stopping_criterion/value_treshold.hpp"
 #include "umintl/stopping_criterion/gradient_treshold.hpp"
 
+#include "umintl/model_type/forwards.h"
+#include "umintl/model_type/deterministic.hpp"
+#include "umintl/model_type/stochastic.hpp"
+
 
 namespace umintl{
 
@@ -96,7 +100,6 @@ namespace umintl{
         optimization_result operator()(typename BackendType::VectorType & res, Fun & fun, typename BackendType::VectorType const & x0, std::size_t N){
             typedef typename BackendType::VectorType VectorType;
 
-            ;
             tools::shared_ptr<umintl::direction<BackendType> > current_direction = direction;
             line_search_result<BackendType> search_res(N);
             optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun));
@@ -107,7 +110,7 @@ namespace umintl{
                 std::cout << info() << std::endl;
 
             //First evaluation
-            c.fun().compute_value_gradient(c.x(), c.val(), c.g());
+            c.fun()(c.x(), c.val(), c.g(), value_gradient_tag(model_type::deterministic()));
 
             //Main loop
             for( ; c.iter() < max_iter ; ++c.iter()){

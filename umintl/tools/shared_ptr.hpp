@@ -151,8 +151,6 @@ namespace umintl
 
         T* get() const {  return pt; }
 
-        operator T*() { return get(); }
-
         T* operator->() const {  return pt; }
 
         T& operator*() const { return *pt; }

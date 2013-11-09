@@ -11,13 +11,12 @@
 #include "tools/shared_ptr.hpp"
 #include "tools/is_call_possible.hpp"
 #include "tools/exception.hpp"
-#include "tags.hpp"
+#include "umintl/forwards.h"
 #include <iostream>
 
 
 
 namespace umintl{
-
 
     namespace detail{
         
@@ -33,10 +32,10 @@ namespace umintl{
             virtual unsigned int n_value_computations() const = 0;
             virtual unsigned int n_gradient_computations() const  = 0;
             virtual unsigned int n_hessian_vector_product_computations() const  = 0;
-            virtual void compute_value(VectorType const & x, ScalarType & value) = 0;
-            virtual void compute_gradient(VectorType const & x, VectorType & gradient) = 0;
-            virtual void compute_value_gradient(VectorType const & x, ScalarType & value, VectorType & grad) = 0;
-            virtual void compute_hessian_vector_product(VectorType const & x, VectorType const & v, VectorType & Hv) = 0;
+            virtual void operator()(VectorType const & x, ScalarType & value, value_tag const &) = 0;
+            virtual void operator()(VectorType const & x, VectorType & gradient, gradient_tag const &) = 0;
+            virtual void operator()(VectorType const & x, ScalarType & value, VectorType & grad, value_gradient_tag const &) = 0;
+            virtual void operator()(VectorType const & x, VectorType const & v, VectorType & Hv, hessian_vector_product_tag const &) = 0;
             virtual ~function_wrapper(){ }
         };
 
@@ -49,7 +48,7 @@ namespace umintl{
         private:
 
             //Compute function's value alone
-            void compute_value(VectorType const &, ScalarType &, int2type<false>){
+            void operator()(VectorType const &, ScalarType &, value_tag const &, int2type<false>){
                 throw exceptions::incompatible_parameters(
                             "\n"
                             "No function supplied to compute the function's value alone!"
@@ -60,13 +59,13 @@ namespace umintl{
                             "PACKED_FUNCTION_GRADIENT_EVALUATION."
                             );
             }
-            void compute_value(VectorType const & x, ScalarType & value, int2type<true>){
-                fun_(x,value,value_tag());
+            void operator()(VectorType const & x, ScalarType & value, value_tag const & tag, int2type<true>){
+                fun_(x,value,tag);
                 n_value_computations_++;
             }
 
             //Compute function's gradient alone
-            void compute_gradient(VectorType const &, VectorType &, int2type<false>){
+            void operator()(VectorType const &, VectorType &, gradient_tag const &, int2type<false>){
                 throw exceptions::incompatible_parameters(
                             "\n"
                             "No function supplied to compute the function's gradient alone!"
@@ -77,13 +76,13 @@ namespace umintl{
                             "PACKED_FUNCTION_GRADIENT_EVALUATION."
                             );
             }
-            void compute_gradient(VectorType const & x, VectorType & gradient, int2type<true>){
-                fun_(x,gradient,gradient_tag());
+            void operator()(VectorType const & x, VectorType & gradient, gradient_tag const & tag, int2type<true>){
+                fun_(x,gradient,tag);
                 n_gradient_computations_++;
             }
 
             //Compute both function's value and gradient
-            void compute_value_gradient(VectorType const &, ScalarType&, VectorType &, int2type<false>){
+            void operator()(VectorType const &, ScalarType&, VectorType &, value_gradient_tag const &, int2type<false>){
                 throw exceptions::incompatible_parameters(
                             "\n"
                             "No function supplied to compute both the function's value and gradient!"
@@ -94,14 +93,14 @@ namespace umintl{
                             "SEPARATE_FUNCTION_GRADIENT_EVALUATION."
                             );
             }
-            void compute_value_gradient(VectorType const & x, ScalarType& value, VectorType & gradient, int2type<true>){
-                fun_(x,value,gradient,value_gradient_tag());
+            void operator()(VectorType const & x, ScalarType& value, VectorType & gradient, value_gradient_tag const & tag, int2type<true>){
+                fun_(x,value,gradient,tag);
                 n_value_computations_++;
                 n_gradient_computations_++;
             }
 
             //Compute hessian-vector product
-            void compute_hessian_vector_product(VectorType const &, VectorType const &, VectorType&, int2type<false>){
+            void operator()(VectorType const &, VectorType const &, VectorType&, hessian_vector_product_tag const &, int2type<false>){
                 throw exceptions::incompatible_parameters(
                             "\n"
                             "No function supplied to compute the hessian-vector product!"
@@ -110,8 +109,8 @@ namespace umintl{
                             "If you wish to use right/centered-differentiation of the function's gradient, please set the appropriate options."
                             );
             }
-            void compute_hessian_vector_product(VectorType const & x, VectorType const & v, VectorType& Hv, int2type<true>){
-                fun_(x,v,Hv,hessian_vector_product_tag());
+            void operator()(VectorType const & x, VectorType const & v, VectorType& Hv, hessian_vector_product_tag const & tag, int2type<true>){
+                fun_(x,v,Hv,tag);
                 n_hessian_vector_product_computations_++;
             }
 
@@ -134,20 +133,20 @@ namespace umintl{
                 return n_hessian_vector_product_computations_;
             }
 
-            void compute_value(VectorType const & x, ScalarType & value){
-                compute_value(x,value,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, value_tag)>::value>());
+            void operator()(VectorType const & x, ScalarType & value, value_tag const & tag){
+                (*this)(x,value,tag,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, value_tag)>::value>());
             }
 
-            void compute_gradient(VectorType const & x, VectorType & gradient){
-                compute_gradient(x,gradient,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, gradient_tag)>::value>());
+            void operator()(VectorType const & x, VectorType & gradient, gradient_tag const & tag){
+                (*this)(x,gradient,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, gradient_tag)>::value>());
             }
 
-            void compute_value_gradient(VectorType const & x, ScalarType & value, VectorType & gradient){
-                compute_value_gradient(x,value,gradient,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
+            void operator()(VectorType const & x, ScalarType & value, VectorType & gradient, value_gradient_tag const & tag){
+                (*this)(x,value,gradient,tag,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
             }
 
-            void compute_hessian_vector_product(VectorType const & x, VectorType const & v, VectorType & Hv){
-                compute_hessian_vector_product(x,v,Hv,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, VectorType&, hessian_vector_product_tag)>::value>());
+            void operator()(VectorType const & x, VectorType const & v, VectorType & Hv, hessian_vector_product_tag const & tag){
+                (*this)(x,v,Hv,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, VectorType&, hessian_vector_product_tag)>::value>());
             }
         private:
             Fun & fun_;

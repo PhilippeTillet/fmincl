@@ -9,7 +9,8 @@
 #define UMINTL_CHECK_GRAD_HPP
 
 #include "tools/shared_ptr.hpp"
-#include "tags.hpp"
+#include "umintl/forwards.h"
+#include "umintl/model_type/deterministic.hpp"
 #include <iostream>
 
 #include <cmath>
@@ -27,11 +28,11 @@ namespace umintl{
         VectorType numgrad = BackendType::create_vector(N);
         ScalarType res = 0;
         ScalarType vl, vr;
-        fun(x,vl,fgrad,umintl::value_gradient_tag());
+        fun(x,vl,fgrad,umintl::value_gradient_tag(model_type::deterministic()));
         for(unsigned int i=0 ; i < N ; ++i){
             ScalarType vx = x[i];
-            x[i] = vx-h; fun(x,vl,dummy,umintl::value_gradient_tag());
-            x[i] = vx+h; fun(x,vr,dummy,umintl::value_gradient_tag());
+            x[i] = vx-h; fun(x,vl,dummy,umintl::value_gradient_tag(model_type::deterministic()));
+            x[i] = vx+h; fun(x,vr,dummy,umintl::value_gradient_tag(model_type::deterministic()));
             numgrad[i] = (vr-vl)/(2*h);
             x[i]=vx;
         }

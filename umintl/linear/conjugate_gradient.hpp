@@ -20,17 +20,6 @@ namespace umintl{
   namespace linear{
 
     template<class BackendType>
-    struct options{
-      private:
-        typedef typename BackendType::ScalarType ScalarType;
-      public:
-        options(std::size_t _max_iter, conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab = new umintl::linear::conjugate_gradient_detail::symv<BackendType>()) : compute_Ab(_compute_Ab), max_iter(_max_iter) { }
-
-        tools::shared_ptr<linear::conjugate_gradient_detail::compute_Ab<BackendType> > compute_Ab;
-        std::size_t max_iter;
-    };
-
-    template<class BackendType>
     struct conjugate_gradient{
       private:
         typedef typename BackendType::MatrixType MatrixType;
@@ -67,7 +56,12 @@ namespace umintl{
 
       public:
 
-        conjugate_gradient(linear::options<BackendType> const & _options) : options(_options){ }
+        conjugate_gradient(std::size_t _max_iter, conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab = new umintl::linear::conjugate_gradient_detail::symv<BackendType>())
+            : max_iter(_max_iter), compute_Ab(_compute_Ab){ }
+
+        conjugate_gradient(std::size_t _max_iter, tools::shared_ptr< conjugate_gradient_detail::compute_Ab<BackendType> > _compute_Ab)
+            : max_iter(_max_iter), compute_Ab(_compute_Ab){ }
+
 
         optimization_result operator()(std::size_t N, VectorType const & x0, VectorType const & b, VectorType & x, ScalarType tolerance = 1e-4)
         {
@@ -84,24 +78,24 @@ namespace umintl{
           }
           else{
             //r = b - Ax0
-            (*options.compute_Ab)(N,x,r); //r = Ax
+            (*compute_Ab)(N,x,r); //r = Ax
             BackendType::scale(N,-1,r); //r = -Ax
             BackendType::axpy(N,1,b,r); //r = b - Ax
           }
-
 
           //p = r;
           BackendType::copy(N,r,p);
           ScalarType rso = BackendType::dot(N,r,r);
 
-          for(std::size_t i = 0 ; i < options.max_iter ; ++i){
-            (*options.compute_Ab)(N,p,Ap);
+          for(std::size_t i = 0 ; i < max_iter ; ++i){
+            (*compute_Ab)(N,p,Ap);
 
              //Ap = A*p
             ScalarType pAp = BackendType::dot(N,p,Ap);
 
-            if(pAp<1e-16)
+            if(pAp<1e-16){
               return clear_terminate(FAILURE_NON_POSITIVE_DEFINITE,i);
+            }
 
             ScalarType alpha = rso/pAp; //alpha = rso/(p'*Ap)
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
@@ -116,13 +110,12 @@ namespace umintl{
             BackendType::scale(N,rsn/rso,p);//pk = r + rsn/rso*pk
             BackendType::axpy(N,1,r,p);
             rso = rsn;
-
           }
           return clear_terminate(FAILURE,std::numeric_limits<size_t>::max());
         }
 
-        linear::options<BackendType> options;
-
+        std::size_t max_iter;
+        tools::shared_ptr<linear::conjugate_gradient_detail::compute_Ab<BackendType> > compute_Ab;
       private:
         VectorType r;
         VectorType p;
