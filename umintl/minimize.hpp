@@ -51,6 +51,8 @@ namespace umintl{
         tools::shared_ptr<umintl::line_search<BackendType> > line_search;
         tools::shared_ptr<umintl::stopping_criterion<BackendType> > stopping_criterion;
 
+        evaluation_policies_type evaluation_policies;
+
         double tolerance;
 
         unsigned int verbosity_level;
@@ -102,7 +104,7 @@ namespace umintl{
 
             tools::shared_ptr<umintl::direction<BackendType> > current_direction = direction;
             line_search_result<BackendType> search_res(N);
-            optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun));
+            optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,evaluation_policies));
 
             init_all(c);
 
@@ -110,7 +112,7 @@ namespace umintl{
                 std::cout << info() << std::endl;
 
             //First evaluation
-            c.fun()(c.x(), c.val(), c.g(), value_gradient_tag(model_type::deterministic()));
+            c.fun().compute_value_gradient(0, c.x(), c.val(), c.g());
 
             //Main loop
             for( ; c.iter() < max_iter ; ++c.iter()){

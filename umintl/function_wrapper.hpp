@@ -8,9 +8,12 @@
 #ifndef UMINTL_FUNCTION_WRAPPER_HPP
 #define UMINTL_FUNCTION_WRAPPER_HPP
 
+#include "umintl/evaluation_policies.hpp"
+
 #include "tools/shared_ptr.hpp"
 #include "tools/is_call_possible.hpp"
 #include "tools/exception.hpp"
+
 #include "umintl/forwards.h"
 #include <iostream>
 
@@ -32,10 +35,10 @@ namespace umintl{
             virtual unsigned int n_value_computations() const = 0;
             virtual unsigned int n_gradient_computations() const  = 0;
             virtual unsigned int n_hessian_vector_product_computations() const  = 0;
-            virtual void operator()(VectorType const & x, ScalarType & value, value_tag const &) = 0;
-            virtual void operator()(VectorType const & x, VectorType & gradient, gradient_tag const &) = 0;
-            virtual void operator()(VectorType const & x, ScalarType & value, VectorType & grad, value_gradient_tag const &) = 0;
-            virtual void operator()(VectorType const & x, VectorType const & v, VectorType & Hv, hessian_vector_product_tag const &) = 0;
+            virtual void compute_value(std::size_t i, VectorType const & x, ScalarType & value) = 0;
+            virtual void compute_gradient(std::size_t i, VectorType const & x, VectorType & gradient) = 0;
+            virtual void compute_value_gradient(std::size_t i, VectorType const & x, ScalarType & value, VectorType & gradient) = 0;
+            virtual void compute_hv_product(std::size_t i, VectorType const & x, VectorType const & g, VectorType const & v, VectorType & Hv) = 0;
             virtual ~function_wrapper(){ }
         };
 
@@ -115,41 +118,100 @@ namespace umintl{
             }
 
         public:
-            function_wrapper_impl(Fun & fun) : fun_(fun){
-                n_value_computations_ = 0;
-                n_gradient_computations_ = 0;
-                n_hessian_vector_product_computations_ = 0;
+            function_wrapper_impl(Fun & fun, std::size_t N, evaluation_policies_type evaluation_policies) : fun_(fun), N_(N), evaluation_policies_(evaluation_policies){
+              n_value_computations_ = 0;
+              n_gradient_computations_ = 0;
+              n_hessian_vector_product_computations_ = 0;
             }
 
             unsigned int n_value_computations() const{
-                return n_value_computations_;
+              return n_value_computations_;
             }
 
             unsigned int n_gradient_computations() const {
-                return n_gradient_computations_;
+              return n_gradient_computations_;
             }
 
             unsigned int n_hessian_vector_product_computations() const {
-                return n_hessian_vector_product_computations_;
+              return n_hessian_vector_product_computations_;
             }
 
-            void operator()(VectorType const & x, ScalarType & value, value_tag const & tag){
-                (*this)(x,value,tag,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, value_tag)>::value>());
+            void compute_value(std::size_t i, VectorType const & x, ScalarType & value){
+              model_type_base * model = evaluation_policies_.value.model.get();
+              model->update(i);
+              (*this)(x,value,value_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, value_tag)>::value>());
             }
 
-            void operator()(VectorType const & x, VectorType & gradient, gradient_tag const & tag){
-                (*this)(x,gradient,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, gradient_tag)>::value>());
+            void compute_gradient(std::size_t i, VectorType const & x, VectorType & gradient){
+              model_type_base * model = evaluation_policies_.gradient.model.get();
+              model->update(i);
+              (*this)(x,gradient,gradient_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, gradient_tag)>::value>());
             }
 
-            void operator()(VectorType const & x, ScalarType & value, VectorType & gradient, value_gradient_tag const & tag){
-                (*this)(x,value,gradient,tag,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
+            void compute_value_gradient(std::size_t i, VectorType const & x, ScalarType & value, VectorType & gradient){
+              model_type_base * model = evaluation_policies_.value_gradient.model.get();
+              model->update(i);
+              (*this)(x,value,gradient,value_gradient_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
             }
 
-            void operator()(VectorType const & x, VectorType const & v, VectorType & Hv, hessian_vector_product_tag const & tag){
-                (*this)(x,v,Hv,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, VectorType&, hessian_vector_product_tag)>::value>());
+            void compute_hv_product(std::size_t i, VectorType const & x, VectorType const & g, VectorType const & v, VectorType & Hv){
+              model_type_base * model = evaluation_policies_.hv_product.model.get();
+              model->update(i);
+              switch(evaluation_policies_.hv_product.computation){
+                case hv_product_evaluation_policy::CENTERED_DIFFERENCE:
+                {
+                  ScalarType dummy;
+                  VectorType tmp = BackendType::create_vector(N_);
+                  VectorType Hvleft = BackendType::create_vector(N_);
+                  ScalarType h = 1e-7;
+
+                  //Hv = Grad(x+hb)
+                  BackendType::copy(N_,x,tmp); //tmp = x + hb
+                  BackendType::axpy(N_,h,v,tmp);
+                   (*this)(tmp,dummy,Hv,value_gradient_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
+
+                  //Hvleft = Grad(x-hb)
+                  BackendType::copy(N_,x,tmp); //tmp = x - hb
+                  BackendType::axpy(N_,-h,v,tmp);
+                  (*this)(tmp,dummy,Hvleft,value_gradient_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
+
+                  //Hv-=Hvleft
+                  //Hv/=2h
+                  BackendType::axpy(N_,-1,Hvleft,Hv);
+                  BackendType::scale(N_,1/(2*h),Hv);
+
+                  BackendType::delete_if_dynamically_allocated(tmp);
+                  BackendType::delete_if_dynamically_allocated(Hvleft);
+                  break;
+                }
+                case hv_product_evaluation_policy::FORWARD_DIFFERENCE:
+                {
+                  ScalarType dummy;
+                  VectorType tmp = BackendType::create_vector(N_);
+                  ScalarType h = 1e-7;
+
+                  BackendType::copy(N_,x,tmp); //tmp = x + hb
+                  BackendType::axpy(N_,h,v,tmp);
+                  (*this)(tmp,dummy,Hv,value_gradient_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient_tag)>::value>());
+                  BackendType::axpy(N_,-1,g,Hv);
+                  BackendType::scale(N_,1/h,Hv);
+
+                  BackendType::delete_if_dynamically_allocated(tmp);
+                  break;
+                }
+                case hv_product_evaluation_policy::PROVIDED:
+                {
+                  (*this)(x,v,Hv,hessian_vector_product_tag(*model),int2type<is_call_possible<Fun,void(VectorType const &, VectorType&, VectorType&, hessian_vector_product_tag)>::value>());
+                  break;
+                }
+                default:
+                  throw exceptions::incompatible_parameters("Unknown Hessian-Vector Product Computation Policy");
+              }
             }
-        private:
+          private:
             Fun & fun_;
+            std::size_t N_;
+            evaluation_policies_type evaluation_policies_;
 
             unsigned int n_value_computations_;
             unsigned int n_gradient_computations_;

@@ -90,7 +90,7 @@ private:
             //Compute phi(alpha) = f(x0 + alpha*p)
             BackendType::copy(c.N(),x0_,current_x);
             BackendType::axpy(c.N(),alpha,p,current_x);
-            c.fun()(current_x,current_phi,current_g, value_gradient_tag(model_type::deterministic()));
+            c.fun().compute_value_gradient(c.iter(), current_x,current_phi,current_g);
             dphi = BackendType::dot(c.N(),current_g,p);
 
             if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alo){
@@ -149,7 +149,7 @@ public:
             //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
             BackendType::copy(c.N(),x0_,current_x);
             BackendType::axpy(c.N(),alpha,p,current_x);
-            c.fun()(current_x,current_phi,current_g, value_gradient_tag(model_type::deterministic()));
+            c.fun().compute_value_gradient(c.iter(), current_x,current_phi,current_g);
             dphi = BackendType::dot(c.N(),current_g,p);
 
             //Tests sufficient decrease

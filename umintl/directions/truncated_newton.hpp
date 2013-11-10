@@ -12,12 +12,7 @@
 #include <vector>
 #include <cmath>
 
-#include "umintl/hessian-vector_product/forwards.h"
-#include "umintl/hessian-vector_product/centered_difference.hpp"
-#include "umintl/hessian-vector_product/provided_function.hpp"
-
 #include "umintl/linear/conjugate_gradient.hpp"
-
 #include "umintl/tools/shared_ptr.hpp"
 #include "forwards.h"
 
@@ -30,22 +25,28 @@ struct truncated_newton : public direction<BackendType>{
   private:
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::ScalarType ScalarType;
-  public:
-    truncated_newton(hessian_vector_product::base<BackendType> * _Hv_policy = new hessian_vector_product::centered_difference<BackendType>(), std::size_t _max_iter = 0) : Hv_policy(_Hv_policy), max_iter(_max_iter){ }
 
-    void init(optimization_context<BackendType> & c){
-      Hv_policy->init(c);
-    }
-    void clean(optimization_context<BackendType> & c){
-      Hv_policy->clean(c);
-    }
+    struct compute_Ab: public linear::conjugate_gradient_detail::compute_Ab<BackendType>{
+        compute_Ab(VectorType const & x, VectorType const & g, std::size_t iter, umintl::detail::function_wrapper<BackendType> & fun) : iter_(iter), x_(x), g_(g), fun_(fun){ }
+        virtual void operator()(std::size_t, typename BackendType::VectorType const & b, typename BackendType::VectorType & res){
+          fun_.compute_hv_product(iter_,x_,g_,b,res);
+        }
+      protected:
+        std::size_t iter_;
+        VectorType const & x_;
+        VectorType const & g_;
+        umintl::detail::function_wrapper<BackendType> & fun_;
+    };
+
+  public:
+    truncated_newton(std::size_t _max_iter = 0) : max_iter(_max_iter){ }
 
     virtual ScalarType line_search_first_trial(optimization_context<BackendType> &){
       return 1;
     }
 
     void operator()(optimization_context<BackendType> & c){
-      linear::conjugate_gradient<BackendType> solver(max_iter,Hv_policy);
+      linear::conjugate_gradient<BackendType> solver(max_iter,new compute_Ab(c.x(), c.g(), c.iter(),c.fun()));
       if(max_iter==0)
           max_iter = c.N();
       ScalarType tol = std::min((ScalarType)0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
@@ -60,7 +61,6 @@ struct truncated_newton : public direction<BackendType>{
       BackendType::delete_if_dynamically_allocated(minus_g);
     }
 
-    tools::shared_ptr< hessian_vector_product::base<BackendType> > Hv_policy;
     std::size_t max_iter;
 };
 
