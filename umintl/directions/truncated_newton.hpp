@@ -13,7 +13,7 @@
 #include <cmath>
 
 #include "umintl/hessian-vector_product/forwards.h"
-#include "umintl/hessian-vector_product/forward_difference.hpp"
+#include "umintl/hessian-vector_product/centered_difference.hpp"
 #include "umintl/hessian-vector_product/provided_function.hpp"
 
 #include "umintl/linear/conjugate_gradient.hpp"
@@ -31,7 +31,7 @@ struct truncated_newton : public direction<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::ScalarType ScalarType;
   public:
-    truncated_newton(hessian_vector_product::base<BackendType> * _Hv_policy = new hessian_vector_product::forward_difference<BackendType>(), std::size_t _max_iter = 0) : Hv_policy(_Hv_policy), max_iter(_max_iter){ }
+    truncated_newton(hessian_vector_product::base<BackendType> * _Hv_policy = new hessian_vector_product::centered_difference<BackendType>(), std::size_t _max_iter = 0) : Hv_policy(_Hv_policy), max_iter(_max_iter){ }
 
     void init(optimization_context<BackendType> & c){
       Hv_policy->init(c);
@@ -48,7 +48,7 @@ struct truncated_newton : public direction<BackendType>{
       linear::conjugate_gradient<BackendType> solver(max_iter,Hv_policy);
       if(max_iter==0)
           max_iter = c.N();
-      ScalarType tol = std::min((ScalarType)0.1,std::sqrt(BackendType::nrm2(c.N(),c.g())));
+      ScalarType tol = std::min((ScalarType)0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
       VectorType minus_g = BackendType::create_vector(c.N());
       BackendType::copy(c.N(),c.g(),minus_g);
       BackendType::scale(c.N(),-1,minus_g);

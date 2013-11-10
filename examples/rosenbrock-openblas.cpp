@@ -66,7 +66,7 @@ void print_solution(umintl::optimization_result const & result, ScalarType * S, 
 int main(){
     srand(0);
 
-    unsigned int D = 45;
+    unsigned int D = 10;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
@@ -97,12 +97,12 @@ int main(){
 //    result = minimizer(S,objective,X0,D);
 //    print_solution(result,S,D);
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(), new umintl::no_restart<BackendType>());
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << "--------------------" << std::endl;
+    std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(), new umintl::no_restart<BackendType>());
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
 //    std::cout << "--------------------" << std::endl;
 //    std::cout << "BFGS" << std::endl;
@@ -111,19 +111,19 @@ int main(){
 //    result = minimizer(S,objective,X0,D);
 //    print_solution(result,S,D);
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
-
     std::cout << "--------------------" << std::endl;
-    std::cout << "Truncated Newton" << std::endl;
+    std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
     std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::truncated_newton<BackendType>(new umintl::hessian_vector_product::forward_difference<BackendType>(new umintl::model_type::stochastic(2000,9000)));
+    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
+
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Truncated Newton" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::truncated_newton<BackendType>(new umintl::hessian_vector_product::forward_difference<BackendType>(new umintl::model_type::stochastic(2000,9000)));
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
 
 //    std::cout << std::endl;
 //    std::cout << "--------------------" << std::endl;

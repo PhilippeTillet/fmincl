@@ -69,6 +69,7 @@ namespace umintl{
         {
           allocate_tmp(N);
           ScalarType nrm_b = BackendType::nrm2(N,b);
+          ScalarType lambda = 0;
 
           //x = x0;
           BackendType::copy(N,x0,x);
@@ -91,6 +92,7 @@ namespace umintl{
 
           for(std::size_t i = 0 ; i < max_iter ; ++i){
             (*compute_Ab)(N,p,Ap);
+            BackendType::axpy(N,lambda*nrm_b,b,Ap);
 
 
              //Ap = A*p
