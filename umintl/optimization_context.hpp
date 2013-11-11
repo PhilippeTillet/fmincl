@@ -32,8 +32,6 @@ namespace umintl{
             gm1_ = BackendType::create_vector(dim_);
 
             BackendType::copy(dim_,x0,x_);
-
-            is_reinitializing_ = true;
         }
 
         detail::function_wrapper<BackendType> & fun() { return *fun_; }
@@ -48,7 +46,6 @@ namespace umintl{
         ScalarType & valm1() { return valkm1_; }
         ScalarType & dphi_0() { return dphi_0_; }
         ScalarType & alpha() { return alpha_; }
-        bool & is_reinitializing() { return is_reinitializing_; }
 
         ~optimization_context(){
             BackendType::delete_if_dynamically_allocated(x_);
@@ -75,8 +72,6 @@ namespace umintl{
         ScalarType dphi_0_;
 
         ScalarType alpha_;
-
-        bool is_reinitializing_;
     };
 }
 #endif

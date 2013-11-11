@@ -11,8 +11,8 @@
 #include "umintl/directions/conjugate_gradient.hpp"
 #include "umintl/directions/steepest_descent.hpp"
 #include "umintl/directions/quasi_newton.hpp"
+#include "umintl/directions/truncated_newton.hpp"
 
-#include "umintl/model_type/deterministic.hpp"
 
 #include "umintl/optimization_context.hpp"
 #include "forwards.h"
@@ -90,7 +90,7 @@ private:
             //Compute phi(alpha) = f(x0 + alpha*p)
             BackendType::copy(c.N(),x0_,current_x);
             BackendType::axpy(c.N(),alpha,p,current_x);
-            c.fun().compute_value_gradient(c.iter(), current_x,current_phi,current_g);
+            c.fun().compute_value_gradient(current_x,current_phi,current_g);
             dphi = BackendType::dot(c.N(),current_g,p);
 
             if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alo){
@@ -120,14 +120,20 @@ private:
     }
 
 public:
-    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c, ScalarType alpha, unsigned int max_evaluations) {
+    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c, unsigned int max_evaluations) {
+        ScalarType alpha;
         c1_ = 1e-4;
-        if(dynamic_cast<quasi_newton<BackendType>*>(direction))
-            c2_ = 0.9;
-        else if(dynamic_cast<conjugate_gradient<BackendType>*>(direction))
+        if(dynamic_cast<conjugate_gradient<BackendType>* >(direction) || dynamic_cast<steepest_descent<BackendType>* >(direction)){
             c2_ = 0.2;
-        else
+            if(c.iter()==0)
+                alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
+            else
+                alpha = std::min((ScalarType)1,2*(c.val() - c.valm1())/c.dphi_0());
+        }
+        else{
             c2_ = 0.9;
+            alpha = 1;
+        }
 
         ScalarType alpham1 = 0;
         ScalarType phi_0 = c.val();
@@ -149,7 +155,7 @@ public:
             //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
             BackendType::copy(c.N(),x0_,current_x);
             BackendType::axpy(c.N(),alpha,p,current_x);
-            c.fun().compute_value_gradient(c.iter(), current_x,current_phi,current_g);
+            c.fun().compute_value_gradient(current_x,current_phi,current_g);
             dphi = BackendType::dot(c.N(),current_g,p);
 
             //Tests sufficient decrease

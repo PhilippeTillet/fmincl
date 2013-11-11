@@ -37,10 +37,6 @@ struct quasi_newton : public direction<BackendType>{
         update->clean(c);
     }
 
-    virtual ScalarType line_search_first_trial(optimization_context<BackendType> &){
-        return 1;
-    }
-
     virtual void operator()(optimization_context<BackendType> & context){
         (*update)(context);
     }

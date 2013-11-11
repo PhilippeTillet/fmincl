@@ -43,7 +43,7 @@ public:
     virtual void init(VectorType &X) const = 0;
     virtual void fill_dym_dxn(VectorType const & V, ScalarType * res) const = 0;
     virtual void fill_ym(VectorType const & V, ScalarType * res) const = 0;
-    void operator()(VectorType const & V, ScalarType & val, VectorType & grad, umintl::value_gradient_tag)const{
+    void operator()(VectorType const & V, ScalarType & val, VectorType & grad, umintl::value_gradient)const{
         ScalarType* y = new ScalarType[M_];
         for(std::size_t m = 0 ; m < M_ ; ++m)
             y[m] = 0;

@@ -28,7 +28,7 @@ class rosenbrock{
 public:
     rosenbrock(std::size_t N) : N_(N){ }
 
-    void operator()(ScalarType* const & x, ScalarType& val, VectorType & grad, umintl::value_gradient_tag tag) {
+    void operator()(ScalarType* const & x, ScalarType& val, VectorType & grad, umintl::value_gradient tag) {
         ScalarType res=0;
         for(unsigned int i=0 ; i<N_-1;++i){
             res = res + 100*(pow(x[i+1] - x[i]*x[i],2)) + pow(1 - x[i],2);

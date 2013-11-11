@@ -25,11 +25,6 @@
 #include "umintl/stopping_criterion/value_treshold.hpp"
 #include "umintl/stopping_criterion/gradient_treshold.hpp"
 
-#include "umintl/model_type/forwards.h"
-#include "umintl/model_type/deterministic.hpp"
-#include "umintl/model_type/stochastic.hpp"
-
-
 namespace umintl{
 
     template<class BackendType>
@@ -50,8 +45,8 @@ namespace umintl{
         tools::shared_ptr<umintl::direction<BackendType> > fallback_direction;
         tools::shared_ptr<umintl::line_search<BackendType> > line_search;
         tools::shared_ptr<umintl::stopping_criterion<BackendType> > stopping_criterion;
+        evaluation_policy_type evaluation_policy;
 
-        evaluation_policies_type evaluation_policies;
 
         double tolerance;
 
@@ -104,22 +99,20 @@ namespace umintl{
 
             tools::shared_ptr<umintl::direction<BackendType> > current_direction = direction;
             line_search_result<BackendType> search_res(N);
-            optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,evaluation_policies));
+            optimization_context<BackendType> c(x0, N, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,evaluation_policy));
 
             init_all(c);
 
             if(verbosity_level >= 1)
                 std::cout << info() << std::endl;
 
-            //First evaluation
-            c.fun().compute_value_gradient(0, c.x(), c.val(), c.g());
 
             //Main loop
+            c.fun().compute_value_gradient(c.x(), c.val(), c.g());
             for( ; c.iter() < max_iter ; ++c.iter()){
-
                 if(verbosity_level >= 2 ){
-                    std::cout << "Ieration  " << c.iter() << " | "
-                              << "cost : " << c.val()
+                    std::cout << "Ieration  " << c.iter()
+                              << "| cost : " << c.val()
                               << "| NVal : " << c.fun().n_value_computations()
                               << "| NGrad : " << c.fun().n_gradient_computations();
                     if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
@@ -127,13 +120,14 @@ namespace umintl{
                     std::cout << std::endl;
                 }
 
-                current_direction = direction;
-                if(c.is_reinitializing()){
-                    current_direction = fallback_direction;
-                    c.is_reinitializing()=false;
-                }
+                evaluation_policy.model->update(c.iter());
+                if(c.iter()==0)
+                  current_direction = fallback_direction;
+                else
+                  current_direction = direction;
 
                 (*current_direction)(c);
+
 
                 c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 //Not a descent direction...
@@ -144,7 +138,7 @@ namespace umintl{
                     c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 }
 
-                (*line_search)(search_res, current_direction.get(), c, current_direction->line_search_first_trial(c));
+                (*line_search)(search_res, current_direction.get(), c);
 
                 if(search_res.has_failed)
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
