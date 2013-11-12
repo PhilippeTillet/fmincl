@@ -20,7 +20,6 @@ int main(){
     typedef typename get_backend<double>::type BackendType;
 
     result |= test_option("Conjugate Gradient [Double - Polak-Ribière]", new conjugate_gradient<BackendType>(new polak_ribiere<BackendType>()));
-    result |= test_option("Conjugate Gradient [Double - Fletcher-Reeves]", new conjugate_gradient<BackendType>(new fletcher_reeves<BackendType>()));
     result |= test_option("Conjugate Gradient [Double - Gilbert-Nocedal]", new conjugate_gradient<BackendType>(new gilbert_nocedal<BackendType>()));
 
     return result;
