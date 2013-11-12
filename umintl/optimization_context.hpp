@@ -24,7 +24,7 @@ namespace umintl{
         typedef typename BackendType::VectorType VectorType;
         typedef typename BackendType::MatrixType MatrixType;
 
-        optimization_context(VectorType const & x0, std::size_t dim, detail::function_wrapper<BackendType> * fun) : fun_(fun), iter_(0), dim_(dim){
+        optimization_context(VectorType const & x0, std::size_t dim, model_base<BackendType> & model, detail::function_wrapper<BackendType> * fun) : fun_(fun), model_(model), iter_(0), dim_(dim){
             x_ = BackendType::create_vector(dim_);
             g_ = BackendType::create_vector(dim_);
             p_ = BackendType::create_vector(dim_);
@@ -33,6 +33,8 @@ namespace umintl{
 
             BackendType::copy(dim_,x0,x_);
         }
+
+        model_base<BackendType> & model(){ return model_; }
 
         detail::function_wrapper<BackendType> & fun() { return *fun_; }
         unsigned int & iter() { return iter_; }
@@ -57,6 +59,7 @@ namespace umintl{
 
     private:
         tools::shared_ptr< detail::function_wrapper<BackendType> > fun_;
+        model_base<BackendType> & model_;
 
         unsigned int iter_;
         unsigned int dim_;
