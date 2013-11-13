@@ -125,15 +125,14 @@ public:
         c1_ = 1e-4;
         if(dynamic_cast<conjugate_gradient<BackendType>* >(direction) || dynamic_cast<steepest_descent<BackendType>* >(direction)){
             c2_ = 0.2;
-//            if(c.iter()==0)
-                alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
-//            else
-//                alpha = std::min((ScalarType)1,2*(c.val() - c.valm1())/c.dphi_0());
+            alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
         }
         else{
             c2_ = 0.9;
             alpha = 1;
         }
+//        if(c.iter()>0)
+//          alpha=c.alpha();
 
         ScalarType alpham1 = 0;
         ScalarType phi_0 = c.val();

@@ -44,8 +44,9 @@ struct dynamically_sampled : public model_base<BackendType> {
   private:
     typedef typename BackendType::ScalarType ScalarType;
     typedef typename BackendType::VectorType VectorType;
+
   public:
-    dynamically_sampled(double r, std::size_t initial_sample_size, std::size_t dataset_size, double theta = 0.5) : r_(r), S(initial_sample_size), offset_(0), N(dataset_size), theta_(theta){ }
+    dynamically_sampled(double r, std::size_t S0, std::size_t dataset_size, double theta = 0.5) : r_(r), S(S0), offset_(0), H_offset_(0), N(dataset_size), theta_(theta){ }
 
     //      BackendType::set_to_value(var,0,c.N());
     //      for(std::size_t i = 0 ; i < S ; ++i){
@@ -58,8 +59,10 @@ struct dynamically_sampled : public model_base<BackendType> {
     //      BackendType::scale(c.N(),(ScalarType)1/(S-1),var);
 
     bool update(optimization_context<BackendType> & c){
-      if(S==N)
+      if(S==N){
+        H_offset_=(H_offset_+(int)(r_*S))%(S - (int)(r_*S) + 1);
         return false;
+      }
       else{
         VectorType var = BackendType::create_vector(c.N());
         c.fun().compute_gradient_variance(c.x(),c.g(),var,gradient_variance(STOCHASTIC,S,offset_));
@@ -71,13 +74,21 @@ struct dynamically_sampled : public model_base<BackendType> {
         bool is_descent_direction = (nrm1var/S <= (std::pow(theta_,2)*std::pow(nrm2grad,2)));
 
         //Update parameters
+        std::size_t old_S = S;
         if(is_descent_direction==false){
-          std::cout << "Augmenting sample size from " << S;
           S = nrm1var/std::pow(theta_*nrm2grad,2);
           S = std::min(S,N);
-          std::cout << " to " << S << std::endl;
+          if(S>N/2)
+            S=N;
+          std::cout << "Augmenting sample size from " << old_S << " to " << S << std::endl;
         }
         offset_=rand()%(N-S+1);
+
+        if(is_descent_direction==false)
+          H_offset_ = 0;
+        else
+          H_offset_=(rand())%(S - (int)(r_*S) + 1);
+
         BackendType::delete_if_dynamically_allocated(var);
         return true;
       }
@@ -88,13 +99,14 @@ struct dynamically_sampled : public model_base<BackendType> {
     }
 
     hessian_vector_product get_hv_product_tag() const {
-      return hessian_vector_product(STOCHASTIC,r_*S,offset_);
+      return hessian_vector_product(STOCHASTIC,r_*S,H_offset_+offset_);
     }
 private:
     double theta_;
     double r_;
     std::size_t S;
     std::size_t offset_;
+    std::size_t H_offset_;
     std::size_t N;
 };
 
