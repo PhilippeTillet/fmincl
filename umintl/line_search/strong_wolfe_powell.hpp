@@ -124,7 +124,7 @@ public:
         ScalarType alpha;
         c1_ = 1e-4;
         if(dynamic_cast<conjugate_gradient<BackendType>* >(direction) || dynamic_cast<steepest_descent<BackendType>* >(direction)){
-            c2_ = 0.4;
+            c2_ = 0.2;
 //            if(c.iter()==0)
                 alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
 //            else

@@ -111,6 +111,16 @@ namespace umintl{
             c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
             for( ; c.iter() < max_iter ; ++c.iter()){
 
+                if(verbosity_level >= 2 ){
+                    std::cout << "Ieration  " << c.iter()
+                              << "| cost : " << c.val()
+                              << "| NVal : " << c.fun().n_value_computations()
+                              << "| NGrad : " << c.fun().n_gradient_computations();
+                    if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
+                     std::cout<< "| NHv : " << NHv ;
+                    std::cout << std::endl;
+                }
+
                 (*current_direction)(c);
                 c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 //Not a descent direction...
@@ -140,22 +150,13 @@ namespace umintl{
                 c.valm1() = c.val();
                 c.val() = search_res.best_phi;
 
-                if((*stopping_criterion)(c))
+                if((*stopping_criterion)(c)){
                     return terminate(optimization_result::STOPPING_CRITERION, res, N, c);
+                }
                 current_direction = direction;
 
-                if(verbosity_level >= 2 ){
-                    std::cout << "Ieration  " << c.iter()
-                              << "| cost : " << c.val()
-                              << "| NVal : " << c.fun().n_value_computations()
-                              << "| NGrad : " << c.fun().n_gradient_computations();
-                    if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
-                     std::cout<< "| NHv : " << NHv ;
-                    std::cout << std::endl;
-                }
-
-                model->update(c);
-                c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
+                if(model->update(c))
+                  c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
             }
 
             return terminate(optimization_result::MAX_ITERATION_REACHED, res, N, c);
