@@ -37,7 +37,8 @@ namespace umintl{
             virtual unsigned int n_hessian_vector_product_computations() const  = 0;
             virtual void compute_value_gradient(VectorType const & x, ScalarType & value, VectorType & gradient, value_gradient const & tag) = 0;
             virtual void compute_hv_product(VectorType const & x, VectorType const & g, VectorType const & v, VectorType & Hv, hessian_vector_product const & tag) = 0;
-            virtual void compute_gradient_variance(VectorType const & x, VectorType const & gradient, VectorType & variance, gradient_variance const & tag) = 0;
+            virtual void compute_gradient_variance(VectorType const & x, VectorType & variance, gradient_variance const & tag) = 0;
+            virtual void compute_hv_product_variance(VectorType const & x, VectorType const & v, VectorType & variance, hv_product_variance const & tag) = 0;
             virtual ~function_wrapper(){ }
         };
 
@@ -48,16 +49,28 @@ namespace umintl{
             typedef typename BackendType::VectorType VectorType;
             typedef typename BackendType::ScalarType ScalarType;
         private:
-            //Compute both function's value and gradient
-            void operator()(VectorType const &,VectorType const &, VectorType &, gradient_variance const &, int2type<false>){
+            //Compute gradient variance
+            void operator()(VectorType const &, VectorType &, gradient_variance const &, int2type<false>){
                 throw exceptions::incompatible_parameters(
                             "\n"
                             "Please provide an overload of :\n"
-                            "void operator()(VectorType const & X, VectorType const & gradient, VectorType & variance, umintl::gradient_variance_tag)\n."
+                            "void operator()(VectorType const & X, VectorType & variance, umintl::gradient_variance_tag)\n."
                             );
             }
-            void operator()(VectorType const & x, VectorType const & gradient, VectorType & variance, gradient_variance const & tag, int2type<true>){
-                fun_(x,gradient,variance,tag);
+            void operator()(VectorType const & x, VectorType & variance, gradient_variance const & tag, int2type<true>){
+                fun_(x,variance,tag);
+            }
+
+            //Compute hessian_vector_product variance
+            void operator()(VectorType const &, VectorType const & , VectorType &, hv_product_variance const &, int2type<false>){
+                throw exceptions::incompatible_parameters(
+                            "\n"
+                            "Please provide an overload of :\n"
+                            "void operator()(VectorType const & X, VectorType const & v, VectorType & variance, umintl::hessian_vector_product_variance_tag)\n."
+                            );
+            }
+            void operator()(VectorType const & x, VectorType const & v, VectorType & variance, hv_product_variance const & tag, int2type<true>){
+                fun_(x,v,variance,tag);
             }
 
 
@@ -110,8 +123,8 @@ namespace umintl{
               }
             }
 
-            void compute_gradient_variance(VectorType const & x, VectorType const & gradient, VectorType & variance, gradient_variance const & tag){
-              (*this)(x,gradient,variance,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType const &, VectorType &,gradient_variance)>::value>());
+            void compute_gradient_variance(VectorType const & x, VectorType & variance, gradient_variance const & tag){
+              (*this)(x,variance,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType &,gradient_variance)>::value>());
             }
 
             void compute_hv_product(VectorType const & x, VectorType const & g, VectorType const & v, VectorType & Hv, hessian_vector_product const & tag){
@@ -166,7 +179,13 @@ namespace umintl{
                 default:
                   throw exceptions::incompatible_parameters("Unknown Hessian-Vector Product Computation Policy");
               }
+              n_hessian_vector_product_computations_++;
             }
+
+            void compute_hv_product_variance(VectorType const & x, VectorType const & v, VectorType & variance, hv_product_variance const & tag){
+              (*this)(x,v,variance,tag,int2type<is_call_possible<Fun,void(VectorType const &, VectorType const &, VectorType &,hv_product_variance)>::value>());
+            }
+
           private:
             Fun & fun_;
             std::size_t N_;

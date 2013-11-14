@@ -19,6 +19,37 @@ namespace umintl{
 
   namespace linear{
 
+    namespace conjugate_gradient_detail{
+
+      template<class BackendType>
+      struct stopping_criterion{
+        private:
+          typedef typename BackendType::VectorType VectorType;
+          typedef typename BackendType::ScalarType ScalarType;
+        public:
+          virtual ~stopping_criterion(){ }
+          virtual void init(VectorType const & p0) = 0;
+          virtual void update(VectorType const & dk) = 0;
+          virtual bool operator()(ScalarType rsn) = 0;
+      };
+
+      template<class BackendType>
+      struct default_stop{
+        private:
+          typedef typename BackendType::VectorType VectorType;
+          typedef typename BackendType::ScalarType ScalarType;
+        public:
+          default_stop(double eps = 1e-4) : eps_(eps){ }
+          void init(VectorType const & p0){ }
+          void update(VectorType const & dk){ }
+          bool operator()(ScalarType rsn){ return std::sqrt(rsn) < eps_; }
+        private:
+          ScalarType eps_;
+      };
+
+
+    }
+
     template<class BackendType>
     struct conjugate_gradient{
       private:
@@ -58,11 +89,10 @@ namespace umintl{
 
       public:
 
-        conjugate_gradient(std::size_t _max_iter, conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab = new umintl::linear::conjugate_gradient_detail::symv<BackendType>())
-            : max_iter(_max_iter), compute_Ab(_compute_Ab){ }
-
-        conjugate_gradient(std::size_t _max_iter, tools::shared_ptr< conjugate_gradient_detail::compute_Ab<BackendType> > _compute_Ab)
-            : max_iter(_max_iter), compute_Ab(_compute_Ab){ }
+        conjugate_gradient(std::size_t _max_iter
+                          , conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab = new umintl::linear::conjugate_gradient_detail::symv<BackendType>()
+                          , conjugate_gradient_detail::stopping_criterion<BackendType> * _stop = new umintl::linear::conjugate_gradient_detail::default_stop<BackendType>())
+          : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop){ }
 
 
         optimization_result operator()(std::size_t N, VectorType const & x0, VectorType const & b, VectorType & x, ScalarType tolerance = 1e-4)
@@ -88,6 +118,9 @@ namespace umintl{
 
           //p = r;
           BackendType::copy(N,r,p);
+
+          stop->init(p);
+
           ScalarType rso = BackendType::dot(N,r,r);
 
           for(std::size_t i = 0 ; i < max_iter ; ++i){
@@ -109,10 +142,13 @@ namespace umintl{
             BackendType::axpy(N,alpha,p,x); //x = x + alpha*p
             BackendType::axpy(N,-alpha,Ap,r); //r = r - alpha*Ap
 
-            ScalarType quadval = -0.5*(BackendType::dot(N,x,r) + BackendType::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
+            stop->update(x);
+
+            //ScalarType quadval = -0.5*(BackendType::dot(N,x,r) + BackendType::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
 
             ScalarType rsn = BackendType::dot(N,r,r);
-            if(std::sqrt(rsn) < tolerance*nrm_b)
+
+            if((*stop)(rsn))
               return clear_terminate(SUCCESS,i);
 
             BackendType::scale(N,rsn/rso,p);//pk = r + rsn/rso*pk
@@ -124,6 +160,7 @@ namespace umintl{
 
         std::size_t max_iter;
         tools::shared_ptr<linear::conjugate_gradient_detail::compute_Ab<BackendType> > compute_Ab;
+        tools::shared_ptr<linear::conjugate_gradient_detail::stopping_criterion<BackendType> > stop;
       private:
         VectorType r;
         VectorType p;

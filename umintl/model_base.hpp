@@ -48,24 +48,45 @@ struct dynamically_sampled : public model_base<BackendType> {
   public:
     dynamically_sampled(double r, std::size_t S0, std::size_t dataset_size, double theta = 0.5) : r_(r), S(S0), offset_(0), H_offset_(0), N(dataset_size), theta_(theta){ }
 
-    //      BackendType::set_to_value(var,0,c.N());
-    //      for(std::size_t i = 0 ; i < S ; ++i){
-    //        //tmp = (grad(xi) - grad(X)).^2
-    //        //var += tmp
-    //        c.fun().compute_value_gradient(c.x(),dummy,tmp,value_gradient(STOCHASTIC,1,offset_+i));
-    //        for(std::size_t i = 0 ; i < c.N() ; ++i)
-    //          var[i]+=std::pow(tmp[i]-c.g()[i],2);
-    //      }
-    //      BackendType::scale(c.N(),(ScalarType)1/(S-1),var);
-
     bool update(optimization_context<BackendType> & c){
+//      {
+//        VectorType var = BackendType::create_vector(c.N());
+//        VectorType tmp = BackendType::create_vector(c.N());
+//        VectorType Hv = BackendType::create_vector(c.N());
+//        BackendType::set_to_value(var,0,c.N());
+//        c.fun().compute_hv_product(c.x(),c.g(),c.g(),Hv,hessian_vector_product(STOCHASTIC,S,offset_));
+
+//        for(std::size_t i = 0 ; i < S ; ++i){
+//          //tmp = (grad(xi) - grad(X)).^2
+//          //var += tmp
+//          c.fun().compute_hv_product(c.x(),c.g(),c.g(),tmp,hessian_vector_product(STOCHASTIC,1,offset_+i));
+//          for(std::size_t i = 0 ; i < c.N() ; ++i)
+//            var[i]+=std::pow(tmp[i]-Hv[i],2);
+//        }
+//        BackendType::scale(c.N(),(ScalarType)1/(S-1),var);
+//        for(std::size_t i = 0 ; i < c.N() ; ++i)
+//          std::cout << var[i] << " ";
+//        std::cout << std::endl;
+
+//        c.fun().compute_hv_product_variance(c.x(),c.g(), var, hv_product_variance(STOCHASTIC,S,offset_));
+
+//        for(std::size_t i = 0 ; i < c.N() ; ++i)
+//          std::cout << var[i] << " ";
+//        std::cout << std::endl;
+
+//        BackendType::delete_if_dynamically_allocated(var);
+//        BackendType::delete_if_dynamically_allocated(tmp);
+//        BackendType::delete_if_dynamically_allocated(Hv);
+//      }
+
+
       if(S==N){
         H_offset_=(H_offset_+(int)(r_*S))%(S - (int)(r_*S) + 1);
         return false;
       }
       else{
         VectorType var = BackendType::create_vector(c.N());
-        c.fun().compute_gradient_variance(c.x(),c.g(),var,gradient_variance(STOCHASTIC,S,offset_));
+        c.fun().compute_gradient_variance(c.x(),var,gradient_variance(STOCHASTIC,S,offset_));
 
         //is_descent_direction = norm1(var)/S*[(N-S)/(N-1)] <= theta^2*norm2(grad)^2
         ScalarType nrm1var = BackendType::asum(c.N(),var);

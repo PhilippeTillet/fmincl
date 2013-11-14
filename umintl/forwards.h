@@ -32,6 +32,9 @@ struct hessian_vector_product : public operation_tag {
 struct gradient_variance : public operation_tag {
     gradient_variance(model_type_tag const & _model, std::size_t _sample_size, std::size_t _offset) : operation_tag(_model,_sample_size,_offset){ }
 };
+struct hv_product_variance : public operation_tag {
+    hv_product_variance(model_type_tag const & _model, std::size_t _sample_size, std::size_t _offset) : operation_tag(_model,_sample_size,_offset){ }
+};
 
 }
 #endif
