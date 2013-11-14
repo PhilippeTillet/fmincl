@@ -34,14 +34,14 @@ namespace umintl{
       };
 
       template<class BackendType>
-      struct default_stop{
+      struct default_stop : public stopping_criterion<BackendType>{
         private:
           typedef typename BackendType::VectorType VectorType;
           typedef typename BackendType::ScalarType ScalarType;
         public:
           default_stop(double eps = 1e-4) : eps_(eps){ }
-          void init(VectorType const & p0){ }
-          void update(VectorType const & dk){ }
+          void init(VectorType const & ){ }
+          void update(VectorType const & ){ }
           bool operator()(ScalarType rsn){ return std::sqrt(rsn) < eps_; }
         private:
           ScalarType eps_;
