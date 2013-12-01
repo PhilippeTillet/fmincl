@@ -131,8 +131,6 @@ public:
             c2_ = 0.9;
             alpha = 1;
         }
-//        if(c.iter()>0)
-//          alpha=c.alpha();
 
         ScalarType alpham1 = 0;
         ScalarType phi_0 = c.val();

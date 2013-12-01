@@ -35,6 +35,7 @@ namespace umintl{
             virtual unsigned int n_value_computations() const = 0;
             virtual unsigned int n_gradient_computations() const  = 0;
             virtual unsigned int n_hessian_vector_product_computations() const  = 0;
+            virtual unsigned int n_datapoints_accessed() const = 0;
             virtual void compute_value_gradient(VectorType const & x, ScalarType & value, VectorType & gradient, value_gradient const & tag) = 0;
             virtual void compute_hv_product(VectorType const & x, VectorType const & g, VectorType const & v, VectorType & Hv, hessian_vector_product const & tag) = 0;
             virtual void compute_gradient_variance(VectorType const & x, VectorType & variance, gradient_variance const & tag) = 0;
@@ -109,18 +110,19 @@ namespace umintl{
               n_value_computations_ = 0;
               n_gradient_computations_ = 0;
               n_hessian_vector_product_computations_ = 0;
+              n_datapoints_accessed_ = 0;
             }
 
+            unsigned int n_datapoints_accessed() const{ return n_datapoints_accessed_; }
             unsigned int n_value_computations() const{ return n_value_computations_; }
             unsigned int n_gradient_computations() const { return n_gradient_computations_; }
             unsigned int n_hessian_vector_product_computations() const { return n_hessian_vector_product_computations_; }
 
             void compute_value_gradient(VectorType const & x,  ScalarType & value, VectorType & gradient, value_gradient const & tag){
               (*this)(x,value,gradient,tag,int2type<is_call_possible<Fun,void(VectorType const &, ScalarType&, VectorType&, value_gradient)>::value>());
-              if(tag.sample_size>1){
-                n_value_computations_++;
-                n_gradient_computations_++;
-              }
+              n_value_computations_++;
+              n_gradient_computations_++;
+              n_datapoints_accessed_+=tag.sample_size;
             }
 
             void compute_gradient_variance(VectorType const & x, VectorType & variance, gradient_variance const & tag){
@@ -180,6 +182,7 @@ namespace umintl{
                   throw exceptions::incompatible_parameters("Unknown Hessian-Vector Product Computation Policy");
               }
               n_hessian_vector_product_computations_++;
+              n_datapoints_accessed_+=tag.sample_size;
             }
 
             void compute_hv_product_variance(VectorType const & x, VectorType const & v, VectorType & variance, hv_product_variance const & tag){
@@ -195,6 +198,8 @@ namespace umintl{
             unsigned int n_value_computations_;
             unsigned int n_gradient_computations_;
             unsigned int n_hessian_vector_product_computations_;
+
+            unsigned int n_datapoints_accessed_;
         };
 
     }

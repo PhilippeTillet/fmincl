@@ -95,7 +95,7 @@ namespace umintl{
           : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop){ }
 
 
-        optimization_result operator()(std::size_t N, VectorType const & x0, VectorType const & b, VectorType & x, ScalarType tolerance = 1e-4)
+        optimization_result operator()(std::size_t N, VectorType const & x0, VectorType const & b, VectorType & x)
         {
           allocate_tmp(N);
           ScalarType nrm_b = BackendType::nrm2(N,b);

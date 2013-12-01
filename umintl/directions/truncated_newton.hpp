@@ -20,6 +20,20 @@
 
 namespace umintl{
 
+namespace tag{
+
+namespace truncated_newton{
+
+enum stopping_criterion{
+    STOP_RESIDUAL_TOLERANCE,
+    STOP_HV_VARIANCE
+};
+
+}
+
+}
+
+
 template<class BackendType>
 struct truncated_newton : public direction<BackendType>{
   private:
@@ -64,7 +78,6 @@ struct truncated_newton : public direction<BackendType>{
         }
 
         bool operator()(ScalarType rsn){
-          //std::cout << rsn << " " << psi_ << " " << gamma_ << std::endl;
           return rsn <= psi_;
         }
 
@@ -74,28 +87,28 @@ struct truncated_newton : public direction<BackendType>{
         ScalarType gamma_;
     };
 
-
   public:
-    truncated_newton(std::size_t _max_iter = 0) : max_iter(_max_iter){ }
+    truncated_newton(tag::truncated_newton::stopping_criterion _stop = tag::truncated_newton::STOP_RESIDUAL_TOLERANCE, std::size_t _max_iter = 0) : max_iter(_max_iter), stop(_stop){ }
 
     void operator()(optimization_context<BackendType> & c){
-      linear::conjugate_gradient<BackendType> solver(max_iter
-                                                     ,new compute_Ab(c.x(), c.g(),c.model(),c.fun())
-                                                     , new variance_stop_criterion(c));
-      if(max_iter==0)
-          max_iter = c.N();
-      VectorType minus_g = BackendType::create_vector(c.N());
+      if(max_iter==0) max_iter = c.N();
 
+      linear::conjugate_gradient<BackendType> solver(max_iter, new compute_Ab(c.x(), c.g(),c.model(),c.fun()));
+      if(stop==tag::truncated_newton::STOP_RESIDUAL_TOLERANCE){
+          ScalarType tol = std::min((ScalarType)0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())))*BackendType::nrm2(c.N(),c.g());
+          solver.stop = new linear::conjugate_gradient_detail::default_stop<BackendType>(tol);
+      }
+      else{
+          solver.stop = new variance_stop_criterion(c);
+      }
+
+      VectorType minus_g = BackendType::create_vector(c.N());
       BackendType::copy(c.N(),c.g(),minus_g);
       BackendType::scale(c.N(),-1,minus_g);
       BackendType::scale(c.N(),c.alpha(),c.p());
 
 
-
-
-      ScalarType tol = std::min((ScalarType)0.5,std::sqrt(BackendType::nrm2(c.N(),c.g())));
-
-      typename linear::conjugate_gradient<BackendType>::optimization_result res = solver(c.N(),c.p(),minus_g,c.p(),tol);
+      typename linear::conjugate_gradient<BackendType>::optimization_result res = solver(c.N(),c.p(),minus_g,c.p());
       if(res.i==0 && res.ret == umintl::linear::conjugate_gradient<BackendType>::FAILURE_NON_POSITIVE_DEFINITE)
         BackendType::copy(c.N(),minus_g,c.p());
       //std::cout << res.ret << " " << res.i << std::endl;
@@ -104,6 +117,7 @@ struct truncated_newton : public direction<BackendType>{
     }
 
     std::size_t max_iter;
+    tag::truncated_newton::stopping_criterion stop;
 };
 
 }

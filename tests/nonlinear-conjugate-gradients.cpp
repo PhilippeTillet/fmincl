@@ -19,8 +19,8 @@ int main(){
 
     typedef typename get_backend<double>::type BackendType;
 
-    result |= test_option("Conjugate Gradient [Double - Polak-Ribière]", new conjugate_gradient<BackendType>(new polak_ribiere<BackendType>()));
-    result |= test_option("Conjugate Gradient [Double - Gilbert-Nocedal]", new conjugate_gradient<BackendType>(new gilbert_nocedal<BackendType>()));
+    result |= test_option("Conjugate Gradient [Double - Polak-Ribière]", new conjugate_gradient<BackendType>(umintl::tag::conjugate_gradient::UPDATE_POLAK_RIBIERE));
+    result |= test_option("Conjugate Gradient [Double - Gilbert-Nocedal]", new conjugate_gradient<BackendType>(umintl::tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL));
 
     return result;
 

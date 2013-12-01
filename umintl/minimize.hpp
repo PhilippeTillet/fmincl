@@ -27,6 +27,8 @@
 #include "umintl/stopping_criterion/value_treshold.hpp"
 #include "umintl/stopping_criterion/gradient_treshold.hpp"
 
+#include <iomanip>
+
 namespace umintl{
 
     template<class BackendType>
@@ -97,7 +99,6 @@ namespace umintl{
         optimization_result operator()(typename BackendType::VectorType & res, Fun & fun, typename BackendType::VectorType const & x0, std::size_t N){
             typedef typename BackendType::VectorType VectorType;
             tools::shared_ptr<umintl::direction<BackendType> > steepest_descent(new umintl::steepest_descent<BackendType>());
-            tools::shared_ptr<umintl::direction<BackendType> > current_direction = steepest_descent;
             line_search_result<BackendType> search_res(N);
             optimization_context<BackendType> c(x0, N, *model, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,hessian_vector_product_computation));
 
@@ -107,10 +108,15 @@ namespace umintl{
                 std::cout << info() << std::endl;
 
 
+            tools::shared_ptr<umintl::direction<BackendType> > current_direction;
+            if(dynamic_cast<truncated_newton<BackendType> * >(direction.get()))
+              current_direction = steepest_descent;
+            else
+              current_direction = steepest_descent;
+
             //Main loop
             c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
             for( ; c.iter() < max_iter ; ++c.iter()){
-
                 if(verbosity_level >= 2 ){
                     std::cout << "Ieration  " << c.iter()
                               << "| cost : " << c.val()
@@ -118,6 +124,8 @@ namespace umintl{
                               << "| NGrad : " << c.fun().n_gradient_computations();
                     if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
                      std::cout<< "| NHv : " << NHv ;
+                    if(unsigned int ND = c.fun().n_datapoints_accessed())
+                     std::cout << "| NAccesses " << (float)ND;
                     std::cout << std::endl;
                 }
 

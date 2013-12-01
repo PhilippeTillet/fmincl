@@ -118,12 +118,12 @@ int main(){
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "Truncated Newton" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::truncated_newton<BackendType>(new umintl::hessian_vector_product::forward_difference<BackendType>(new umintl::model_type::stochastic(2000,9000)));
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << "--------------------" << std::endl;
+    std::cout << "Truncated Newton" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.direction = new umintl::truncated_newton<BackendType>();
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
 //    std::cout << std::endl;
 //    std::cout << "--------------------" << std::endl;
