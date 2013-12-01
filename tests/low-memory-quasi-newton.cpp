@@ -17,10 +17,10 @@ int main(){
     int result = EXIT_SUCCESS;
     typedef typename get_backend<double>::type BackendType;
 
-    result |= test_option("lbfgs [Double, M=2]", new quasi_newton<BackendType>(new lbfgs<BackendType>(2)));
-    result |= test_option("lbfgs [Double, M=4]", new quasi_newton<BackendType>(new lbfgs<BackendType>(4)));
-    result |= test_option("lbfgs [Double, M=8]", new quasi_newton<BackendType>(new lbfgs<BackendType>(8)));
-    result |= test_option("lbfgs [Double, M=32]", new quasi_newton<BackendType>(new lbfgs<BackendType>(32)));
+    result |= test_option("lbfgs [Double, M=2]", new low_memory_quasi_newton<BackendType>(2));
+    result |= test_option("lbfgs [Double, M=4]", new low_memory_quasi_newton<BackendType>(4));
+    result |= test_option("lbfgs [Double, M=8]", new low_memory_quasi_newton<BackendType>(8));
+    result |= test_option("lbfgs [Double, M=32]", new low_memory_quasi_newton<BackendType>(32));
 
     return result;
 

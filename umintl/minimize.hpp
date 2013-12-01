@@ -19,6 +19,7 @@
 
 #include "umintl/directions/conjugate_gradient.hpp"
 #include "umintl/directions/quasi_newton.hpp"
+#include "umintl/directions/low_memory_quasi_newton.hpp"
 #include "umintl/directions/steepest_descent.hpp"
 #include "umintl/directions/truncated_newton.hpp"
 

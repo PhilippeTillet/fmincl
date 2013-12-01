@@ -100,7 +100,7 @@ int main(){
     std::cout << "--------------------" << std::endl;
     std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
     std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::conjugate_gradient<BackendType>(new umintl::polak_ribiere<BackendType>(), new umintl::no_restart<BackendType>());
+    minimizer.direction = new umintl::conjugate_gradient<BackendType>(umintl::tag::conjugate_gradient::UPDATE_POLAK_RIBIERE, umintl::tag::conjugate_gradient::NO_RESTART);
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
@@ -114,7 +114,7 @@ int main(){
     std::cout << "--------------------" << std::endl;
     std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
     std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::lbfgs<BackendType>(8));
+    minimizer.direction = new umintl::low_memory_quasi_newton<BackendType>(8);
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
