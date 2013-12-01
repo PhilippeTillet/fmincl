@@ -14,7 +14,7 @@
 #include "umintl/backends/cblas.hpp"
 #include "umintl/minimize.hpp"
 #include "umintl/optimization_context.hpp"
-#include "umintl/check_grad.hpp"
+#include "umintl/debug.hpp"
 #include "mghfuns/beale.hpp"
 #include "mghfuns/powell_badly_scaled.hpp"
 #include "mghfuns/brown_badly_scaled.hpp"

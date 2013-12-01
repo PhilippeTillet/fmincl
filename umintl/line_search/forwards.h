@@ -66,11 +66,8 @@ namespace umintl{
       virtual ~line_search(){ }
       virtual void init(optimization_context<BackendType> &){ }
       virtual void clean(optimization_context<BackendType> &){ }
-      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context,  unsigned int max_evaluations) = 0;
-      void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context){
-          (*this)(res,direction,context,max_evals);
-      }
-  private:
+      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context) = 0;
+  protected:
       unsigned int max_evals;
   };
 

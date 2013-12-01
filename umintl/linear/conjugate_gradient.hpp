@@ -8,12 +8,10 @@
 #ifndef UMINTL_DIRECTIONS_SECOND_ORDER_SOLVE_FORWARDS_H_
 #define UMINTL_DIRECTIONS_SECOND_ORDER_SOLVE_FORWARDS_H_
 
-#include "umintl/tools/shared_ptr.hpp"
-
 #include <limits>
+#include <cmath>
 
-#include "conjugate_gradient/compute_Ab/forwards.h"
-#include "conjugate_gradient/compute_Ab/gemv.hpp"
+#include "umintl/tools/shared_ptr.hpp"
 
 namespace umintl{
 
@@ -21,6 +19,7 @@ namespace umintl{
 
     namespace conjugate_gradient_detail{
 
+    /** @brief Base class for a stopping criterion for the linear conjugate gradient */
       template<class BackendType>
       struct stopping_criterion{
         private:
@@ -33,13 +32,17 @@ namespace umintl{
           virtual bool operator()(ScalarType rsn) = 0;
       };
 
+      /** @brief residual norm stopping criterion
+      *
+      *  Stops the Linear CG when the norm of the residual is below a threshold
+      */
       template<class BackendType>
-      struct default_stop : public stopping_criterion<BackendType>{
+      struct residual_norm : public stopping_criterion<BackendType>{
         private:
           typedef typename BackendType::VectorType VectorType;
           typedef typename BackendType::ScalarType ScalarType;
         public:
-          default_stop(double eps = 1e-4) : eps_(eps){ }
+          residual_norm(double eps = 1e-4) : eps_(eps){ }
           void init(VectorType const & ){ }
           void update(VectorType const & ){ }
           bool operator()(ScalarType rsn){ return std::sqrt(rsn) < eps_; }
@@ -47,9 +50,41 @@ namespace umintl{
           ScalarType eps_;
       };
 
+      /** @brief Base class for a matrix-vector product computation within linear conjugate gradient
+      *
+      * For the CG procedure, the explicit knowledge of the matrix is unnecessary. It is only necessary to know how to compute the product between
+      * this matrix and any vector, hence this class
+      */
+      template<class BackendType>
+      struct compute_Ab{
+          virtual ~compute_Ab(){ }
+          virtual void operator()(std::size_t N, typename BackendType::VectorType const & b, typename BackendType::VectorType & res) = 0;
+      };
+
+      /** @brief symv product class */
+      template<class BackendType>
+      struct symv : public compute_Ab<BackendType>{
+        private:
+          typedef typename BackendType::MatrixType MatrixType;
+          typedef typename BackendType::VectorType VectorType;
+        public:
+          symv(MatrixType const & A) : A_(A){ }
+          void operator()(std::size_t N, VectorType const & b, VectorType & res)
+          {
+            BackendType::symv(N,1,A_,b,0,res);
+          }
+        private:
+          MatrixType const & A_;
+      };
+
 
     }
 
+    /** @brief Base class for the linear conjugate gradient
+    *
+    * This is a slightly modified version of the CG algorithm. Indeed,
+    * the procedure is stopped whenever a direction of neative curvature is found
+    */
     template<class BackendType>
     struct conjugate_gradient{
       private:
@@ -90,8 +125,8 @@ namespace umintl{
       public:
 
         conjugate_gradient(std::size_t _max_iter
-                          , conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab = new umintl::linear::conjugate_gradient_detail::symv<BackendType>()
-                          , conjugate_gradient_detail::stopping_criterion<BackendType> * _stop = new umintl::linear::conjugate_gradient_detail::default_stop<BackendType>())
+                          , conjugate_gradient_detail::compute_Ab<BackendType> * _compute_Ab
+                          , conjugate_gradient_detail::stopping_criterion<BackendType> * _stop = new umintl::linear::conjugate_gradient_detail::residual_norm<BackendType>)
           : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop){ }
 
 

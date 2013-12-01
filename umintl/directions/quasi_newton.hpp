@@ -28,6 +28,10 @@ struct quasi_newton : public direction<BackendType>{
     typedef typename BackendType::VectorType VectorType;
     typedef typename BackendType::MatrixType MatrixType;
 
+    virtual std::string info() const{
+        return "Quasi-Newton";
+    }
+
     virtual void init(optimization_context<BackendType> & c)
     {
         reinitialize_ = true;

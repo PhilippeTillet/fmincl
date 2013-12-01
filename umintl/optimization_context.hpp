@@ -14,6 +14,11 @@
 
 namespace umintl{
 
+    /** @brief The optimization context class
+     *
+     *  Holds the state of the optimization procedure. Typically passed as function argument, to allow easy
+     * access to the usual quantities of interest
+     */
     template<class BackendType>
     class optimization_context{
     private:

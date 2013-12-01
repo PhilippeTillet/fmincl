@@ -15,6 +15,10 @@
 
 namespace umintl{
 
+/** @brief parameter-based stopping criterion
+ *
+ *  Stops the optimization procedure when the change in value accross two successive iterations  is below a threshold
+ */
 template<class BackendType>
 struct value_treshold : public stopping_criterion<BackendType>{
     value_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }

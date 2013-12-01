@@ -28,7 +28,7 @@ class rosenbrock{
 public:
     rosenbrock(std::size_t N) : N_(N){ }
 
-    void operator()(ScalarType* const & x, ScalarType& val, VectorType & grad, umintl::value_gradient tag) {
+    void operator()(ScalarType* const & x, ScalarType& val, VectorType & grad, umintl::value_gradient) {
         ScalarType res=0;
         for(unsigned int i=0 ; i<N_-1;++i){
             res = res + 100*(pow(x[i+1] - x[i]*x[i],2)) + pow(1 - x[i],2);
@@ -90,12 +90,12 @@ int main(){
 
     std::cout << std::endl;
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "Steepest descent" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::steepest_descent<BackendType>();
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << "--------------------" << std::endl;
+    std::cout << "Steepest descent" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.direction = new umintl::steepest_descent<BackendType>();
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
     std::cout << "--------------------" << std::endl;
     std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
@@ -104,12 +104,12 @@ int main(){
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "BFGS" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::quasi_newton<BackendType>(new umintl::bfgs<BackendType>());
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << "--------------------" << std::endl;
+    std::cout << "BFGS" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.direction = new umintl::quasi_newton<BackendType>();
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
     std::cout << "--------------------" << std::endl;
     std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
@@ -125,15 +125,15 @@ int main(){
     result = minimizer(S,objective,X0,D);
     print_solution(result,S,D);
 
-//    std::cout << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "Truncated Newton" << std::endl;
-//    std::cout << "Custom Stopping criterion:" << std::endl;
-//    std::cout << "Stops when the first dimension is close enough to optimal" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.stopping_criterion = new custom_stop();
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << std::endl;
+    std::cout << "--------------------" << std::endl;
+    std::cout << "Truncated Newton" << std::endl;
+    std::cout << "Custom Stopping criterion:" << std::endl;
+    std::cout << "Stops when the first dimension is close enough to optimal" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.stopping_criterion = new custom_stop();
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
 
 

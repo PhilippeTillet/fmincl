@@ -15,6 +15,10 @@
 
 namespace umintl{
 
+/** @brief parameter-based stopping criterion
+ *
+ *  Stops the optimization procedure when the euclidian norm of the change of parameters accross two successive iterations is below a threshold
+ */
 template<class BackendType>
 struct parameter_change_threshold : public stopping_criterion<BackendType>{
     parameter_change_threshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }

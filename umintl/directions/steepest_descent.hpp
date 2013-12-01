@@ -19,6 +19,11 @@ namespace umintl{
 
 template<class BackendType>
 struct steepest_descent : public direction<BackendType>{
+
+    virtual std::string info() const{
+        return "Steepest Descent";
+    }
+
     void operator()(optimization_context<BackendType> & c){
         std::size_t N = c.N();
         BackendType::copy(N,c.g(),c.p());

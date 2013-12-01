@@ -14,6 +14,7 @@
 
 namespace umintl{
 
+/** @brief Base class for a stopping criterion */
 template<class BackendType>
 struct stopping_criterion{
     virtual ~stopping_criterion(){ }

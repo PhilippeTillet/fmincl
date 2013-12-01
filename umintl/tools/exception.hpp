@@ -8,7 +8,7 @@ namespace umintl{
 
 namespace exceptions{
 
-/** @brief Exception class in case of memory errors */
+/** @brief Exception class in the case of incompatible parameters*/
 class incompatible_parameters : public std::exception
 {
 public:

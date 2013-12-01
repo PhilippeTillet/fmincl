@@ -16,6 +16,10 @@
 
 namespace umintl{
 
+/** @brief Gradient-based stopping criterion
+ *
+ *  Stops the optimization procedure when the euclidian norm of the gradient accross two successive iterations  is below a threshold
+ */
 template<class BackendType>
 struct gradient_treshold : public stopping_criterion<BackendType>{
     gradient_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }

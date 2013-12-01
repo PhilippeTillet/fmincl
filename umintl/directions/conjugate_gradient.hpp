@@ -88,9 +88,9 @@ public:
     conjugate_gradient(tag::conjugate_gradient::update _update = tag::conjugate_gradient::UPDATE_POLAK_RIBIERE
             , tag::conjugate_gradient::restart _restart = tag::conjugate_gradient::RESTART_NOT_ORTHOGONAL) : update(_update), restart(_restart){ }
 
-    virtual void init(optimization_context<BackendType> &){ }
-
-    virtual void clean(optimization_context<BackendType> &){ }
+    virtual std::string info() const{
+        return "Nonlinear Conjugate Gradient";
+    }
 
     void operator()(optimization_context<BackendType> & c){
         ScalarType beta;

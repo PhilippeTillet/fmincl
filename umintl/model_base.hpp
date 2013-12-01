@@ -8,6 +8,11 @@
 
 namespace umintl{
 
+/** @brief The model_base class
+ *
+ *  The optimization model can be either deterministic or stochastic.  The latter usually corresponds to expected losses
+ * evaluated accross a large amount of data points
+ */
 template<class BackendType>
 struct model_base{
     virtual ~model_base(){ }
@@ -16,6 +21,11 @@ struct model_base{
     virtual hessian_vector_product get_hv_product_tag() const = 0;
 };
 
+/** @brief The deterministic class
+ *
+ *  Assumes the function evaluation is the same at each call. In the case of expected losses, it means all the data-points
+ * are always used.
+ */
 template<class BackendType>
 struct deterministic : public model_base<BackendType> {
     bool update(optimization_context<BackendType> &){ return false; }
@@ -39,6 +49,15 @@ private:
     std::size_t dataset_size_;
 };
 
+/** @brief the dynamically_sampled class
+ *
+ * Uses the dynamic sampled procedure from Byrd et al. (2012) :
+ * "Sample Size Selection in Optimization Methods for Machine Learning"
+ * Requires that the functor overloads :
+ * void operator()(VectorType const & X, VectorType & variance, umintl::gradient_variance_tag tag)
+ *
+ * The parameter tag contains the information on the current offset and sample size
+ */
 template<class BackendType>
 struct dynamically_sampled : public model_base<BackendType> {
   private:

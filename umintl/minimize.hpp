@@ -9,7 +9,6 @@
 #ifndef UMINTL_MINIMIZE_HPP_
 #define UMINTL_MINIMIZE_HPP_
 
-#include "umintl/optimization_options.hpp"
 #include "umintl/optimization_result.hpp"
 
 #include "umintl/model_base.hpp"
@@ -29,21 +28,34 @@
 #include "umintl/stopping_criterion/gradient_treshold.hpp"
 
 #include <iomanip>
+#include <sstream>
 
 namespace umintl{
 
+    /** @brief The minimizer class
+     *
+     *  @tparam BackendType the linear algebra backend of the minimizer
+     */
     template<class BackendType>
     class minimizer{
     public:
+
+        /** @brief The constructor
+         *
+         * @param _direction the descent direction used by the minimizer
+         * @param _stopping_criterion the stopping criterion
+         * @param _max_iter the maximum number of iterations
+         * @param _verbosity_level the verbosity level
+         */
         minimizer(umintl::direction<BackendType> * _direction = new quasi_newton<BackendType>()
                              , umintl::stopping_criterion<BackendType> * _stopping_criterion = new gradient_treshold<BackendType>()
-                             , unsigned int iter = 1024, unsigned int verbosity = 0) :
+                             , unsigned int _max_iter = 1024, unsigned int _verbosity_level = 0) :
             direction(_direction)
           , line_search(new strong_wolfe_powell<BackendType>())
           , stopping_criterion(_stopping_criterion)
           , model(new deterministic<BackendType>())
           , hessian_vector_product_computation(CENTERED_DIFFERENCE)
-          , verbosity_level(verbosity), max_iter(iter){
+          , verbosity_level(_verbosity_level), max_iter(_max_iter){
 
         }
 
@@ -60,15 +72,22 @@ namespace umintl{
 
     private:
 
+        /** @brief Get a brief info string on the minimizer
+         *
+         *  @return String containing the verbosity level, maximum number of iteration, and the direction used
+         */
         std::string info() const{
           std::ostringstream oss;
           oss << "Verbosity Level : " << verbosity_level << std::endl;
           oss << "Maximum number of iterations : " << max_iter << std::endl;
-          oss << "Direction : " << typeid(*direction).name() << std::endl;
-          oss << "Line Search : " << typeid(*line_search).name() << std::endl;
+          oss << "Direction : " << direction->info() << std::endl;
           return oss.str();
         }
 
+        /** @brief Clean memory and terminate the optimization result
+         *
+         *  @return Optimization result
+         */
         optimization_result terminate(optimization_result::termination_cause_type termination_cause, typename BackendType::VectorType & res, std::size_t N, optimization_context<BackendType> & context){
             optimization_result result;
             BackendType::copy(N,context.x(),res);
@@ -83,12 +102,16 @@ namespace umintl{
             return result;
         }
 
+        /** @brief Init the components of the procedure (ie allocate memory for the temporaries, typically)
+         */
         void init_all(optimization_context<BackendType> & c){
             direction->init(c);
             line_search->init(c);
             stopping_criterion->init(c);
         }
 
+        /** @brief Clean the components of the procedure (ie free memory for the temporaries, typically)
+         */
         void clean_all(optimization_context<BackendType> & c){
             direction->clean(c);
             line_search->clean(c);

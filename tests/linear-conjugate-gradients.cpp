@@ -10,7 +10,6 @@
 
 #include "umintl/backends/cblas.hpp"
 #include "umintl/linear/conjugate_gradient.hpp"
-#include "umintl/linear/conjugate_gradient/compute_Ab/gemv.hpp"
 
 
 typedef double ScalarType;
