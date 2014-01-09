@@ -26,7 +26,7 @@ namespace umintl{
       return (xmin+xmax)/2;
     ScalarType d2 = std::sqrt(delta);
     ScalarType x = b - (b - a)*((dfb + d2 - d1)/(dfb - dfa + 2*d2));
-    if(isnan(x))
+    if(std::isnan(x))
       return (xmin+xmax)/2;
     return std::min(std::max(x,xmin),xmax);
   }

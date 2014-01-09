@@ -122,12 +122,12 @@ struct dynamically_sampled : public model_base<BackendType> {
             S=N;
           std::cout << "Augmenting sample size from " << old_S << " to " << S << std::endl;
         }
-        offset_=rand()%(N-S+1);
+        offset_=(offset_+S)%(N-S+1);
 
         if(is_descent_direction==false)
           H_offset_ = 0;
         else
-          H_offset_=(rand())%(S - (int)(r_*S) + 1);
+          H_offset_=(H_offset_+S)%(S - (int)(r_*S) + 1);
 
         BackendType::delete_if_dynamically_allocated(var);
         return true;

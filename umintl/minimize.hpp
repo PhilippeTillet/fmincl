@@ -154,6 +154,7 @@ namespace umintl{
                 }
 
                 (*current_direction)(c);
+
                 c.dphi_0() = BackendType::dot(N,c.p(),c.g());
                 //Not a descent direction...
                 if(c.dphi_0()>0){
@@ -168,6 +169,7 @@ namespace umintl{
                 if(search_res.has_failed){
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
                 }
+
 //                BackendType::copy(c.N(), c.x(), search_res.best_x);
 //                BackendType::axpy(c.N(),0.0001,c.p(),search_res.best_x);
 
