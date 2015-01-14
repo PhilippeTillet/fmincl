@@ -12,7 +12,7 @@
 #include <vector>
 #include <cmath>
 
-
+#include "atidlas/array.h"
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/optimization_context.hpp"
 
@@ -20,107 +20,78 @@
 
 namespace umintl{
 
-template<class BackendType>
-struct low_memory_quasi_newton : public direction<BackendType>{
-    low_memory_quasi_newton(unsigned int _m = 4) : m(_m) { }
-    unsigned int m;
 
-    typedef typename BackendType::ScalarType ScalarType;
-    typedef typename BackendType::VectorType VectorType;
-    typedef typename BackendType::MatrixType MatrixType;
+struct low_memory_quasi_newton : public direction{
+    low_memory_quasi_newton(unsigned int _m = 4) : m(_m){ }
+    unsigned int m;
 
 private:
 
     struct storage_pair{
-        VectorType s;
-        VectorType y;
+        storage_pair(std::size_t N, atidlas::numeric_type dtype) : s(atidlas::zeros(N, dtype)), y(atidlas::zeros(N, dtype))
+        { }
+        atidlas::array s;
+        atidlas::array y;
     };
 
-    VectorType & s(std::size_t i) { return vecs_[i].s; }
-    VectorType & y(std::size_t i) { return vecs_[i].y; }
+    atidlas::array & s(std::size_t i) { return memory_[i].s; }
+    atidlas::array & y(std::size_t i) { return memory_[i].y; }
 
 public:
 
-    virtual void init(optimization_context<BackendType> & context){
-        vecs_.resize(m);
-        N_ = context.N();
-        q_ = BackendType::create_vector(N_);
-        r_ = BackendType::create_vector(N_);
-        for(unsigned int i = 0 ; i < m ; ++i){
-            vecs_[i].s = BackendType::create_vector(N_);
-            vecs_[i].y = BackendType::create_vector(N_);
+    virtual void clean(optimization_context &)
+    { n_valid_pairs_ = 0; }
+
+    virtual std::string info() const
+    { return "Low memory quasi-newton"; }
+
+    void operator()(optimization_context & c)
+    {
+        if(n_valid_pairs_==0)
+        {
+            memory_.clear();
+            memory_.reserve(m);
+            for(unsigned int i = 0 ; i < m ; ++i)
+                memory_.push_back(storage_pair(c.N(), c.dtype()));
         }
-        n_valid_pairs_ = 0;
-    }
 
-    virtual void clean(optimization_context<BackendType> &){
-        BackendType::delete_if_dynamically_allocated(q_);
-        BackendType::delete_if_dynamically_allocated(r_);
-        for(unsigned int i = 0 ; i < m ; ++i){
-            BackendType::delete_if_dynamically_allocated(s(i));
-            BackendType::delete_if_dynamically_allocated(y(i));
-        }
-        vecs_.clear();
-    }
-
-    virtual std::string info() const{
-        return "Low memory quasi-newton";
-    }
-
-    void operator()(optimization_context<BackendType> & c){
-        std::vector<ScalarType> rhos(m);
-        std::vector<ScalarType> alphas(m);
+        std::vector<double> rhos(m);
+        std::vector<double> alphas(m);
 
         //Algorithm
         n_valid_pairs_ = std::min(n_valid_pairs_+1,m);
 
         //Updates storage
         for(unsigned int i = n_valid_pairs_-1 ; i > 0  ; --i){
-            BackendType::copy(N_,s(i-1), s(i));
-            BackendType::copy(N_,y(i-1), y(i));
+            s(i) = s(i-1);
+            y(i) = y(i-1);
         }
 
         //s(0) = x - xm1;
-        BackendType::copy(N_,c.x(),s(0));
-        BackendType::axpy(N_,-1,c.xm1(),s(0));
+        s(0) = c.x() - c.xm1();
+        y(0) = c.g() - c.gm1();
+        atidlas::array q = c.g();
 
-        //y(0) = g - gm1;
-        BackendType::copy(N_,c.g(),y(0));
-        BackendType::axpy(N_,-1,c.gm1(),y(0));
-
-
-        BackendType::copy(N_,c.g(),q_);
         int i = 0;
         for(; i < (int)n_valid_pairs_ ; ++i){
-            rhos[i] = static_cast<ScalarType>(1)/BackendType::dot(N_,y(i),s(i));
-            alphas[i] = rhos[i]*BackendType::dot(N_,s(i),q_);
-            //q_ = q - alphas[i]*y(i);
-            BackendType::axpy(N_,-alphas[i],y(i),q_);
+            rhos[i] = atidlas::value_scalar(1/atidlas::dot(y(i),s(i)));
+            alphas[i] = atidlas::value_scalar(rhos[i]*atidlas::dot(s(i), q));
+            q = q - alphas[i]*y(i);
         }
-        ScalarType scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
+        double scale = atidlas::value_scalar(atidlas::dot(s(0), y(0))/atidlas::dot(y(0),y(0)));
 
-        //r_ = scale*q_;
-        BackendType::copy(N_,q_,r_);
-        BackendType::scale(N_,scale,r_);
-
+        atidlas::array r(scale*q);
         --i;
         for(; i >=0 ; --i){
-            ScalarType beta = rhos[i]*BackendType::dot(N_,y(i),r_);
-            //r_ = r_ + (alphas[i]-beta)*s(i)
-            BackendType::axpy(N_,alphas[i]-beta,s(i),r_);
+            double beta = atidlas::value_scalar(rhos[i]*atidlas::dot(y(i), r));
+            r = r + (alphas[i] - beta)*s(i);
         }
 
-        //p = -r_;
-        BackendType::copy(N_,r_,c.p());
-        BackendType::scale(N_,-1,c.p());
+        c.p() = -r;
     }
 
 private:
-
-    std::size_t N_;
-    VectorType q_;
-    VectorType r_;
-    std::vector<storage_pair> vecs_;
+    std::vector<storage_pair> memory_;
     unsigned int n_valid_pairs_;
 };
 

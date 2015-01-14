@@ -12,14 +12,14 @@
 
 namespace umintl{
 
-template<class BackendType>
+
 struct direction{
-    typedef typename BackendType::ScalarType ScalarType;
+    
     virtual ~direction(){ }
-    virtual void operator()(optimization_context<BackendType> &) = 0;
+    virtual void operator()(optimization_context &) = 0;
     virtual std::string info() const = 0;
-    virtual void init(optimization_context<BackendType> &){ }
-    virtual void clean(optimization_context<BackendType> &){ }
+    virtual void init(optimization_context &){ }
+    virtual void clean(optimization_context &){ }
 };
 
 

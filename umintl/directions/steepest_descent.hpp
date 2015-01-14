@@ -17,18 +17,14 @@
 
 namespace umintl{
 
-template<class BackendType>
-struct steepest_descent : public direction<BackendType>{
 
-    virtual std::string info() const{
-        return "Steepest Descent";
-    }
+struct steepest_descent : public direction
+{
+    virtual std::string info() const
+    { return "Steepest Descent";  }
 
-    void operator()(optimization_context<BackendType> & c){
-        std::size_t N = c.N();
-        BackendType::copy(N,c.g(),c.p());
-        BackendType::scale(N,-1,c.p());
-    }
+    void operator()(optimization_context & c)
+    { c.p() = -c.g(); }
 };
 
 }

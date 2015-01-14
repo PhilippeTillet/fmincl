@@ -7,9 +7,9 @@
 namespace umintl{
 
 
-template<class BackendType>
+
 class optimization_context;
-template<class BackendType>
+
 struct model_base;
 
 enum computation_type{ CENTERED_DIFFERENCE, FORWARD_DIFFERENCE, PROVIDED };

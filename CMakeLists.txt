@@ -15,7 +15,7 @@ option(BUILD_TESTING "Build the tests " ON)
 
 # Includes
 include_directories(BEFORE ${PROJECT_SOURCE_DIR})
-
+include_directories(~/Development/ATIDLAS/include/)
 # Add visibility of headers
 # Necessary for Qt-Creator usage.
 ################

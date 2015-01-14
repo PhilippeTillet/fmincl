@@ -12,7 +12,7 @@
 #include <vector>
 #include <cmath>
 
-
+#include "atidlas/array.h"
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/optimization_context.hpp"
 
@@ -22,99 +22,62 @@
 
 namespace umintl{
 
-template<class BackendType>
-struct quasi_newton : public direction<BackendType>{
-    typedef typename BackendType::ScalarType ScalarType;
-    typedef typename BackendType::VectorType VectorType;
-    typedef typename BackendType::MatrixType MatrixType;
 
-    virtual std::string info() const{
-        return "Quasi-Newton";
-    }
+struct quasi_newton : public direction
+{
+    virtual std::string info() const
+    { return "Quasi-Newton"; }
 
-    virtual void init(optimization_context<BackendType> & c)
+    virtual void clean(optimization_context &)
     {
-        reinitialize_ = true;
-
-        N_ = c.N();
-        Hy_ = BackendType::create_vector(N_);
-        s_ = BackendType::create_vector(N_);
-        y_ = BackendType::create_vector(N_);
-        H_ = BackendType::create_matrix(N_, N_);
-
-        BackendType::set_to_value(Hy_,0,N_);
-        BackendType::set_to_value(s_,0,N_);
-        BackendType::set_to_value(y_,0,N_);
+      if(pH_.get())
+        pH_.reset();
     }
 
-    virtual void clean(optimization_context<BackendType> &)
+    void operator()(optimization_context & c)
     {
-        BackendType::delete_if_dynamically_allocated(Hy_);
-        BackendType::delete_if_dynamically_allocated(s_);
-        BackendType::delete_if_dynamically_allocated(y_);
+      atidlas::array s(c.x() - c.xm1());
+      atidlas::array y(c.g() - c.gm1());
 
-        BackendType::delete_if_dynamically_allocated(H_);
-    }
+      double ys = atidlas::value_scalar(atidlas::dot(s, y));
 
-    void operator()(optimization_context<BackendType> & c){
-      //s = x - xm1;
-      BackendType::copy(N_,c.x(),s_);
-      BackendType::axpy(N_,-1,c.xm1(),s_);
+      if(pH_.get()==NULL)
+      {
+        std::size_t N = c.N();
+        atidlas::numeric_type dtype = c.dtype();
+        pH_.reset(new atidlas::array(atidlas::diag(N, dtype)));
+      }
+      atidlas::array& H = *pH_;
 
-      //y = g - gm1;
-      BackendType::copy(N_,c.g(),y_);
-      BackendType::axpy(N_,-1,c.gm1(),y_);
-
-      ScalarType ys = BackendType::dot(N_,s_,y_);
-
-      if(reinitialize_)
-        BackendType::set_to_diagonal(N_,H_,1);
-
-      ScalarType gamma = 1;
+      atidlas::array Hy(c.N(), c.dtype());
+      double gamma = 1;
 
       {
-          BackendType::symv(N_,1,H_,y_,0,Hy_);
-          ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-          ScalarType sg = BackendType::dot(N_,s_,c.gm1());
-          ScalarType gHy = BackendType::dot(N_,c.gm1(),Hy_);
+          Hy = atidlas::dot(H, y);
+          double yHy = atidlas::value_scalar(atidlas::dot(y, Hy));
+          double sg = atidlas::value_scalar(atidlas::dot(s, c.gm1()));
+          double gHy = atidlas::value_scalar(atidlas::dot(c.gm1(), Hy));
           if(ys/yHy>1)
             gamma = ys/yHy;
           else if(sg/gHy<1)
-             gamma = sg/gHy;
+            gamma = sg/gHy;
           else
-              gamma = 1;
+            gamma = 1;
       }
 
-      BackendType::scale(N_,N_,gamma,H_);
-      BackendType::symv(N_,1,H_,y_,0,Hy_);
-      ScalarType yHy = BackendType::dot(N_,y_,Hy_);
+      H*=gamma;
+      Hy = atidlas::dot(H, y);
+      double yHy = atidlas::value_scalar(atidlas::dot(y, Hy));
 
       //quasi_newton UPDATE
-      //H_ += alpha*(s_*Hy' + Hy*s_') + beta*s_*s_';
-      ScalarType alpha = -1/ys;
-      ScalarType beta = 1/ys + yHy/pow(ys,2);
-      BackendType::syr2(N_,alpha,s_,Hy_,H_);
-      BackendType::syr1(N_,beta,s_,H_);
-
-      //p = -H_*g
-      BackendType::symv(N_,-1,H_,c.g(),0,c.p());
-
-      if(reinitialize_)
-          reinitialize_=false;
+      double alpha = -1/ys;
+      double beta = 1/ys + yHy/pow(ys,2);
+      H += alpha*(atidlas::outer(s, Hy) + atidlas::outer(Hy, s)) + beta*atidlas::outer(s, s);
+      c.p() = - atidlas::dot(H, c.g());
     }
 
 private:
-
-    std::size_t N_;
-
-    VectorType Hy_;
-    VectorType s_;
-    VectorType y_;
-
-    MatrixType H_;
-
-    bool reinitialize_;
-
+    tools::shared_ptr<atidlas::array> pH_;
 };
 
 

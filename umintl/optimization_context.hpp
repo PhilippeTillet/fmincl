@@ -19,67 +19,56 @@ namespace umintl{
      *  Holds the state of the optimization procedure. Typically passed as function argument, to allow easy
      * access to the usual quantities of interest
      */
-    template<class BackendType>
+    
     class optimization_context{
     private:
         optimization_context(optimization_context const & other);
         optimization_context& operator=(optimization_context const & other);
     public:
-        typedef typename BackendType::ScalarType ScalarType;
-        typedef typename BackendType::VectorType VectorType;
-        typedef typename BackendType::MatrixType MatrixType;
+        
+        
+        
 
-        optimization_context(VectorType const & x0, std::size_t dim, model_base<BackendType> & model, detail::function_wrapper<BackendType> * fun) : fun_(fun), model_(model), iter_(0), dim_(dim){
-            x_ = BackendType::create_vector(dim_);
-            g_ = BackendType::create_vector(dim_);
-            p_ = BackendType::create_vector(dim_);
-            xm1_ = BackendType::create_vector(dim_);
-            gm1_ = BackendType::create_vector(dim_);
+        optimization_context(atidlas::array const & x0, std::size_t dim, model_base & model, detail::function_wrapper * fun) : fun_(fun), model_(model), iter_(0), dim_(dim),
+                                                                                                                    dtype_(x_.dtype()), x_(x0), g_(dim_, dtype_),
+                                                                                                                    p_(dim_, dtype_), xm1_(dim_, dtype_), gm1_(dim_, dtype_),
+                                                                                                                    valk_(dtype_), valkm1_(dtype_), dphi_0_(dtype_), alpha_(dtype_)
+        { }
 
-            BackendType::copy(dim_,x0,x_);
-        }
-
-        model_base<BackendType> & model(){ return model_; }
-
-        detail::function_wrapper<BackendType> & fun() { return *fun_; }
+        model_base & model(){ return model_; }
+        atidlas::numeric_type dtype() const { return dtype_; }
+        detail::function_wrapper & fun() { return *fun_; }
         unsigned int & iter() { return iter_; }
         unsigned int & N() { return dim_; }
-        VectorType & x() { return x_; }
-        VectorType & g() { return g_; }
-        VectorType & xm1() { return xm1_; }
-        VectorType & gm1() { return gm1_; }
-        VectorType & p() { return p_; }
-        ScalarType & val() { return valk_; }
-        ScalarType & valm1() { return valkm1_; }
-        ScalarType & dphi_0() { return dphi_0_; }
-        ScalarType & alpha() { return alpha_; }
-
-        ~optimization_context(){
-            BackendType::delete_if_dynamically_allocated(x_);
-            BackendType::delete_if_dynamically_allocated(g_);
-            BackendType::delete_if_dynamically_allocated(p_);
-            BackendType::delete_if_dynamically_allocated(xm1_);
-            BackendType::delete_if_dynamically_allocated(gm1_);
-        }
+        atidlas::array & x() { return x_; }
+        atidlas::array & g() { return g_; }
+        atidlas::array & xm1() { return xm1_; }
+        atidlas::array & gm1() { return gm1_; }
+        atidlas::array & p() { return p_; }
+        double & val() { return valk_; }
+        double & valm1() { return valkm1_; }
+        double & dphi_0() { return dphi_0_; }
+        double & alpha() { return alpha_; }
 
     private:
-        tools::shared_ptr< detail::function_wrapper<BackendType> > fun_;
-        model_base<BackendType> & model_;
+        tools::shared_ptr< detail::function_wrapper > fun_;
+        model_base & model_;
 
         unsigned int iter_;
         unsigned int dim_;
+        atidlas::numeric_type dtype_;
 
-        VectorType x_;
-        VectorType g_;
-        VectorType p_;
-        VectorType xm1_;
-        VectorType gm1_;
+        atidlas::array x_;
+        atidlas::array g_;
+        atidlas::array p_;
+        atidlas::array xm1_;
+        atidlas::array gm1_;
 
-        ScalarType valk_;
-        ScalarType valkm1_;
-        ScalarType dphi_0_;
+        double valk_;
+        double valkm1_;
+        double dphi_0_;
 
-        ScalarType alpha_;
+        double alpha_;
     };
 }
 #endif

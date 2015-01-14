@@ -19,18 +19,12 @@ namespace umintl{
  *
  *  Stops the optimization procedure when the euclidian norm of the change of parameters accross two successive iterations is below a threshold
  */
-template<class BackendType>
-struct parameter_change_threshold : public stopping_criterion<BackendType>{
+
+struct parameter_change_threshold : public stopping_criterion{
     parameter_change_threshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
-    bool operator()(optimization_context<BackendType> & c){
-        typename BackendType::VectorType tmp = BackendType::create_vector(c.N());
-        BackendType::copy(c.N(),c.x(),tmp);
-        BackendType::axpy(c.N(),-1,c.xm1(),tmp);
-        double change = BackendType::nrm2(c.N(),tmp);
-        BackendType::delete_if_dynamically_allocated(tmp);
-        return  change < tolerance;
-    }
+    bool operator()(optimization_context & c)
+    { return  atidlas::norm(c.x() - c.xm1()) < tolerance; }
 };
 
 }

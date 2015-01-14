@@ -15,12 +15,12 @@
 namespace umintl{
 
 /** @brief Base class for a stopping criterion */
-template<class BackendType>
+
 struct stopping_criterion{
     virtual ~stopping_criterion(){ }
-    virtual void init(optimization_context<BackendType> &){ }
-    virtual void clean(optimization_context<BackendType> &){ }
-    virtual bool operator()(optimization_context<BackendType> & context) = 0;
+    virtual void init(optimization_context &){ }
+    virtual void clean(optimization_context &){ }
+    virtual bool operator()(optimization_context & context) = 0;
 };
 
 

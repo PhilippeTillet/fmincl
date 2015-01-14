@@ -20,14 +20,13 @@ namespace umintl{
  *
  *  Stops the optimization procedure when the euclidian norm of the gradient accross two successive iterations  is below a threshold
  */
-template<class BackendType>
-struct gradient_treshold : public stopping_criterion<BackendType>{
+
+struct gradient_treshold : public stopping_criterion{
     gradient_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
 
-    bool operator()(optimization_context<BackendType> & c){
-        return BackendType::nrm2(c.N(),c.g()) < tolerance;
-    }
+    bool operator()(optimization_context & c)
+    { return atidlas::value_scalar(atidlas::norm(c.g()) < tolerance); }
 };
 
 

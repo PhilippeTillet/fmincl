@@ -9,10 +9,9 @@
 #define UMINTL_DIRECTIONS_CONJUGATE_GRADIENT_HPP_
 
 #include "umintl/optimization_context.hpp"
-
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/directions/forwards.h"
-
+#include "atidlas/array.h"
 
 namespace umintl{
 
@@ -36,44 +35,38 @@ enum update{
 
 }
 
-template<class BackendType>
-struct conjugate_gradient : public direction<BackendType>{
+
+struct conjugate_gradient : public direction{
 public:
-    typedef typename BackendType::VectorType VectorType;
-    typedef typename BackendType::ScalarType ScalarType;
+
+
 private:
-    ScalarType update_polak_ribiere(optimization_context<BackendType> & c){
-        VectorType tmp = BackendType::create_vector(c.N());
-        BackendType::copy(c.N(),c.g(), tmp);
-        BackendType::axpy(c.N(),-1,c.gm1(),tmp);
-        ScalarType res = std::max(BackendType::dot(c.N(),c.g(),tmp)/BackendType::dot(c.N(),c.gm1(),c.gm1()),(ScalarType)0);
-        BackendType::delete_if_dynamically_allocated(tmp);
-        return res;
-    }
+    atidlas::array_expression update_polak_ribiere(optimization_context & c)
+    { return atidlas::max(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), 0); }
 
-    ScalarType update_fletcher_reeves(optimization_context<BackendType> & c){
-        return BackendType::dot(c.N(),c.g(),c.g())/BackendType::dot(c.N(),c.gm1(),c.gm1());
-    }
+    atidlas::array_expression update_fletcher_reeves(optimization_context & c)
+    { return atidlas::dot(c.g(), c.g())/atidlas::dot(c.gm1(), c.gm1()); }
 
-    ScalarType update_impl(optimization_context<BackendType> & c){
+    atidlas::array_expression update_impl(optimization_context & c){
         switch (update) {
             case tag::conjugate_gradient::UPDATE_POLAK_RIBIERE: return update_polak_ribiere(c);
-            case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return std::min(update_polak_ribiere(c), update_fletcher_reeves(c));
+        case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return atidlas::min(update_polak_ribiere(c), update_fletcher_reeves(c));
             case tag::conjugate_gradient::UPDATE_FLETCHER_REEVES: return update_fletcher_reeves(c);
             default: throw exceptions::incompatible_parameters("Unsupported conjugate gradient update");
         }
     }
 
-    ScalarType restart_on_dim(optimization_context<BackendType> & c){
+    bool restart_on_dim(optimization_context & c){
         return c.iter()==c.N();
     }
 
-    ScalarType restart_not_orthogonal(optimization_context<BackendType> & c){
+    bool restart_not_orthogonal(optimization_context & c){
         double threshold = 0.1;
-        return std::abs(BackendType::dot(c.N(),c.g(),c.gm1()))/BackendType::dot(c.N(),c.g(),c.g()) > threshold;
+        double ratio = atidlas::value_scalar(atidlas::abs(dot(c.g(), c.gm1()))/atidlas::dot(c.g(), c.g()));
+        return ratio > threshold;
     }
 
-    ScalarType restart_impl(optimization_context<BackendType> & c){
+    bool restart_impl(optimization_context & c){
         switch (restart) {
             case tag::conjugate_gradient::NO_RESTART: return false;
             case tag::conjugate_gradient::RESTART_ON_DIM: return restart_on_dim(c);
@@ -92,14 +85,13 @@ public:
         return "Nonlinear Conjugate Gradient";
     }
 
-    void operator()(optimization_context<BackendType> & c){
-        ScalarType beta;
+    void operator()(optimization_context & c){
+        double beta;
         if(restart_impl(c))
             beta = 0;
         else
-            beta = update_impl(c);
-        BackendType::scale(c.N(),beta,c.p());
-        BackendType::axpy(c.N(),-1,c.g(),c.p());
+            beta = atidlas::value_scalar(update_impl(c));
+        c.p() = beta*c.p() - c.g();
     }
 
     tag::conjugate_gradient::update update;

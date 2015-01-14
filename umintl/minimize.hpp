@@ -34,9 +34,8 @@ namespace umintl{
 
     /** @brief The minimizer class
      *
-     *  @tparam BackendType the linear algebra backend of the minimizer
      */
-    template<class BackendType>
+
     class minimizer{
     public:
 
@@ -47,22 +46,22 @@ namespace umintl{
          * @param _max_iter the maximum number of iterations
          * @param _verbosity_level the verbosity level
          */
-        minimizer(umintl::direction<BackendType> * _direction = new quasi_newton<BackendType>()
-                             , umintl::stopping_criterion<BackendType> * _stopping_criterion = new gradient_treshold<BackendType>()
+        minimizer(umintl::direction * _direction = new quasi_newton()
+                             , umintl::stopping_criterion * _stopping_criterion = new gradient_treshold()
                              , unsigned int _max_iter = 1024, unsigned int _verbosity_level = 0) :
             direction(_direction)
-          , line_search(new strong_wolfe_powell<BackendType>())
+          , line_search(new strong_wolfe_powell())
           , stopping_criterion(_stopping_criterion)
-          , model(new deterministic<BackendType>())
+          , model(new deterministic())
           , hessian_vector_product_computation(CENTERED_DIFFERENCE)
           , verbosity_level(_verbosity_level), max_iter(_max_iter){
 
         }
 
-        tools::shared_ptr<umintl::direction<BackendType> > direction;
-        tools::shared_ptr<umintl::line_search<BackendType> > line_search;
-        tools::shared_ptr<umintl::stopping_criterion<BackendType> > stopping_criterion;
-        tools::shared_ptr< model_base<BackendType> > model;
+        tools::shared_ptr<umintl::direction > direction;
+        tools::shared_ptr<umintl::line_search > line_search;
+        tools::shared_ptr<umintl::stopping_criterion > stopping_criterion;
+        tools::shared_ptr< model_base > model;
         computation_type hessian_vector_product_computation;
 
         double tolerance;
@@ -88,23 +87,21 @@ namespace umintl{
          *
          *  @return Optimization result
          */
-        optimization_result terminate(optimization_result::termination_cause_type termination_cause, typename BackendType::VectorType & res, std::size_t N, optimization_context<BackendType> & context){
+        optimization_result terminate(optimization_result::termination_cause_type termination_cause, atidlas::array & res, optimization_context & context){
             optimization_result result;
-            BackendType::copy(N,context.x(),res);
+            res = context.x();
             result.f = context.val();
             result.iteration = context.iter();
             result.n_functions_eval = context.fun().n_value_computations();
             result.n_gradient_eval = context.fun().n_gradient_computations();
             result.termination_cause = termination_cause;
-
             clean_all(context);
-
             return result;
         }
 
         /** @brief Init the components of the procedure (ie allocate memory for the temporaries, typically)
          */
-        void init_all(optimization_context<BackendType> & c){
+        void init_all(optimization_context & c){
             direction->init(c);
             line_search->init(c);
             stopping_criterion->init(c);
@@ -112,7 +109,7 @@ namespace umintl{
 
         /** @brief Clean the components of the procedure (ie free memory for the temporaries, typically)
          */
-        void clean_all(optimization_context<BackendType> & c){
+        void clean_all(optimization_context & c){
             direction->clean(c);
             line_search->clean(c);
             stopping_criterion->clean(c);
@@ -120,11 +117,11 @@ namespace umintl{
 
     public:
         template<class Fun>
-        optimization_result operator()(typename BackendType::VectorType & res, Fun & fun, typename BackendType::VectorType const & x0, std::size_t N){
-            typedef typename BackendType::VectorType VectorType;
-            tools::shared_ptr<umintl::direction<BackendType> > steepest_descent(new umintl::steepest_descent<BackendType>());
-            line_search_result<BackendType> search_res(N);
-            optimization_context<BackendType> c(x0, N, *model, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,hessian_vector_product_computation));
+        optimization_result operator()(atidlas::array & res, Fun & fun, atidlas::array const & x0, std::size_t N){
+
+            tools::shared_ptr<umintl::direction > steepest_descent(new umintl::steepest_descent());
+            line_search_result search_res(N);
+            optimization_context c(x0, N, *model, new detail::function_wrapper_impl<Fun>(fun,N,hessian_vector_product_computation));
 
             init_all(c);
 
@@ -132,8 +129,8 @@ namespace umintl{
                 std::cout << info() << std::endl;
 
 
-            tools::shared_ptr<umintl::direction<BackendType> > current_direction;
-            if(dynamic_cast<truncated_newton<BackendType> * >(direction.get()))
+            tools::shared_ptr<umintl::direction > current_direction;
+            if(dynamic_cast<truncated_newton * >(direction.get()))
               current_direction = steepest_descent;
             else
               current_direction = steepest_descent;
@@ -155,37 +152,31 @@ namespace umintl{
 
                 (*current_direction)(c);
 
-                c.dphi_0() = BackendType::dot(N,c.p(),c.g());
+                c.dphi_0() = atidlas::dot(c.p(), c.g());
                 //Not a descent direction...
                 if(c.dphi_0()>0){
                     //current_direction->reset(c);
                     current_direction = steepest_descent;
                     (*current_direction)(c);
-                    c.dphi_0() = BackendType::dot(N,c.p(),c.g());
+                    c.dphi_0() = atidlas::dot(c.p(), c.g());
                 }
 
                 (*line_search)(search_res, current_direction.get(), c);
 
                 if(search_res.has_failed){
-                    return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
+                    return terminate(optimization_result::LINE_SEARCH_FAILED, res, c);
                 }
 
-//                BackendType::copy(c.N(), c.x(), search_res.best_x);
-//                BackendType::axpy(c.N(),0.0001,c.p(),search_res.best_x);
-
                 c.alpha() = search_res.best_alpha;
-
-                BackendType::copy(N,c.x(),c.xm1());
-                BackendType::copy(N,search_res.best_x,c.x());
-
-                BackendType::copy(N,c.g(),c.gm1());
-                BackendType::copy(N,search_res.best_g,c.g());
-
+                c.xm1() = c.x();
+                c.x() = search_res.best_x;
+                c.gm1() = c.g();
+                c.g() = search_res.best_g;
                 c.valm1() = c.val();
                 c.val() = search_res.best_phi;
 
                 if((*stopping_criterion)(c)){
-                    return terminate(optimization_result::STOPPING_CRITERION, res, N, c);
+                    return terminate(optimization_result::STOPPING_CRITERION, res, c);
                 }
                 current_direction = direction;
 
@@ -193,7 +184,7 @@ namespace umintl{
                   c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
             }
 
-            return terminate(optimization_result::MAX_ITERATION_REACHED, res, N, c);
+            return terminate(optimization_result::MAX_ITERATION_REACHED, res, c);
         }
     };
 
