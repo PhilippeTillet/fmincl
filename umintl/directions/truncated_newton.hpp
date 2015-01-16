@@ -43,7 +43,7 @@ struct truncated_newton : public direction{
 
     struct compute_Ab: public linear::conjugate_gradient_detail::compute_Ab{
         compute_Ab(atidlas::array const & x, atidlas::array const & g, model_base const & model, umintl::detail::function_wrapper & fun) : x_(x), g_(g), model_(model), fun_(fun){ }
-        virtual void operator()(std::size_t, atidlas::array const & b, atidlas::array & res){
+        virtual void operator()(atidlas::array const & b, atidlas::array & res){
           fun_.compute_hv_product(x_,g_,b,res,model_.get_hv_product_tag());
         }
       protected:

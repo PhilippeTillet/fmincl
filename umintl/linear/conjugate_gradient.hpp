@@ -59,7 +59,7 @@ namespace umintl{
       
       struct compute_Ab{
           virtual ~compute_Ab(){ }
-          virtual void operator()(std::size_t N, atidlas::array const & b, atidlas::array & res) = 0;
+          virtual void operator()(atidlas::array const & b, atidlas::array & res) = 0;
       };
 
       /** @brief symv product class */
@@ -67,7 +67,7 @@ namespace umintl{
       struct symv : public compute_Ab{
         public:
           symv(atidlas::array const & A) : A_(A){ }
-          void operator()(std::size_t N, atidlas::array const & b, atidlas::array & res)
+          void operator()(atidlas::array const & b, atidlas::array & res)
           { res = atidlas::dot(A_, b); }
         private:
           atidlas::array const & A_;
@@ -132,7 +132,7 @@ namespace umintl{
             r = b;
           else
           {
-            (*compute_Ab)(N,x,r); //r = Ax
+            (*compute_Ab)(x,r); //r = Ax
             r = b - r; //r = b - Ax
           }
           p = r;
@@ -141,7 +141,7 @@ namespace umintl{
           double rso = atidlas::value_scalar(atidlas::dot(r, r));
 
           for(std::size_t i = 0 ; i < max_iter ; ++i){
-            (*compute_Ab)(N,p,Ap);
+            (*compute_Ab)(p,Ap);
             Ap += lambda*nrm_b*b;
             double pAp = atidlas::value_scalar(atidlas::dot(p, Ap));
             if(pAp<0)

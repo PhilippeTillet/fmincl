@@ -65,7 +65,7 @@ struct dynamically_sampled : public model_base {
 
 
   public:
-    dynamically_sampled(double r, std::size_t S0, std::size_t dataset_size, double theta = 0.5) : r_(r), S(std::min(S0,dataset_size)), offset_(0), H_offset_(0), N(dataset_size), theta_(theta){ }
+    dynamically_sampled(double r, std::size_t S0, std::size_t dataset_size, double theta = 0.5) : N(dataset_size), theta_(theta), r_(r), S(std::min(S0,dataset_size)), offset_(0), H_offset_(0){ }
 
     bool update(optimization_context & c){
 //      {
@@ -141,12 +141,12 @@ struct dynamically_sampled : public model_base {
       return hessian_vector_product(STOCHASTIC,r_*S,H_offset_+offset_);
     }
 private:
+    std::size_t N;
     double theta_;
     double r_;
     std::size_t S;
     std::size_t offset_;
     std::size_t H_offset_;
-    std::size_t N;
 };
 
 

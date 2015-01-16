@@ -133,12 +133,12 @@ namespace umintl{
                 case umintl::CENTERED_DIFFERENCE:
                 {
                   double dummy;
-                  atidlas::array Hvleft(N_);
                   double h = 1e-7;
 
-                  atidlas::array tmp = x + h*v;
+                  atidlas::array tmp(x + h*v);
                    (*this)(tmp,dummy,Hv,vgtag,int2type<is_call_possible<Fun,void(atidlas::array const &, double&, atidlas::array&, value_gradient)>::value>());
 
+                  atidlas::array Hvleft(N_, Hv.dtype());
                   tmp = x - h*v;
                   (*this)(tmp,dummy,Hvleft,vgtag,int2type<is_call_possible<Fun,void(atidlas::array const &, double&, atidlas::array&, value_gradient)>::value>());
 
@@ -150,7 +150,7 @@ namespace umintl{
                   double dummy;
                   double h = 1e-7;
 
-                  atidlas::array tmp = x + h*v;
+                  atidlas::array tmp(x + h*v);
                   (*this)(tmp,dummy,Hv,vgtag,int2type<is_call_possible<Fun,void(atidlas::array const &, double&, atidlas::array&, value_gradient)>::value>());
                   Hv = (Hv - g)/h;
                   break;
