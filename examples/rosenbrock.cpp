@@ -23,7 +23,7 @@ class rosenbrock{
 public:
     rosenbrock(std::size_t N) : N_(N){ }
 
-    void operator()(atidlas::array const & x, atidlas::value_scalar& val, atidlas::array& grad, umintl::value_gradient) {
+    void operator()(atidlas::array const & x, double& val, atidlas::array& grad, umintl::value_gradient) {
         double res=0;
         for(unsigned int i=0 ; i<N_-1;++i){
             double xi = x[i];
@@ -75,9 +75,7 @@ int main(){
     for(std::size_t i = 0 ; i < D ; ++i)
         X0[i] = 0;
 
-    std::cout << "Starting at : " << std::endl;
-    std::cout << D << std::endl;
-    std::cout << std::endl;
+    std::cout << "Starting at : " << X0 << std::endl;
 
     umintl::minimizer minimizer;
     rosenbrock objective(D);

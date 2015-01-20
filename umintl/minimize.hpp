@@ -36,7 +36,8 @@ namespace umintl{
      *
      */
 
-    class minimizer{
+    class minimizer
+    {
     public:
 
         /** @brief The constructor
@@ -121,7 +122,8 @@ namespace umintl{
 
             tools::shared_ptr<umintl::direction > steepest_descent(new umintl::steepest_descent());
             line_search_result search_res(N);
-            optimization_context c(x0, N, *model, new detail::function_wrapper_impl<Fun>(fun,N,hessian_vector_product_computation));
+
+            optimization_context c(x0, *model, new detail::function_wrapper_impl<Fun>(fun,N,hessian_vector_product_computation));
 
             init_all(c);
 

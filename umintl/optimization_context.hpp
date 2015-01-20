@@ -29,8 +29,8 @@ namespace umintl{
         
         
 
-        optimization_context(atidlas::array const & x0, std::size_t dim, model_base & model, detail::function_wrapper * fun) : fun_(fun), model_(model), iter_(0), dim_(dim),
-                                                                                                                    dtype_(x_.dtype()), x_(x0), g_(dim_, dtype_),
+        optimization_context(atidlas::array const & x0, model_base & model, detail::function_wrapper * fun) : fun_(fun), model_(model), iter_(0), dim_(x0.shape()._1),
+                                                                                                                    dtype_(x0.dtype()), x_(x0), g_(dim_, dtype_),
                                                                                                                     p_(dim_, dtype_), xm1_(dim_, dtype_), gm1_(dim_, dtype_),
                                                                                                                     valk_(dtype_), valkm1_(dtype_), dphi_0_(dtype_), alpha_(dtype_)
         { }

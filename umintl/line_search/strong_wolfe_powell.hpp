@@ -31,15 +31,7 @@ struct strong_wolfe_powell : public line_search{
     /** @brief The constructor
      *  @param _max_evals maximum number of value-gradient evaluation in the line-search
      */
-    strong_wolfe_powell(unsigned int _max_evals = 40) : line_search(_max_evals), x0_(0, atidlas::FLOAT_TYPE) { }
-
-    /** @brief initialization of the temporaries */
-    virtual void init(optimization_context & c)
-    { x0_.resize(c.N()); }
-
-    /** @brief deletion of the temporaries */
-    virtual void clean(optimization_context &)
-    { }
+    strong_wolfe_powell(unsigned int _max_evals = 40) : line_search(_max_evals) { }
 
 private:
     using line_search::max_evals;
@@ -52,7 +44,7 @@ private:
     bool curvature(double dphi_alpha, double dphi0) const
     { return std::abs(dphi_alpha) <= c2_*std::abs(dphi0); }
 
-    void zoom(line_search_result & res, double alpha_low, double phi_alpha_low, double dphi_alpha_low
+    void zoom(line_search_result & res, atidlas::array const & x0, double alpha_low, double phi_alpha_low, double dphi_alpha_low
               , double alpha_high, double phi_alpha_high, double dphi_alpha_high
               , optimization_context & c, unsigned int eval_offset) const{
         atidlas::array & current_x = res.best_x;
@@ -92,7 +84,7 @@ private:
             }
 
             //Compute phi(alpha) = f(x0 + alpha*p)
-            current_x = x0_ + alpha*p;
+            current_x = x0 + alpha*p;
             c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
             dphi = atidlas::value_scalar(atidlas::dot(current_g, p));
 
@@ -155,17 +147,17 @@ public:
         atidlas::array & current_g = res.best_g;
         atidlas::array const & p = c.p();
 
-        x0_ = c.x();
+        atidlas::array x0 = c.x();
 
         for(unsigned int i = 1 ; i< max_evals; ++i){
             //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
-            current_x = x0_ + alpha*p;
+            current_x = x0 + alpha*p;
             c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
             dphi = atidlas::value_scalar(atidlas::dot(current_g, p));
 
             //Tests sufficient decrease
             if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
-                return zoom(res, alpham1, last_phi, dphim1, alpha, current_phi, dphi, c, i);
+                return zoom(res, x0, alpham1, last_phi, dphim1, alpha, current_phi, dphi, c, i);
             }
 
             //Tests curvature
@@ -175,7 +167,7 @@ public:
                 return;
             }
             if(dphi>=0){
-                return zoom(res, alpha, current_phi, dphi, alpham1, last_phi, dphim1, c, i);
+                return zoom(res, x0, alpha, current_phi, dphi, alpham1, last_phi, dphim1, c, i);
             }
 
             //Updates context_s
@@ -203,10 +195,6 @@ private:
     double c1_;
     /** parameter of the strong-wolfe powell conditions */
     double c2_;
-    /** temporary vector */
-    atidlas::array x0_;
-
-
 };
 
 

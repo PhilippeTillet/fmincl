@@ -45,7 +45,7 @@ struct quasi_newton : public direction
       {
         std::size_t N = c.N();
         atidlas::numeric_type dtype = c.dtype();
-        pH_.reset(new atidlas::array(atidlas::diag(N, dtype)));
+        pH_.reset(new atidlas::array(atidlas::eye(N, N, dtype)));
       }
       atidlas::array& H = *pH_;
 
