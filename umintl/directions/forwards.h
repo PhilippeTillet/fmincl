@@ -13,14 +13,14 @@
 namespace umintl{
 
 
-struct direction{
+  struct direction{
     
     virtual ~direction(){ }
     virtual void operator()(optimization_context &) = 0;
     virtual std::string info() const = 0;
     virtual void init(optimization_context &){ }
     virtual void clean(optimization_context &){ }
-};
+  };
 
 
 }

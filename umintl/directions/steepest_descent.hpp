@@ -18,14 +18,14 @@
 namespace umintl{
 
 
-struct steepest_descent : public direction
-{
+  struct steepest_descent : public direction
+  {
     virtual std::string info() const
     { return "Steepest Descent";  }
 
     void operator()(optimization_context & c)
     { c.p() = -c.g(); }
-};
+  };
 
 }
 

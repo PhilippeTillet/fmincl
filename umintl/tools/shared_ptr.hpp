@@ -12,7 +12,7 @@
                             -----------------
 
    Project Head:    Karl Rupp                   rupp@iue.tuwien.ac.at
-               
+
    (A list of authors and contributors can be found in the PDF manual)
 
    License:         MIT (X11), see file LICENSE in the base directory
@@ -36,14 +36,14 @@ namespace umintl
 
       class count
       {
-        public:
-          count(unsigned int val) : val_(val){ }
-          void dec(){ --val_; }
-          void inc(){ ++val_; }
-          bool is_null(){ return val_ == 0; }
-          unsigned int val(){ return val_; }
-        private:
-          unsigned int val_;
+      public:
+        count(unsigned int val) : val_(val){ }
+        void dec(){ --val_; }
+        void inc(){ ++val_; }
+        bool is_null(){ return val_ == 0; }
+        unsigned int val(){ return val_; }
+      private:
+        unsigned int val_;
       };
 
       struct aux
@@ -77,83 +77,83 @@ namespace umintl
     template<class T>
     class shared_ptr
     {
-        template<class U>
-        friend class shared_ptr;
+      template<class U>
+      friend class shared_ptr;
 
-        detail::aux* pa;
-        T* pt;
+      detail::aux* pa;
+      T* pt;
 
-        void inc() { if(pa) pa->count.inc(); }
+      void inc() { if(pa) pa->count.inc(); }
 
-        void dec()
+      void dec()
+      {
+        if(pa)
         {
-          if(pa)
+          pa->count.dec();
+
+          if(pa->count.is_null())
           {
-            pa->count.dec();
-            
-            if(pa->count.is_null())
-            {
-                pa->destroy();
-                delete pa;
-                pa = NULL;
-            }
+            pa->destroy();
+            delete pa;
+            pa = NULL;
           }
         }
+      }
 
-      public:
+    public:
 
-        shared_ptr() :pa(NULL), pt(NULL) {}
+      shared_ptr() :pa(NULL), pt(NULL) {}
 
-        template<class U, class Deleter>
-        shared_ptr(U* pu, Deleter d) : pa(new detail::auximpl<U, Deleter>(pu, d)), pt(pu) {}
+      template<class U, class Deleter>
+      shared_ptr(U* pu, Deleter d) : pa(new detail::auximpl<U, Deleter>(pu, d)), pt(pu) {}
 
-        template<class U>
-        explicit shared_ptr(U* pu) : pa(new detail::auximpl<U, detail::default_deleter<U> >(pu, detail::default_deleter<U>())), pt(pu) {}
+      template<class U>
+      explicit shared_ptr(U* pu) : pa(new detail::auximpl<U, detail::default_deleter<U> >(pu, detail::default_deleter<U>())), pt(pu) {}
 
-        shared_ptr(const shared_ptr& s) :pa(s.pa), pt(s.pt) { inc(); }
+      shared_ptr(const shared_ptr& s) :pa(s.pa), pt(s.pt) { inc(); }
 
-        template<class U>
-        shared_ptr(const shared_ptr<U>& s) :pa(s.pa), pt(s.pt) { inc(); }
+      template<class U>
+      shared_ptr(const shared_ptr<U>& s) :pa(s.pa), pt(s.pt) { inc(); }
 
-        ~shared_ptr() { dec(); }
+      ~shared_ptr() { dec(); }
 
-        void reset(){
-            shared_ptr<T>().swap(*this);
-        }
+      void reset(){
+        shared_ptr<T>().swap(*this);
+      }
 
-        void reset(T * ptr){
-            shared_ptr<T>(ptr).swap(*this);
-        }
+      void reset(T * ptr){
+        shared_ptr<T>(ptr).swap(*this);
+      }
 
-        void swap(shared_ptr<T> & other){
-            std::swap(pt,other.pt);
-            std::swap(pa, other.pa);
-        }
+      void swap(shared_ptr<T> & other){
+        std::swap(pt,other.pt);
+        std::swap(pa, other.pa);
+      }
 
 
-        shared_ptr& operator=(const shared_ptr& s)
+      shared_ptr& operator=(const shared_ptr& s)
+      {
+        if(this!=&s)
         {
-            if(this!=&s)
-            {
-                dec();
-                pa = s.pa;
-                pt = s.pt;
-                inc();
-            }
-            return *this;
+          dec();
+          pa = s.pa;
+          pt = s.pt;
+          inc();
         }
+        return *this;
+      }
 
-        shared_ptr& operator=(T * p)
-        {
-          *this = shared_ptr(p);
-          return *this;
-        }
+      shared_ptr& operator=(T * p)
+      {
+        *this = shared_ptr(p);
+        return *this;
+      }
 
-        T* get() const {  return pt; }
+      T* get() const {  return pt; }
 
-        T* operator->() const {  return pt; }
+      T* operator->() const {  return pt; }
 
-        T& operator*() const { return *pt; }
+      T& operator*() const { return *pt; }
     };
 
   }

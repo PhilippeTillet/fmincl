@@ -23,17 +23,17 @@
 
 namespace umintl{
 
-/** @brief The strong wolfe-powell line-search class
+  /** @brief The strong wolfe-powell line-search class
  */
 
-struct strong_wolfe_powell : public line_search{
+  struct strong_wolfe_powell : public line_search{
     //Tag
     /** @brief The constructor
      *  @param _max_evals maximum number of value-gradient evaluation in the line-search
      */
     strong_wolfe_powell(unsigned int _max_evals = 40) : line_search(_max_evals) { }
 
-private:
+  private:
     using line_search::max_evals;
 
     /** @brief Sufficient decrease test for the strong wolfe-powell conditions */
@@ -47,74 +47,74 @@ private:
     void zoom(line_search_result & res, atidlas::array const & x0, double alpha_low, double phi_alpha_low, double dphi_alpha_low
               , double alpha_high, double phi_alpha_high, double dphi_alpha_high
               , optimization_context & c, unsigned int eval_offset) const{
-        atidlas::array & current_x = res.best_x;
-        atidlas::array & current_g = res.best_g;
-        double & current_phi = res.best_phi;
-        atidlas::array const & p = c.p();
-        double eps = 1e-8;
-        double alpha = 0;
-        double dphi = 0;
-        bool twice_close_to_boundary=false;
-        for(unsigned int i = eval_offset ; i < max_evals ; ++i){
-            double xmin = std::min(alpha_low,alpha_high);
-            double xmax = std::max(alpha_low,alpha_high);
-            if(alpha_low < alpha_high)
-                alpha = cubicmin(alpha_low, alpha_high, phi_alpha_low, phi_alpha_high, dphi_alpha_low, dphi_alpha_high,xmin,xmax);
-            else
-                alpha = cubicmin(alpha_high, alpha_low, phi_alpha_high, phi_alpha_low, dphi_alpha_high, dphi_alpha_low,xmin,xmax);
-            if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin)  < eps){
-                res.best_alpha = alpha;
-                res.has_failed=true;
-                return;
-            }
-            if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin) < 0.1){
-                if(twice_close_to_boundary){
-                    if(std::abs(alpha - xmax) < std::abs(alpha - xmin))
-                        alpha = xmax - 0.1*(xmax-xmin);
-                    else
-                        alpha = xmin + 0.1*(xmax-xmin);
-                    twice_close_to_boundary = false;
-                }
-                else{
-                    twice_close_to_boundary = true;
-                }
-            }
-            else{
-                twice_close_to_boundary = false;
-            }
-
-            //Compute phi(alpha) = f(x0 + alpha*p)
-            current_x = x0 + alpha*p;
-            c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-            dphi = atidlas::value_scalar(dot(current_g, p));
-
-            if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alpha_low){
-                alpha_high = alpha;
-                phi_alpha_high = current_phi;
-                dphi_alpha_high = dphi;
-
-            }
-            else{
-                if(curvature(dphi, c.dphi_0())){
-                    res.best_alpha = alpha;
-                    res.has_failed = false;
-                    return;
-                }
-                if(dphi*(alpha_high - alpha_low) >= 0){
-                    alpha_high = alpha_low;
-                    phi_alpha_high = phi_alpha_low;
-                    dphi_alpha_high = dphi_alpha_low;
-                }
-                alpha_low = alpha;
-                phi_alpha_low = current_phi;
-                dphi_alpha_low = dphi;
-            }
+      atidlas::array & current_x = res.best_x;
+      atidlas::array & current_g = res.best_g;
+      double & current_phi = res.best_phi;
+      atidlas::array const & p = c.p();
+      double eps = 1e-8;
+      double alpha = 0;
+      double dphi = 0;
+      bool twice_close_to_boundary=false;
+      for(unsigned int i = eval_offset ; i < max_evals ; ++i){
+        double xmin = std::min(alpha_low,alpha_high);
+        double xmax = std::max(alpha_low,alpha_high);
+        if(alpha_low < alpha_high)
+          alpha = cubicmin(alpha_low, alpha_high, phi_alpha_low, phi_alpha_high, dphi_alpha_low, dphi_alpha_high,xmin,xmax);
+        else
+          alpha = cubicmin(alpha_high, alpha_low, phi_alpha_high, phi_alpha_low, dphi_alpha_high, dphi_alpha_low,xmin,xmax);
+        if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin)  < eps){
+          res.best_alpha = alpha;
+          res.has_failed=true;
+          return;
         }
-        res.best_alpha = alpha;
-        res.has_failed=true;
+        if(std::min(xmax - alpha, alpha - xmin)/(xmax - xmin) < 0.1){
+          if(twice_close_to_boundary){
+            if(std::abs(alpha - xmax) < std::abs(alpha - xmin))
+              alpha = xmax - 0.1*(xmax-xmin);
+            else
+              alpha = xmin + 0.1*(xmax-xmin);
+            twice_close_to_boundary = false;
+          }
+          else{
+            twice_close_to_boundary = true;
+          }
+        }
+        else{
+          twice_close_to_boundary = false;
+        }
+
+        //Compute phi(alpha) = f(x0 + alpha*p)
+        current_x = x0 + alpha*p;
+        c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
+        dphi = atidlas::value_scalar(dot(current_g, p));
+
+        if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alpha_low){
+          alpha_high = alpha;
+          phi_alpha_high = current_phi;
+          dphi_alpha_high = dphi;
+
+        }
+        else{
+          if(curvature(dphi, c.dphi_0())){
+            res.best_alpha = alpha;
+            res.has_failed = false;
+            return;
+          }
+          if(dphi*(alpha_high - alpha_low) >= 0){
+            alpha_high = alpha_low;
+            phi_alpha_high = phi_alpha_low;
+            dphi_alpha_high = dphi_alpha_low;
+          }
+          alpha_low = alpha;
+          phi_alpha_low = current_phi;
+          dphi_alpha_low = dphi;
+        }
+      }
+      res.best_alpha = alpha;
+      res.has_failed=true;
     }
 
-public:
+  public:
 
     /** @brief Line-Search procedure call
     *
@@ -123,79 +123,79 @@ public:
     * @param c corresponding optimization context
     */
     void operator()(line_search_result & res, umintl::direction * direction, optimization_context & c) {
-        double alpha;
-        c1_ = 1e-4;
-        if(dynamic_cast<conjugate_gradient* >(direction) || dynamic_cast<steepest_descent* >(direction)){
-            c2_ = 0.2;
-            alpha = atidlas::value_scalar(minimum(float(1), 1/sum(abs(c.g()))));
+      double alpha;
+      c1_ = 1e-4;
+      if(dynamic_cast<conjugate_gradient* >(direction) || dynamic_cast<steepest_descent* >(direction)){
+        c2_ = 0.2;
+        alpha = atidlas::value_scalar(minimum(float(1), 1/sum(abs(c.g()))));
+      }
+      else{
+        c2_ = 0.9;
+        alpha = 1;
+      }
+
+      double alpham1 = 0;
+      double phi_0 = c.val();
+      double dphi_0 = c.dphi_0();
+      double last_phi = phi_0;
+      double dphim1 = dphi_0;
+      double dphi;
+
+
+      double & current_phi = res.best_phi;
+      atidlas::array & current_x = res.best_x;
+      atidlas::array & current_g = res.best_g;
+      atidlas::array const & p = c.p();
+
+      atidlas::array x0 = c.x();
+
+      for(unsigned int i = 1 ; i< max_evals; ++i){
+        //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
+        current_x = x0 + alpha*p;
+        c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
+        dphi = atidlas::value_scalar(dot(current_g, p));
+
+        //Tests sufficient decrease
+        if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
+          return zoom(res, x0, alpham1, last_phi, dphim1, alpha, current_phi, dphi, c, i);
         }
-        else{
-            c2_ = 0.9;
-            alpha = 1;
+
+        //Tests curvature
+        if(curvature(dphi, dphi_0)){
+          res.has_failed = false;
+          res.best_alpha = alpha;
+          return;
+        }
+        if(dphi>=0){
+          return zoom(res, x0, alpha, current_phi, dphi, alpham1, last_phi, dphim1, c, i);
         }
 
-        double alpham1 = 0;
-        double phi_0 = c.val();
-        double dphi_0 = c.dphi_0();
-        double last_phi = phi_0;
-        double dphim1 = dphi_0;
-        double dphi;
+        //Updates context_s
+        double old_alpha = alpha;
+        double old_phi = current_phi;
+        double old_dphi = dphi;
 
-
-        double & current_phi = res.best_phi;
-        atidlas::array & current_x = res.best_x;
-        atidlas::array & current_g = res.best_g;
-        atidlas::array const & p = c.p();
-
-        atidlas::array x0 = c.x();
-
-        for(unsigned int i = 1 ; i< max_evals; ++i){
-            //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
-            current_x = x0 + alpha*p;
-            c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-            dphi = atidlas::value_scalar(dot(current_g, p));
-
-            //Tests sufficient decrease
-            if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){
-                return zoom(res, x0, alpham1, last_phi, dphim1, alpha, current_phi, dphi, c, i);
-            }
-
-            //Tests curvature
-            if(curvature(dphi, dphi_0)){
-                res.has_failed = false;
-                res.best_alpha = alpha;
-                return;
-            }
-            if(dphi>=0){
-                return zoom(res, x0, alpha, current_phi, dphi, alpham1, last_phi, dphim1, c, i);
-            }
-
-            //Updates context_s
-            double old_alpha = alpha;
-            double old_phi = current_phi;
-            double old_dphi = dphi;
-
-            //Cubic extrapolation to chose a new value of ai
-            double xmin = alpha + 0.01*(alpha-alpham1);
-            double xmax = 10*alpha;
-            alpha = cubicmin(alpham1,alpha,last_phi,current_phi,dphim1,dphi,xmin,xmax);
-            if(std::abs(alpha-xmin) < 1e-4 || std::abs(alpha-xmax) < 1e-4)
-                alpha=(xmin+xmax)/2;
-            alpham1 = old_alpha;
-            last_phi = old_phi;
-            dphim1 = old_dphi;
-        }
-        res.best_alpha = alpha;
-        res.has_failed=true;
+        //Cubic extrapolation to chose a new value of ai
+        double xmin = alpha + 0.01*(alpha-alpham1);
+        double xmax = 10*alpha;
+        alpha = cubicmin(alpham1,alpha,last_phi,current_phi,dphim1,dphi,xmin,xmax);
+        if(std::abs(alpha-xmin) < 1e-4 || std::abs(alpha-xmax) < 1e-4)
+          alpha=(xmin+xmax)/2;
+        alpham1 = old_alpha;
+        last_phi = old_phi;
+        dphim1 = old_dphi;
+      }
+      res.best_alpha = alpha;
+      res.has_failed=true;
     }
 
 
-private:
+  private:
     /** parameter of the strong-wolfe powell conditions */
     double c1_;
     /** parameter of the strong-wolfe powell conditions */
     double c2_;
-};
+  };
 
 
 

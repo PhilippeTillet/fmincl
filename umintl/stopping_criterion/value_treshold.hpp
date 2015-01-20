@@ -15,19 +15,19 @@
 
 namespace umintl{
 
-/** @brief parameter-based stopping criterion
+  /** @brief parameter-based stopping criterion
  *
  *  Stops the optimization procedure when the change in value accross two successive iterations  is below a threshold
  */
 
-struct value_treshold : public stopping_criterion{
+  struct value_treshold : public stopping_criterion{
     value_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
 
     bool operator()(optimization_context & c){
-        return std::fabs(c.val() - c.valm1()) < tolerance;
+      return std::fabs(c.val() - c.valm1()) < tolerance;
     }
-};
+  };
 
 }
 

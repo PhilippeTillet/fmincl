@@ -8,33 +8,33 @@
 
 namespace umintl{
 
-/** @brief The model_base class
+  /** @brief The model_base class
  *
  *  The optimization model can be either deterministic or stochastic.  The latter usually corresponds to expected losses
  * evaluated accross a large amount of data points
  */
 
-struct model_base{
+  struct model_base{
     virtual ~model_base(){ }
     virtual bool update(optimization_context & context) = 0;
     virtual value_gradient get_value_gradient_tag() const = 0;
     virtual hessian_vector_product get_hv_product_tag() const = 0;
-};
+  };
 
-/** @brief The deterministic class
+  /** @brief The deterministic class
  *
  *  Assumes the function evaluation is the same at each call. In the case of expected losses, it means all the data-points
  * are always used.
  */
 
-struct deterministic : public model_base {
+  struct deterministic : public model_base {
     bool update(optimization_context &){ return false; }
     value_gradient get_value_gradient_tag() const { return value_gradient(DETERMINISTIC,0,0); }
     hessian_vector_product get_hv_product_tag() const { return hessian_vector_product(DETERMINISTIC,0,0); }
-};
+  };
 
 
-struct mini_batch : public model_base {
+  struct mini_batch : public model_base {
   public:
     mini_batch(std::size_t sample_size, std::size_t dataset_size) : sample_size_(std::min(sample_size,dataset_size)), offset_(0), dataset_size_(dataset_size){ }
     bool update(optimization_context &){
@@ -43,13 +43,13 @@ struct mini_batch : public model_base {
     }
     value_gradient get_value_gradient_tag() const { return value_gradient(STOCHASTIC,dataset_size_,0); }
     hessian_vector_product get_hv_product_tag() const { return hessian_vector_product(STOCHASTIC,sample_size_,offset_); }
-private:
+  private:
     std::size_t sample_size_;
     std::size_t offset_;
     std::size_t dataset_size_;
-};
+  };
 
-/** @brief the dynamically_sampled class
+  /** @brief the dynamically_sampled class
  *
  * Uses the dynamic sampled procedure from Byrd et al. (2012) :
  * "Sample Size Selection in Optimization Methods for Machine Learning"
@@ -59,7 +59,7 @@ private:
  * The parameter tag contains the information on the current offset and sample size
  */
 
-struct dynamically_sampled : public model_base {
+  struct dynamically_sampled : public model_base {
   private:
 
 
@@ -68,35 +68,35 @@ struct dynamically_sampled : public model_base {
     dynamically_sampled(double r, std::size_t S0, std::size_t dataset_size, double theta = 0.5) : N(dataset_size), theta_(theta), r_(r), S(std::min(S0,dataset_size)), offset_(0), H_offset_(0){ }
 
     bool update(optimization_context & c){
-//      {
-//        atidlas::array var(c.N());
-//        atidlas::array tmp(c.N());
-//        atidlas::array Hv(c.N());
-//        BackendType::set_to_value(var,0,c.N());
-//        c.fun().compute_hv_product(c.x(),c.g(),c.g(),Hv,hessian_vector_product(STOCHASTIC,S,offset_));
+      //      {
+      //        atidlas::array var(c.N());
+      //        atidlas::array tmp(c.N());
+      //        atidlas::array Hv(c.N());
+      //        BackendType::set_to_value(var,0,c.N());
+      //        c.fun().compute_hv_product(c.x(),c.g(),c.g(),Hv,hessian_vector_product(STOCHASTIC,S,offset_));
 
-//        for(std::size_t i = 0 ; i < S ; ++i){
-//          //tmp = (grad(xi) - grad(X)).^2
-//          //var += tmp
-//          c.fun().compute_hv_product(c.x(),c.g(),c.g(),tmp,hessian_vector_product(STOCHASTIC,1,offset_+i));
-//          for(std::size_t i = 0 ; i < c.N() ; ++i)
-//            var[i]+=std::pow(tmp[i]-Hv[i],2);
-//        }
-//        BackendType::scale(c.N(),(double)1/(S-1),var);
-//        for(std::size_t i = 0 ; i < c.N() ; ++i)
-//          std::cout << var[i] << " ";
-//        std::cout << std::endl;
+      //        for(std::size_t i = 0 ; i < S ; ++i){
+      //          //tmp = (grad(xi) - grad(X)).^2
+      //          //var += tmp
+      //          c.fun().compute_hv_product(c.x(),c.g(),c.g(),tmp,hessian_vector_product(STOCHASTIC,1,offset_+i));
+      //          for(std::size_t i = 0 ; i < c.N() ; ++i)
+      //            var[i]+=std::pow(tmp[i]-Hv[i],2);
+      //        }
+      //        BackendType::scale(c.N(),(double)1/(S-1),var);
+      //        for(std::size_t i = 0 ; i < c.N() ; ++i)
+      //          std::cout << var[i] << " ";
+      //        std::cout << std::endl;
 
-//        c.fun().compute_hv_product_variance(c.x(),c.g(), var, hv_product_variance(STOCHASTIC,S,offset_));
+      //        c.fun().compute_hv_product_variance(c.x(),c.g(), var, hv_product_variance(STOCHASTIC,S,offset_));
 
-//        for(std::size_t i = 0 ; i < c.N() ; ++i)
-//          std::cout << var[i] << " ";
-//        std::cout << std::endl;
+      //        for(std::size_t i = 0 ; i < c.N() ; ++i)
+      //          std::cout << var[i] << " ";
+      //        std::cout << std::endl;
 
-//        BackendType::delete_if_dynamically_allocated(var);
-//        BackendType::delete_if_dynamically_allocated(tmp);
-//        BackendType::delete_if_dynamically_allocated(Hv);
-//      }
+      //        BackendType::delete_if_dynamically_allocated(var);
+      //        BackendType::delete_if_dynamically_allocated(tmp);
+      //        BackendType::delete_if_dynamically_allocated(Hv);
+      //      }
 
 
       if(S==N){
@@ -140,14 +140,14 @@ struct dynamically_sampled : public model_base {
     hessian_vector_product get_hv_product_tag() const {
       return hessian_vector_product(STOCHASTIC,r_*S,H_offset_+offset_);
     }
-private:
+  private:
     std::size_t N;
     double theta_;
     double r_;
     std::size_t S;
     std::size_t offset_;
     std::size_t H_offset_;
-};
+  };
 
 
 }

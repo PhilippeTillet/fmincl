@@ -23,8 +23,8 @@
 namespace umintl{
 
 
-struct quasi_newton : public direction
-{
+  struct quasi_newton : public direction
+  {
     virtual std::string info() const
     { return "Quasi-Newton"; }
 
@@ -49,16 +49,16 @@ struct quasi_newton : public direction
       double gamma = 1;
 
       {
-          Hy = atidlas::dot(H, y);
-          double yHy = atidlas::value_scalar(dot(y, Hy));
-          double sg = atidlas::value_scalar(dot(s, c.gm1()));
-          double gHy = atidlas::value_scalar(dot(c.gm1(), Hy));
-          if(ys/yHy>1)
-            gamma = ys/yHy;
-          else if(sg/gHy<1)
-            gamma = sg/gHy;
-          else
-            gamma = 1;
+        Hy = atidlas::dot(H, y);
+        double yHy = atidlas::value_scalar(dot(y, Hy));
+        double sg = atidlas::value_scalar(dot(s, c.gm1()));
+        double gHy = atidlas::value_scalar(dot(c.gm1(), Hy));
+        if(ys/yHy>1)
+          gamma = ys/yHy;
+        else if(sg/gHy<1)
+          gamma = sg/gHy;
+        else
+          gamma = 1;
       }
 
       H*=gamma;
@@ -72,9 +72,9 @@ struct quasi_newton : public direction
       c.p() = - atidlas::dot(H, c.g());
     }
 
-private:
+  private:
     tools::shared_ptr<atidlas::array> pH_;
-};
+  };
 
 
 }

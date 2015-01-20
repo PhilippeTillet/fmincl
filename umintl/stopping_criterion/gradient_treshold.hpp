@@ -16,18 +16,18 @@
 
 namespace umintl{
 
-/** @brief Gradient-based stopping criterion
+  /** @brief Gradient-based stopping criterion
  *
  *  Stops the optimization procedure when the euclidian norm of the gradient accross two successive iterations  is below a threshold
  */
 
-struct gradient_treshold : public stopping_criterion{
+  struct gradient_treshold : public stopping_criterion{
     gradient_treshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
 
     bool operator()(optimization_context & c)
     { return atidlas::value_scalar(norm(c.g()) < float(tolerance)); }
-};
+  };
 
 
 

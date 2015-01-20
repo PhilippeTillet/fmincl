@@ -37,29 +37,29 @@ namespace umintl{
 
   
   struct line_search_result{
-    private:
-      //NonCopyable, we do not want useless temporaries here
-      line_search_result(line_search_result const &) : best_x(0, atidlas::FLOAT_TYPE), best_g(0, atidlas::FLOAT_TYPE){ }
-      line_search_result & operator=(line_search_result const &);
-    public:
-      line_search_result(std::size_t dim) : has_failed(false), best_x(dim, atidlas::FLOAT_TYPE), best_g(dim, atidlas::FLOAT_TYPE){ }
-      bool has_failed;
-      double best_alpha;
-      double best_phi;
-      atidlas::array best_x;
-      atidlas::array best_g;
+  private:
+    //NonCopyable, we do not want useless temporaries here
+    line_search_result(line_search_result const &) : best_x(0, atidlas::FLOAT_TYPE), best_g(0, atidlas::FLOAT_TYPE){ }
+    line_search_result & operator=(line_search_result const &);
+  public:
+    line_search_result(std::size_t dim) : has_failed(false), best_x(dim, atidlas::FLOAT_TYPE), best_g(dim, atidlas::FLOAT_TYPE){ }
+    bool has_failed;
+    double best_alpha;
+    double best_phi;
+    atidlas::array best_x;
+    atidlas::array best_g;
   };
 
   
   struct line_search{
-      
-      line_search(unsigned int _max_evals) : max_evals(_max_evals){ }
-      virtual ~line_search(){ }
-      virtual void init(optimization_context &){ }
-      virtual void clean(optimization_context &){ }
-      virtual void operator()(line_search_result & res,umintl::direction * direction, optimization_context & context) = 0;
+
+    line_search(unsigned int _max_evals) : max_evals(_max_evals){ }
+    virtual ~line_search(){ }
+    virtual void init(optimization_context &){ }
+    virtual void clean(optimization_context &){ }
+    virtual void operator()(line_search_result & res,umintl::direction * direction, optimization_context & context) = 0;
   protected:
-      unsigned int max_evals;
+    unsigned int max_evals;
   };
 
 

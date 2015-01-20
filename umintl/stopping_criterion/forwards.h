@@ -14,14 +14,14 @@
 
 namespace umintl{
 
-/** @brief Base class for a stopping criterion */
+  /** @brief Base class for a stopping criterion */
 
-struct stopping_criterion{
+  struct stopping_criterion{
     virtual ~stopping_criterion(){ }
     virtual void init(optimization_context &){ }
     virtual void clean(optimization_context &){ }
     virtual bool operator()(optimization_context & context) = 0;
-};
+  };
 
 
 
