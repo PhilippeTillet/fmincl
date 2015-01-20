@@ -49,13 +49,9 @@ private:
 
 void print_solution(umintl::optimization_result const & result, atidlas::array const& S, std::size_t D)
 {
-    std::cout << "Optimization complete ! " << std::endl;
-    std::cout << "Solution : " << std::endl;
-    std::cout << S << std::endl;
-    std::cout << std::endl;
-    std::cout << "Solution's value : " << result.f << std::endl;
+    std::cout << "Solution : "  << S << std::endl;
+    std::cout << "Value : " << result.f << std::endl;
     std::cout << "Found in " << result.iteration << " iterations / " << result.n_functions_eval << " functions eval" << " / " << result.n_gradient_eval << " gradient eval " << std::endl;
-    std::cout << std::endl;
 }
 
 int main(){
@@ -80,17 +76,15 @@ int main(){
     umintl::minimizer minimizer;
     rosenbrock objective(D);
     minimizer.max_iter = 100000;
-    minimizer.verbosity_level=2;
+    minimizer.verbosity_level=0;
     umintl::optimization_result result;
 
-    std::cout << std::endl;
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Steepest descent" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::steepest_descent();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
+//    std::cout << "--------------------" << std::endl;
+//    std::cout << "Steepest descent" << std::endl;
+//    std::cout << "--------------------" << std::endl;
+//    minimizer.direction = new umintl::steepest_descent();
+//    result = minimizer(S,objective,X0,D);
+//    print_solution(result,S,D);
 
 //    std::cout << "--------------------" << std::endl;
 //    std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
@@ -107,18 +101,18 @@ int main(){
 //    print_solution(result,S,D);
 
 //    std::cout << "--------------------" << std::endl;
-//    std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
+//    std::cout << "L-BFGS [ memory = 8 ]" << std::endl;
 //    std::cout << "--------------------" << std::endl;
 //    minimizer.direction = new umintl::low_memory_quasi_newton(8);
 //    result = minimizer(S,objective,X0,D);
 //    print_solution(result,S,D);
 
-//    std::cout << "--------------------" << std::endl;
-//    std::cout << "Truncated Newton" << std::endl;
-//    std::cout << "--------------------" << std::endl;
-//    minimizer.direction = new umintl::truncated_newton();
-//    result = minimizer(S,objective,X0,D);
-//    print_solution(result,S,D);
+    std::cout << "--------------------" << std::endl;
+    std::cout << "Truncated Newton" << std::endl;
+    std::cout << "--------------------" << std::endl;
+    minimizer.direction = new umintl::truncated_newton();
+    result = minimizer(S,objective,X0,D);
+    print_solution(result,S,D);
 
 //    std::cout << std::endl;
 //    std::cout << "--------------------" << std::endl;

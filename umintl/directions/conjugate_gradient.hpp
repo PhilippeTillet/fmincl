@@ -42,7 +42,7 @@ public:
 
 private:
     atidlas::array_expression update_polak_ribiere(optimization_context & c)
-    { return atidlas::max(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), 0); }
+    { return atidlas::maximum(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), (float)0); }
 
     atidlas::array_expression update_fletcher_reeves(optimization_context & c)
     { return atidlas::dot(c.g(), c.g())/atidlas::dot(c.gm1(), c.gm1()); }
@@ -50,7 +50,7 @@ private:
     atidlas::array_expression update_impl(optimization_context & c){
         switch (update) {
             case tag::conjugate_gradient::UPDATE_POLAK_RIBIERE: return update_polak_ribiere(c);
-        case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return atidlas::min(update_polak_ribiere(c), update_fletcher_reeves(c));
+        case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return atidlas::minimum(update_polak_ribiere(c), update_fletcher_reeves(c));
             case tag::conjugate_gradient::UPDATE_FLETCHER_REEVES: return update_fletcher_reeves(c);
             default: throw exceptions::incompatible_parameters("Unsupported conjugate gradient update");
         }
@@ -62,7 +62,7 @@ private:
 
     bool restart_not_orthogonal(optimization_context & c){
         double threshold = 0.1;
-        double ratio = atidlas::value_scalar(atidlas::abs(dot(c.g(), c.gm1()))/atidlas::dot(c.g(), c.g()));
+        double ratio = atidlas::value_scalar(abs(dot(c.g(), c.gm1()))/atidlas::dot(c.g(), c.g()));
         return ratio > threshold;
     }
 

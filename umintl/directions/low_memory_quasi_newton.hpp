@@ -22,13 +22,13 @@ namespace umintl{
 
 
 struct low_memory_quasi_newton : public direction{
-    low_memory_quasi_newton(unsigned int _m = 4) : m(_m){ }
+    low_memory_quasi_newton(unsigned int _m = 4) : m(_m), n_valid_pairs_(0){ }
     unsigned int m;
 
 private:
 
     struct storage_pair{
-        storage_pair(std::size_t N, atidlas::numeric_type dtype) : s(atidlas::zeros(N, dtype)), y(atidlas::zeros(N, dtype))
+        storage_pair(std::size_t N, atidlas::numeric_type dtype) : s(atidlas::zeros(N, 1, dtype)), y(atidlas::zeros(N, 1, dtype))
         { }
         atidlas::array s;
         atidlas::array y;
@@ -38,9 +38,6 @@ private:
     atidlas::array & y(std::size_t i) { return memory_[i].y; }
 
 public:
-
-    virtual void clean(optimization_context &)
-    { n_valid_pairs_ = 0; }
 
     virtual std::string info() const
     { return "Low memory quasi-newton"; }
@@ -74,16 +71,16 @@ public:
 
         int i = 0;
         for(; i < (int)n_valid_pairs_ ; ++i){
-            rhos[i] = atidlas::value_scalar(1/atidlas::dot(y(i),s(i)));
-            alphas[i] = atidlas::value_scalar(rhos[i]*atidlas::dot(s(i), q));
+            rhos[i] = atidlas::value_scalar(1/dot(y(i),s(i)));
+            alphas[i] = atidlas::value_scalar(rhos[i]*dot(s(i), q));
             q = q - alphas[i]*y(i);
         }
-        double scale = atidlas::value_scalar(atidlas::dot(s(0), y(0))/atidlas::dot(y(0),y(0)));
+        double scale = atidlas::value_scalar(dot(s(0), y(0))/dot(y(0),y(0)));
 
         atidlas::array r(scale*q);
         --i;
         for(; i >=0 ; --i){
-            double beta = atidlas::value_scalar(rhos[i]*atidlas::dot(y(i), r));
+            double beta = atidlas::value_scalar(rhos[i]*dot(y(i), r));
             r = r + (alphas[i] - beta)*s(i);
         }
 

@@ -64,8 +64,8 @@ struct truncated_newton : public direction{
           std::size_t offset = c_.model().get_hv_product_tag().offset;
           atidlas::array var(c_.N(), c_.dtype());
           c_.fun().compute_hv_product_variance(c_.x(),p0,var,hv_product_variance(STOCHASTIC,H,offset));
-          double nrm2p0 = atidlas::value_scalar(atidlas::norm(p0, 2));
-          double nrm1var = atidlas::value_scalar(atidlas::norm(var, 1));
+          double nrm2p0 = atidlas::value_scalar(norm(p0, 2));
+          double nrm1var = atidlas::value_scalar(norm(var, 1));
           gamma_ = nrm1var/(H*std::pow(nrm2p0,2));
         }
 
@@ -95,7 +95,7 @@ struct truncated_newton : public direction{
 
       linear::conjugate_gradient solver(max_iter, new compute_Ab(c.x(), c.g(),c.model(),c.fun()));
       if(stop==tag::truncated_newton::STOP_RESIDUAL_TOLERANCE){
-          double nrm2g = atidlas::value_scalar(atidlas::norm(c.g(),2));
+          double nrm2g = atidlas::value_scalar(norm(c.g(),2));
           double tol = std::min(0.5,sqrt(nrm2g))*nrm2g;
           solver.stop = new linear::conjugate_gradient_detail::residual_norm(tol);
       }

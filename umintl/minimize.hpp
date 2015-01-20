@@ -154,17 +154,16 @@ namespace umintl{
 
                 (*current_direction)(c);
 
-                c.dphi_0() = atidlas::value_scalar(atidlas::dot(c.p(), c.g()));
+                c.dphi_0() = atidlas::value_scalar(dot(c.p(), c.g()));
                 //Not a descent direction...
                 if(c.dphi_0()>0){
                     //current_direction->reset(c);
                     current_direction = steepest_descent;
                     (*current_direction)(c);
-                    c.dphi_0() = atidlas::value_scalar(atidlas::dot(c.p(), c.g()));
+                    c.dphi_0() = atidlas::value_scalar(dot(c.p(), c.g()));
                 }
 
                 (*line_search)(search_res, current_direction.get(), c);
-
                 if(search_res.has_failed){
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, c);
                 }

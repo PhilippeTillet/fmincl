@@ -21,11 +21,8 @@ namespace umintl{
     namespace conjugate_gradient_detail{
 
     /** @brief Base class for a stopping criterion for the linear conjugate gradient */
-      
-      struct stopping_criterion{
-        private:
-          
-          
+      struct stopping_criterion
+      {
         public:
           virtual ~stopping_criterion(){ }
           virtual void init(atidlas::array const & p0) = 0;
@@ -37,16 +34,13 @@ namespace umintl{
       *
       *  Stops the Linear CG when the norm of the residual is below a threshold
       */
-      
-      struct residual_norm : public stopping_criterion{
-        private:
-          
-          
+      struct residual_norm : public stopping_criterion
+      {
         public:
           residual_norm(double eps = 1e-4) : eps_(eps){ }
           void init(atidlas::array const & ){ }
           void update(atidlas::array const & ){ }
-          bool operator()(double rsn){ return atidlas::sqrt(rsn) < eps_; }
+          bool operator()(double rsn){ return std::sqrt(rsn) < eps_; }
         private:
           double eps_;
       };
@@ -114,18 +108,19 @@ namespace umintl{
         conjugate_gradient(std::size_t _max_iter
                           , conjugate_gradient_detail::compute_Ab * _compute_Ab
                           , conjugate_gradient_detail::stopping_criterion * _stop = new umintl::linear::conjugate_gradient_detail::residual_norm)
-          : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop), r(0, atidlas::FLOAT_TYPE), p(0, atidlas::FLOAT_TYPE), Ap(0, atidlas::FLOAT_TYPE), best_x(0, atidlas::FLOAT_TYPE){ }
+          : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop){ }
 
 
         optimization_result operator()(std::size_t N, atidlas::array const & x0, atidlas::array const & b, atidlas::array & x)
         {
-          best_x.resize(N);
-          r.resize(N);
-          p.resize(N);
-          Ap.resize(N);
+          atidlas::numeric_type dtype = x0.dtype();
+          atidlas::array r(atidlas::zeros(N, 1, dtype));
+          atidlas::array p(atidlas::zeros(N, 1, dtype));
+          atidlas::array Ap(atidlas::zeros(N, 1, dtype));
+          atidlas::array best_x(atidlas::zeros(N, 1, dtype));
 
-          double nrm_b = atidlas::value_scalar(atidlas::norm(b));
-          double nrm_x0 = atidlas::value_scalar(atidlas::norm(x0));
+          double nrm_b = atidlas::value_scalar(norm(b));
+          double nrm_x0 = atidlas::value_scalar(norm(x0));
           double lambda = 0;
           x = x0;
           if(nrm_x0==0)
@@ -138,12 +133,12 @@ namespace umintl{
           p = r;
           stop->init(p);
 
-          double rso = atidlas::value_scalar(atidlas::dot(r, r));
+          double rso = atidlas::value_scalar(dot(r, r));
 
           for(std::size_t i = 0 ; i < max_iter ; ++i){
             (*compute_Ab)(p,Ap);
             Ap += lambda*nrm_b*b;
-            double pAp = atidlas::value_scalar(atidlas::dot(p, Ap));
+            double pAp = atidlas::value_scalar(dot(p, Ap));
             if(pAp<0)
             {
               x = best_x;
@@ -159,7 +154,7 @@ namespace umintl{
 
             //double quadval = -0.5*(atidlas::dot(x,r) + atidlas::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
 
-            double rsn = atidlas::value_scalar(atidlas::dot(r,r));
+            double rsn = atidlas::value_scalar(dot(r,r));
             if((*stop)(rsn))
               return clear_terminate(SUCCESS,i);
             p = r + rsn/rso*p;
@@ -171,11 +166,6 @@ namespace umintl{
         std::size_t max_iter;
         tools::shared_ptr<linear::conjugate_gradient_detail::compute_Ab > compute_Ab;
         tools::shared_ptr<linear::conjugate_gradient_detail::stopping_criterion > stop;
-      private:
-        atidlas::array r;
-        atidlas::array p;
-        atidlas::array Ap;
-        atidlas::array best_x;
     };
 
   }

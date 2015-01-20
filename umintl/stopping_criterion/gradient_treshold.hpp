@@ -26,7 +26,7 @@ struct gradient_treshold : public stopping_criterion{
     double tolerance;
 
     bool operator()(optimization_context & c)
-    { return atidlas::value_scalar(atidlas::norm(c.g()) < tolerance); }
+    { return atidlas::value_scalar(norm(c.g()) < float(tolerance)); }
 };
 
 

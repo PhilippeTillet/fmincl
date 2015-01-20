@@ -108,8 +108,8 @@ struct dynamically_sampled : public model_base {
         c.fun().compute_gradient_variance(c.x(),var,gradient_variance(STOCHASTIC,S,offset_));
 
         //is_descent_direction = norm1(var)/S*[(N-S)/(N-1)] <= theta^2*norm2(grad)^2
-        double nrm1var = atidlas::value_scalar(atidlas::sum(abs(var)));
-        double nrm2grad = atidlas::value_scalar(atidlas::norm(c.g()));
+        double nrm1var = atidlas::value_scalar(sum(abs(var)));
+        double nrm2grad = atidlas::value_scalar(norm(c.g()));
         //std::gradient_variance << nrm1var*scal << " " << std::pow(theta_,2)*std::pow(nrm2grad,2) << std::endl;
         bool is_descent_direction = (nrm1var/S <= (std::pow(theta_,2)*std::pow(nrm2grad,2)));
 

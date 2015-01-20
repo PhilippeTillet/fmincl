@@ -86,7 +86,7 @@ private:
             //Compute phi(alpha) = f(x0 + alpha*p)
             current_x = x0 + alpha*p;
             c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-            dphi = atidlas::value_scalar(atidlas::dot(current_g, p));
+            dphi = atidlas::value_scalar(dot(current_g, p));
 
             if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alpha_low){
                 alpha_high = alpha;
@@ -127,7 +127,7 @@ public:
         c1_ = 1e-4;
         if(dynamic_cast<conjugate_gradient* >(direction) || dynamic_cast<steepest_descent* >(direction)){
             c2_ = 0.2;
-            alpha = atidlas::value_scalar(atidlas::min(1, 1/sum(abs(c.g()))));
+            alpha = atidlas::value_scalar(minimum(float(1), 1/sum(abs(c.g()))));
         }
         else{
             c2_ = 0.9;
@@ -153,7 +153,7 @@ public:
             //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
             current_x = x0 + alpha*p;
             c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-            dphi = atidlas::value_scalar(atidlas::dot(current_g, p));
+            dphi = atidlas::value_scalar(dot(current_g, p));
 
             //Tests sufficient decrease
             if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){

@@ -39,14 +39,10 @@ struct quasi_newton : public direction
       atidlas::array s(c.x() - c.xm1());
       atidlas::array y(c.g() - c.gm1());
 
-      double ys = atidlas::value_scalar(atidlas::dot(s, y));
+      double ys = atidlas::value_scalar(dot(s, y));
 
       if(pH_.get()==NULL)
-      {
-        std::size_t N = c.N();
-        atidlas::numeric_type dtype = c.dtype();
-        pH_.reset(new atidlas::array(atidlas::eye(N, N, dtype)));
-      }
+        pH_.reset(new atidlas::array(atidlas::eye(c.N(), c.N(), c.dtype())));
       atidlas::array& H = *pH_;
 
       atidlas::array Hy(c.N(), c.dtype());
@@ -54,9 +50,9 @@ struct quasi_newton : public direction
 
       {
           Hy = atidlas::dot(H, y);
-          double yHy = atidlas::value_scalar(atidlas::dot(y, Hy));
-          double sg = atidlas::value_scalar(atidlas::dot(s, c.gm1()));
-          double gHy = atidlas::value_scalar(atidlas::dot(c.gm1(), Hy));
+          double yHy = atidlas::value_scalar(dot(y, Hy));
+          double sg = atidlas::value_scalar(dot(s, c.gm1()));
+          double gHy = atidlas::value_scalar(dot(c.gm1(), Hy));
           if(ys/yHy>1)
             gamma = ys/yHy;
           else if(sg/gHy<1)
@@ -67,7 +63,7 @@ struct quasi_newton : public direction
 
       H*=gamma;
       Hy = atidlas::dot(H, y);
-      double yHy = atidlas::value_scalar(atidlas::dot(y, Hy));
+      double yHy = atidlas::value_scalar(dot(y, Hy));
 
       //quasi_newton UPDATE
       double alpha = -1/ys;
