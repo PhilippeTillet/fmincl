@@ -42,7 +42,7 @@ namespace umintl{
 
   private:
     atidlas::array_expression update_polak_ribiere(optimization_context & c)
-    { return atidlas::maximum(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), (float)0); }
+    { return atidlas::maximum(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), atidlas::value_scalar(0, c.dtype())); }
 
     atidlas::array_expression update_fletcher_reeves(optimization_context & c)
     { return atidlas::dot(c.g(), c.g())/atidlas::dot(c.gm1(), c.gm1()); }

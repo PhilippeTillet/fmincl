@@ -127,7 +127,7 @@ namespace umintl{
       c1_ = 1e-4;
       if(dynamic_cast<conjugate_gradient* >(direction) || dynamic_cast<steepest_descent* >(direction)){
         c2_ = 0.2;
-        alpha = atidlas::value_scalar(minimum(float(1), 1/sum(abs(c.g()))));
+        alpha = atidlas::value_scalar(minimum(atidlas::value_scalar(1, c.dtype()), 1/sum(abs(c.g()))));
       }
       else{
         c2_ = 0.9;
