@@ -11,7 +11,7 @@
 #include "umintl/optimization_context.hpp"
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/directions/forwards.h"
-#include "atidlas/array.h"
+#include "isaac/array.h"
 
 namespace umintl{
 
@@ -41,16 +41,16 @@ namespace umintl{
 
 
   private:
-    atidlas::array_expression update_polak_ribiere(optimization_context & c)
-    { return atidlas::maximum(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), atidlas::value_scalar(0, c.dtype())); }
+    isaac::array_expression update_polak_ribiere(optimization_context & c)
+    { return isaac::maximum(dot(c.g(), c.g() - c.gm1())/dot(c.gm1(), c.gm1()), isaac::value_scalar(0, c.dtype())); }
 
-    atidlas::array_expression update_fletcher_reeves(optimization_context & c)
-    { return atidlas::dot(c.g(), c.g())/atidlas::dot(c.gm1(), c.gm1()); }
+    isaac::array_expression update_fletcher_reeves(optimization_context & c)
+    { return isaac::dot(c.g(), c.g())/isaac::dot(c.gm1(), c.gm1()); }
 
-    atidlas::array_expression update_impl(optimization_context & c){
+    isaac::array_expression update_impl(optimization_context & c){
       switch (update) {
       case tag::conjugate_gradient::UPDATE_POLAK_RIBIERE: return update_polak_ribiere(c);
-      case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return atidlas::minimum(update_polak_ribiere(c), update_fletcher_reeves(c));
+      case tag::conjugate_gradient::UPDATE_GILBERT_NOCEDAL: return isaac::minimum(update_polak_ribiere(c), update_fletcher_reeves(c));
       case tag::conjugate_gradient::UPDATE_FLETCHER_REEVES: return update_fletcher_reeves(c);
       default: throw exceptions::incompatible_parameters("Unsupported conjugate gradient update");
       }
@@ -62,7 +62,7 @@ namespace umintl{
 
     bool restart_not_orthogonal(optimization_context & c){
       double threshold = 0.1;
-      double ratio = atidlas::value_scalar(abs(dot(c.g(), c.gm1()))/atidlas::dot(c.g(), c.g()));
+      double ratio = isaac::value_scalar(abs(dot(c.g(), c.gm1()))/isaac::dot(c.g(), c.g()));
       return ratio > threshold;
     }
 
@@ -90,7 +90,7 @@ namespace umintl{
       if(restart_impl(c))
         beta = 0;
       else
-        beta = atidlas::value_scalar(update_impl(c));
+        beta = isaac::value_scalar(update_impl(c));
       c.p() = beta*c.p() - c.g();
     }
 

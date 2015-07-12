@@ -88,7 +88,7 @@ namespace umintl{
          *
          *  @return Optimization result
          */
-    optimization_result terminate(optimization_result::termination_cause_type termination_cause, atidlas::array & res, optimization_context & context){
+    optimization_result terminate(optimization_result::termination_cause_type termination_cause, isaac::array & res, optimization_context & context){
       optimization_result result;
       res = context.x();
       result.f = context.val();
@@ -118,7 +118,7 @@ namespace umintl{
 
   public:
     template<class Fun>
-    optimization_result operator()(atidlas::array & res, Fun & fun, atidlas::array const & x0, std::size_t N){
+    optimization_result operator()(isaac::array & res, Fun & fun, isaac::array const & x0, std::size_t N){
 
       tools::shared_ptr<umintl::direction > steepest_descent(new umintl::steepest_descent());
       line_search_result search_res(N);
@@ -154,13 +154,13 @@ namespace umintl{
 
         (*current_direction)(c);
 
-        c.dphi_0() = atidlas::value_scalar(dot(c.p(), c.g()));
+        c.dphi_0() = isaac::value_scalar(dot(c.p(), c.g()));
         //Not a descent direction...
         if(c.dphi_0()>0){
           //current_direction->reset(c);
           current_direction = steepest_descent;
           (*current_direction)(c);
-          c.dphi_0() = atidlas::value_scalar(dot(c.p(), c.g()));
+          c.dphi_0() = isaac::value_scalar(dot(c.p(), c.g()));
         }
 
         (*line_search)(search_res, current_direction.get(), c);

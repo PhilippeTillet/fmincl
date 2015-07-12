@@ -39,15 +39,15 @@ namespace umintl{
   struct line_search_result{
   private:
     //NonCopyable, we do not want useless temporaries here
-    line_search_result(line_search_result const &) : best_x(0, atidlas::FLOAT_TYPE), best_g(0, atidlas::FLOAT_TYPE){ }
+    line_search_result(line_search_result const &) : best_x(0, isaac::FLOAT_TYPE), best_g(0, isaac::FLOAT_TYPE){ }
     line_search_result & operator=(line_search_result const &);
   public:
-    line_search_result(std::size_t dim) : has_failed(false), best_x(dim, atidlas::FLOAT_TYPE), best_g(dim, atidlas::FLOAT_TYPE){ }
+    line_search_result(std::size_t dim) : has_failed(false), best_x(dim, isaac::FLOAT_TYPE), best_g(dim, isaac::FLOAT_TYPE){ }
     bool has_failed;
     double best_alpha;
     double best_phi;
-    atidlas::array best_x;
-    atidlas::array best_g;
+    isaac::array best_x;
+    isaac::array best_g;
   };
 
   

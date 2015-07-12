@@ -13,7 +13,7 @@
 class custom_stop : public umintl::stopping_criterion{
 public:
     bool operator()(umintl::optimization_context & context){
-        atidlas::array const & X = context.x(); //Obtain current iterate
+        isaac::array const & X = context.x(); //Obtain current iterate
         double X0 = X[0];
         return std::abs(X0 - 1)<1e-6;
     }
@@ -23,7 +23,7 @@ class rosenbrock{
 public:
     rosenbrock(std::size_t N) : N_(N){ }
 
-    void operator()(atidlas::array const & x, double& val, atidlas::array& grad, umintl::value_gradient) {
+    void operator()(isaac::array const & x, double& val, isaac::array& grad, umintl::value_gradient) {
         double res=0;
         for(unsigned int i=0 ; i<N_-1;++i){
             double xi = x[i];
@@ -47,7 +47,7 @@ private:
     std::size_t N_;
 };
 
-void print_solution(umintl::optimization_result const & result, atidlas::array const& S, std::size_t D)
+void print_solution(umintl::optimization_result const & result, isaac::array const& S, std::size_t D)
 {
     std::cout << "Solution : "  << S << std::endl;
     std::cout << "Value : " << result.f << std::endl;
@@ -58,15 +58,15 @@ int main(){
     srand(0);
 
     unsigned int D = 10;
-    atidlas::numeric_type dtype = atidlas::DOUBLE_TYPE;
+    isaac::numeric_type dtype = isaac::DOUBLE_TYPE;
 
     std::cout << "====================" << std::endl;
     std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
     std::cout << "Dimension : " << D << std::endl;
     std::cout << "====================" << std::endl;
 
-    atidlas::array X0(D, dtype);
-    atidlas::array S(D, dtype);
+    isaac::array X0(D, dtype);
+    isaac::array S(D, dtype);
 
     for(std::size_t i = 0 ; i < D ; ++i)
         X0[i] = 0;

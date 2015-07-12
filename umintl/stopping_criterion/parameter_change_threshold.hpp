@@ -24,7 +24,7 @@ namespace umintl{
     parameter_change_threshold(double _tolerance = 1e-5) : tolerance(_tolerance){ }
     double tolerance;
     bool operator()(optimization_context & c)
-    { return  atidlas::norm(c.x() - c.xm1()) < tolerance; }
+    { return  isaac::norm(c.x() - c.xm1()) < tolerance; }
   };
 
 }

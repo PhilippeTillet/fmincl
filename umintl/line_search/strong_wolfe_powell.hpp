@@ -44,13 +44,13 @@ namespace umintl{
     bool curvature(double dphi_alpha, double dphi0) const
     { return std::abs(dphi_alpha) <= c2_*std::abs(dphi0); }
 
-    void zoom(line_search_result & res, atidlas::array const & x0, double alpha_low, double phi_alpha_low, double dphi_alpha_low
+    void zoom(line_search_result & res, isaac::array const & x0, double alpha_low, double phi_alpha_low, double dphi_alpha_low
               , double alpha_high, double phi_alpha_high, double dphi_alpha_high
               , optimization_context & c, unsigned int eval_offset) const{
-      atidlas::array & current_x = res.best_x;
-      atidlas::array & current_g = res.best_g;
+      isaac::array & current_x = res.best_x;
+      isaac::array & current_g = res.best_g;
       double & current_phi = res.best_phi;
-      atidlas::array const & p = c.p();
+      isaac::array const & p = c.p();
       double eps = 1e-8;
       double alpha = 0;
       double dphi = 0;
@@ -86,7 +86,7 @@ namespace umintl{
         //Compute phi(alpha) = f(x0 + alpha*p)
         current_x = x0 + alpha*p;
         c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-        dphi = atidlas::value_scalar(dot(current_g, p));
+        dphi = isaac::value_scalar(dot(current_g, p));
 
         if(!sufficient_decrease(alpha,current_phi, c.val()) || current_phi >= phi_alpha_low){
           alpha_high = alpha;
@@ -127,7 +127,7 @@ namespace umintl{
       c1_ = 1e-4;
       if(dynamic_cast<conjugate_gradient* >(direction) || dynamic_cast<steepest_descent* >(direction)){
         c2_ = 0.2;
-        alpha = atidlas::value_scalar(minimum(atidlas::value_scalar(1, c.dtype()), 1/sum(abs(c.g()))));
+        alpha = isaac::value_scalar(minimum(isaac::value_scalar(1, c.dtype()), 1/sum(abs(c.g()))));
       }
       else{
         c2_ = 0.9;
@@ -143,17 +143,17 @@ namespace umintl{
 
 
       double & current_phi = res.best_phi;
-      atidlas::array & current_x = res.best_x;
-      atidlas::array & current_g = res.best_g;
-      atidlas::array const & p = c.p();
+      isaac::array & current_x = res.best_x;
+      isaac::array & current_g = res.best_g;
+      isaac::array const & p = c.p();
 
-      atidlas::array x0 = c.x();
+      isaac::array x0 = c.x();
 
       for(unsigned int i = 1 ; i< max_evals; ++i){
         //Compute phi(alpha) = f(x0 + alpha*p) ; dphi = grad(phi)_alpha'*p
         current_x = x0 + alpha*p;
         c.fun().compute_value_gradient(current_x,current_phi,current_g,c.model().get_value_gradient_tag());
-        dphi = atidlas::value_scalar(dot(current_g, p));
+        dphi = isaac::value_scalar(dot(current_g, p));
 
         //Tests sufficient decrease
         if(!sufficient_decrease(alpha, current_phi, phi_0) || (i==1 && current_phi >= last_phi)){

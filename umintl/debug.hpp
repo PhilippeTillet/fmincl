@@ -10,7 +10,7 @@
 
 
 #include "tools/shared_ptr.hpp"
-#include "atidlas/array.h"
+#include "isaac/array.h"
 #include "umintl/model_base.hpp"
 #include <iostream>
 
@@ -19,12 +19,12 @@
 namespace umintl{
 
   template<class FUN>
-  double check_grad(FUN & fun, atidlas::array const & x0, double h)
+  double check_grad(FUN & fun, isaac::array const & x0, double h)
   {
-    atidlas::array x(x0);
-    atidlas::array fgrad(N, x.dtype());
-    atidlas::array dummy(N, x.dtype());
-    atidlas::array numgrad(N, x.dtype());
+    isaac::array x(x0);
+    isaac::array fgrad(N, x.dtype());
+    isaac::array dummy(N, x.dtype());
+    isaac::array numgrad(N, x.dtype());
     double vl, vr;
     umintl::deterministic model;
     fun(x,vl,fgrad,model.get_value_gradient_tag());
@@ -38,17 +38,17 @@ namespace umintl{
       numgrad[i] = (vr-vl)/(2*h);
       x[i]=vx;
     }
-    return atidlas::max(max(abs(numgrad), abs(fgrad)) / abs(numgrad - fgrad));
+    return isaac::max(max(abs(numgrad), abs(fgrad)) / abs(numgrad - fgrad));
   }
 
   //template<class BackendType, class FUN>
-  //double check_grad_variance(FUN & fun, atidlas::array const & x0, std::size_t N){
+  //double check_grad_variance(FUN & fun, isaac::array const & x0, std::size_t N){
   //
   //
 
-  //    atidlas::array var(N);
-  //    atidlas::array tmp(N);
-  //    atidlas::array Hv(N);
+  //    isaac::array var(N);
+  //    isaac::array tmp(N);
+  //    isaac::array Hv(N);
   //    BackendType::set_to_value(var,0,N);
   //    c.fun().compute_hv_product(x0,c.g(),c.g(),Hv,hessian_vector_product(STOCHASTIC,S,offset_));
 

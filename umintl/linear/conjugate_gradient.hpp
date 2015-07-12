@@ -11,7 +11,7 @@
 #include <limits>
 #include <cmath>
 
-#include "atidlas/array.h"
+#include "isaac/array.h"
 #include "umintl/tools/shared_ptr.hpp"
 
 namespace umintl{
@@ -25,8 +25,8 @@ namespace umintl{
       {
       public:
         virtual ~stopping_criterion(){ }
-        virtual void init(atidlas::array const & p0) = 0;
-        virtual void update(atidlas::array const & dk) = 0;
+        virtual void init(isaac::array const & p0) = 0;
+        virtual void update(isaac::array const & dk) = 0;
         virtual bool operator()(double rsn) = 0;
       };
 
@@ -38,8 +38,8 @@ namespace umintl{
       {
       public:
         residual_norm(double eps = 1e-4) : eps_(eps){ }
-        void init(atidlas::array const & ){ }
-        void update(atidlas::array const & ){ }
+        void init(isaac::array const & ){ }
+        void update(isaac::array const & ){ }
         bool operator()(double rsn){ return std::sqrt(rsn) < eps_; }
       private:
         double eps_;
@@ -53,18 +53,18 @@ namespace umintl{
       
       struct compute_Ab{
         virtual ~compute_Ab(){ }
-        virtual void operator()(atidlas::array const & b, atidlas::array & res) = 0;
+        virtual void operator()(isaac::array const & b, isaac::array & res) = 0;
       };
 
       /** @brief symv product class */
       
       struct symv : public compute_Ab{
       public:
-        symv(atidlas::array const & A) : A_(A){ }
-        void operator()(atidlas::array const & b, atidlas::array & res)
-        { res = atidlas::dot(A_, b); }
+        symv(isaac::array const & A) : A_(A){ }
+        void operator()(isaac::array const & b, isaac::array & res)
+        { res = isaac::dot(A_, b); }
       private:
-        atidlas::array const & A_;
+        isaac::array const & A_;
       };
 
 
@@ -107,16 +107,16 @@ namespace umintl{
         : max_iter(_max_iter), compute_Ab(_compute_Ab), stop(_stop){ }
 
 
-      optimization_result operator()(std::size_t N, atidlas::array const & x0, atidlas::array const & b, atidlas::array & x)
+      optimization_result operator()(std::size_t N, isaac::array const & x0, isaac::array const & b, isaac::array & x)
       {
-        atidlas::numeric_type dtype = x0.dtype();
-        atidlas::array r(atidlas::zeros(N, 1, dtype));
-        atidlas::array p(atidlas::zeros(N, 1, dtype));
-        atidlas::array Ap(atidlas::zeros(N, 1, dtype));
-        atidlas::array best_x(atidlas::zeros(N, 1, dtype));
+        isaac::numeric_type dtype = x0.dtype();
+        isaac::array r(isaac::zeros(N, 1, dtype));
+        isaac::array p(isaac::zeros(N, 1, dtype));
+        isaac::array Ap(isaac::zeros(N, 1, dtype));
+        isaac::array best_x(isaac::zeros(N, 1, dtype));
 
-        double nrm_b = atidlas::value_scalar(norm(b));
-        double nrm_x0 = atidlas::value_scalar(norm(x0));
+        double nrm_b = isaac::value_scalar(norm(b));
+        double nrm_x0 = isaac::value_scalar(norm(x0));
         double lambda = 0;
         x = x0;
         if(nrm_x0==0)
@@ -129,12 +129,12 @@ namespace umintl{
         p = r;
         stop->init(p);
 
-        double rso = atidlas::value_scalar(dot(r, r));
+        double rso = isaac::value_scalar(dot(r, r));
 
         for(std::size_t i = 0 ; i < max_iter ; ++i){
           (*compute_Ab)(p,Ap);
           Ap += lambda*nrm_b*b;
-          double pAp = atidlas::value_scalar(dot(p, Ap));
+          double pAp = isaac::value_scalar(dot(p, Ap));
           if(pAp<0)
           {
             x = best_x;
@@ -148,9 +148,9 @@ namespace umintl{
           r = r - alpha*Ap;
           stop->update(x);
 
-          //double quadval = -0.5*(atidlas::dot(x,r) + atidlas::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
+          //double quadval = -0.5*(isaac::dot(x,r) + isaac::dot(N,x,b)); //quadval = -0.5*(x'r + x'b);
 
-          double rsn = atidlas::value_scalar(dot(r,r));
+          double rsn = isaac::value_scalar(dot(r,r));
           if((*stop)(rsn))
             return clear_terminate(SUCCESS,i);
           p = r + rsn/rso*p;

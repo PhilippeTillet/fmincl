@@ -26,7 +26,7 @@ namespace umintl{
     double tolerance;
 
     bool operator()(optimization_context & c)
-    { return atidlas::value_scalar(norm(c.g()) < atidlas::value_scalar(tolerance, c.dtype())); }
+    { return isaac::value_scalar(norm(c.g()) < isaac::value_scalar(tolerance, c.dtype())); }
   };
 
 

@@ -12,7 +12,7 @@
 #include <vector>
 #include <cmath>
 
-#include "atidlas/array.h"
+#include "isaac/array.h"
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/optimization_context.hpp"
 
@@ -28,14 +28,14 @@ namespace umintl{
   private:
 
     struct storage_pair{
-      storage_pair(std::size_t N, atidlas::numeric_type dtype) : s(atidlas::zeros(N, 1, dtype)), y(atidlas::zeros(N, 1, dtype))
+      storage_pair(std::size_t N, isaac::numeric_type dtype) : s(isaac::zeros(N, 1, dtype)), y(isaac::zeros(N, 1, dtype))
       { }
-      atidlas::array s;
-      atidlas::array y;
+      isaac::array s;
+      isaac::array y;
     };
 
-    atidlas::array & s(std::size_t i) { return memory_[i].s; }
-    atidlas::array & y(std::size_t i) { return memory_[i].y; }
+    isaac::array & s(std::size_t i) { return memory_[i].s; }
+    isaac::array & y(std::size_t i) { return memory_[i].y; }
 
   public:
 
@@ -67,20 +67,20 @@ namespace umintl{
       //s(0) = x - xm1;
       s(0) = c.x() - c.xm1();
       y(0) = c.g() - c.gm1();
-      atidlas::array q = c.g();
+      isaac::array q = c.g();
 
       int i = 0;
       for(; i < (int)n_valid_pairs_ ; ++i){
-        rhos[i] = atidlas::value_scalar(1/dot(y(i),s(i)));
-        alphas[i] = atidlas::value_scalar(rhos[i]*dot(s(i), q));
+        rhos[i] = isaac::value_scalar(1/dot(y(i),s(i)));
+        alphas[i] = isaac::value_scalar(rhos[i]*dot(s(i), q));
         q = q - alphas[i]*y(i);
       }
-      double scale = atidlas::value_scalar(dot(s(0), y(0))/dot(y(0),y(0)));
+      double scale = isaac::value_scalar(dot(s(0), y(0))/dot(y(0),y(0)));
 
-      atidlas::array r(scale*q);
+      isaac::array r(scale*q);
       --i;
       for(; i >=0 ; --i){
-        double beta = atidlas::value_scalar(rhos[i]*dot(y(i), r));
+        double beta = isaac::value_scalar(rhos[i]*dot(y(i), r));
         r = r + (alphas[i] - beta)*s(i);
       }
 

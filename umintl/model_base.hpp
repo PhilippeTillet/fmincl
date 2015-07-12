@@ -54,7 +54,7 @@ namespace umintl{
  * Uses the dynamic sampled procedure from Byrd et al. (2012) :
  * "Sample Size Selection in Optimization Methods for Machine Learning"
  * Requires that the functor overloads :
- * void operator()(atidlas::array const & X, atidlas::array & variance, umintl::gradient_variance_tag tag)
+ * void operator()(isaac::array const & X, isaac::array & variance, umintl::gradient_variance_tag tag)
  *
  * The parameter tag contains the information on the current offset and sample size
  */
@@ -69,9 +69,9 @@ namespace umintl{
 
     bool update(optimization_context & c){
       //      {
-      //        atidlas::array var(c.N());
-      //        atidlas::array tmp(c.N());
-      //        atidlas::array Hv(c.N());
+      //        isaac::array var(c.N());
+      //        isaac::array tmp(c.N());
+      //        isaac::array Hv(c.N());
       //        BackendType::set_to_value(var,0,c.N());
       //        c.fun().compute_hv_product(c.x(),c.g(),c.g(),Hv,hessian_vector_product(STOCHASTIC,S,offset_));
 
@@ -104,12 +104,12 @@ namespace umintl{
         return false;
       }
       else{
-        atidlas::array var(c.N(), c.dtype());
+        isaac::array var(c.N(), c.dtype());
         c.fun().compute_gradient_variance(c.x(),var,gradient_variance(STOCHASTIC,S,offset_));
 
         //is_descent_direction = norm1(var)/S*[(N-S)/(N-1)] <= theta^2*norm2(grad)^2
-        double nrm1var = atidlas::value_scalar(sum(abs(var)));
-        double nrm2grad = atidlas::value_scalar(norm(c.g()));
+        double nrm1var = isaac::value_scalar(sum(abs(var)));
+        double nrm2grad = isaac::value_scalar(norm(c.g()));
         //std::gradient_variance << nrm1var*scal << " " << std::pow(theta_,2)*std::pow(nrm2grad,2) << std::endl;
         bool is_descent_direction = (nrm1var/S <= (std::pow(theta_,2)*std::pow(nrm2grad,2)));
 

@@ -12,7 +12,7 @@
 #include <vector>
 #include <cmath>
 
-#include "atidlas/array.h"
+#include "isaac/array.h"
 #include "umintl/tools/shared_ptr.hpp"
 #include "umintl/optimization_context.hpp"
 
@@ -36,23 +36,23 @@ namespace umintl{
 
     void operator()(optimization_context & c)
     {
-      atidlas::array s(c.x() - c.xm1());
-      atidlas::array y(c.g() - c.gm1());
+      isaac::array s(c.x() - c.xm1());
+      isaac::array y(c.g() - c.gm1());
 
-      double ys = atidlas::value_scalar(dot(s, y));
+      double ys = isaac::value_scalar(dot(s, y));
 
       if(pH_.get()==NULL)
-        pH_.reset(new atidlas::array(atidlas::eye(c.N(), c.N(), c.dtype())));
-      atidlas::array& H = *pH_;
+        pH_.reset(new isaac::array(isaac::eye(c.N(), c.N(), c.dtype())));
+      isaac::array& H = *pH_;
 
-      atidlas::array Hy(c.N(), c.dtype());
+      isaac::array Hy(c.N(), c.dtype());
       double gamma = 1;
 
       {
-        Hy = atidlas::dot(H, y);
-        double yHy = atidlas::value_scalar(dot(y, Hy));
-        double sg = atidlas::value_scalar(dot(s, c.gm1()));
-        double gHy = atidlas::value_scalar(dot(c.gm1(), Hy));
+        Hy = isaac::dot(H, y);
+        double yHy = isaac::value_scalar(dot(y, Hy));
+        double sg = isaac::value_scalar(dot(s, c.gm1()));
+        double gHy = isaac::value_scalar(dot(c.gm1(), Hy));
         if(ys/yHy>1)
           gamma = ys/yHy;
         else if(sg/gHy<1)
@@ -62,18 +62,18 @@ namespace umintl{
       }
 
       H*=gamma;
-      Hy = atidlas::dot(H, y);
-      double yHy = atidlas::value_scalar(dot(y, Hy));
+      Hy = isaac::dot(H, y);
+      double yHy = isaac::value_scalar(dot(y, Hy));
 
       //quasi_newton UPDATE
       double alpha = -1/ys;
       double beta = 1/ys + yHy/pow(ys,2);
-      H += alpha*(atidlas::outer(s, Hy) + atidlas::outer(Hy, s)) + beta*atidlas::outer(s, s);
-      c.p() = - atidlas::dot(H, c.g());
+      H += alpha*(isaac::outer(s, Hy) + isaac::outer(Hy, s)) + beta*isaac::outer(s, s);
+      c.p() = - isaac::dot(H, c.g());
     }
 
   private:
-    tools::shared_ptr<atidlas::array> pH_;
+    tools::shared_ptr<isaac::array> pH_;
   };
 
 
