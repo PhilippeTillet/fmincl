@@ -121,7 +121,6 @@ namespace umintl{
     public:
         template<class Fun>
         optimization_result operator()(typename BackendType::VectorType & res, Fun & fun, typename BackendType::VectorType const & x0, std::size_t N){
-            typedef typename BackendType::VectorType VectorType;
             tools::shared_ptr<umintl::direction<BackendType> > steepest_descent(new umintl::steepest_descent<BackendType>());
             line_search_result<BackendType> search_res(N);
             optimization_context<BackendType> c(x0, N, *model, new detail::function_wrapper_impl<BackendType, Fun>(fun,N,hessian_vector_product_computation));
