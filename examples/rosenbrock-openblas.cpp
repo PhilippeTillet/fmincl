@@ -85,7 +85,7 @@ int main(){
     umintl::minimizer<BackendType> minimizer;
     rosenbrock objective(D);
     minimizer.max_iter = 100000;
-    minimizer.verbosity_level=2;
+    minimizer.verbosity_level=0;
     umintl::optimization_result result;
 
     std::cout << std::endl;
