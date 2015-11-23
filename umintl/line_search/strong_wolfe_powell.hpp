@@ -149,7 +149,7 @@ public:
             alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
         }
         else{
-            c2_ = 0.9;
+            c2_ = 0.001;
             alpha = 1;
         }
 

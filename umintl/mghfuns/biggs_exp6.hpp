@@ -5,15 +5,14 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_BIGGS_EXP6_HPP_
-#define UMINTL_BIGGS_EXP6_HPP_
+#ifndef UMINTL_MGHFUNS_BIGGS_EXP6_HPP_
+#define UMINTL_MGHFUNS_BIGGS_EXP6_HPP_
 
 #include <cmath>
 #include <vector>
 #include "sum_square.hpp"
 
 using namespace std;
-#define RES(i,j) base_type::get(res,i,j)
 
 template<class BackendType>
 class biggs_exp6 : public sum_square<BackendType>{

@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_WOOD_HPP_
-#define UMINTL_WOOD_HPP_
+#ifndef UMINTL_MGHFUNS_WOOD_HPP_
+#define UMINTL_MGHFUNS_WOOD_HPP_
 
 #include <cmath>
 #include <vector>

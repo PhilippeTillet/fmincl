@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_ROSENBROCK_HPP_
-#define UMINTL_ROSENBROCK_HPP_
+#ifndef UMINTL_MGHFUNS_ROSENBROCK_HPP_
+#define UMINTL_MGHFUNS_ROSENBROCK_HPP_
 
 #include <cmath>
 #include <vector>

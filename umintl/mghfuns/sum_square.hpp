@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_NONLINEAR_LEAST_SQUARE_HPP_
-#define UMINTL_NONLINEAR_LEAST_SQUARE_HPP_
+#ifndef UMINTL_MGHFUNS_NONLINEAR_LEAST_SQUARE_HPP_
+#define UMINTL_MGHFUNS_NONLINEAR_LEAST_SQUARE_HPP_
 
 #include <cmath>
 #include <vector>
@@ -14,6 +14,8 @@
 #include <cassert>
 
 #include "umintl/minimize.hpp"
+
+#define RES(i,j) base_type::get(res,i,j)
 
 using namespace std;
 
@@ -43,6 +45,7 @@ public:
     virtual void init(VectorType &X) const = 0;
     virtual void fill_dym_dxn(VectorType const & V, ScalarType * res) const = 0;
     virtual void fill_ym(VectorType const & V, ScalarType * res) const = 0;
+
     void operator()(VectorType const & V, ScalarType & val, VectorType & grad, umintl::value_gradient)const{
         ScalarType* y = new ScalarType[M_];
         for(std::size_t m = 0 ; m < M_ ; ++m)

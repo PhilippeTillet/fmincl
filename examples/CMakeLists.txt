@@ -1,5 +1,7 @@
-add_executable(rosenbrock rosenbrock.cpp)
-target_link_libraries(rosenbrock openblas)
+foreach(PROG rosenbrock mnist data)
+    add_executable(${PROG} ${PROG}.cpp)
+    target_link_libraries(${PROG} openblas)
+endforeach()
 
 #add_executable(neural-network-mnist neural-network-mnist.cpp)
 

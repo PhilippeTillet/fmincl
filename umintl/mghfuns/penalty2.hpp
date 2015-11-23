@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_PENALTY2_HPP_
-#define UMINTL_PENALTY2_HPP_
+#ifndef UMINTL_MGHFUNS_PENALTY2_HPP_
+#define UMINTL_MGHFUNS_PENALTY2_HPP_
 
 #include <cmath>
 #include <vector>

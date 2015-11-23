@@ -127,8 +127,12 @@ namespace umintl{
 
             init_all(c);
 
-            if(verbosity_level >= 1)
-                std::cout << info() << std::endl;
+            if(verbosity_level <= 1)
+            {
+                std::cout << "# Verbosity Level : " << verbosity_level << std::endl;
+                std::cout << "# Maximum number of iterations : " << max_iter << std::endl;
+                std::cout << "# Direction : " << direction->info() << std::endl;
+            }
 
 
             tools::shared_ptr<umintl::direction<BackendType> > current_direction;
@@ -139,22 +143,13 @@ namespace umintl{
 
             //Main loop
             c.fun().compute_value_gradient(c.x(), c.val(), c.g(), c.model().get_value_gradient_tag());
-            for( ; c.iter() < max_iter ; ++c.iter()){
-                if(verbosity_level >= 2 ){
-                    std::cout << "Ieration  " << c.iter()
-                              << "| cost : " << c.val()
-                              << "| NVal : " << c.fun().n_value_computations()
-                              << "| NGrad : " << c.fun().n_gradient_computations();
-                    if(unsigned int NHv = c.fun().n_hessian_vector_product_computations())
-                     std::cout<< "| NHv : " << NHv ;
-                    if(unsigned int ND = c.fun().n_datapoints_accessed())
-                     std::cout << "| NAccesses " << (float)ND;
-                    std::cout << std::endl;
-                }
 
+
+            for( ; c.iter() < max_iter ; ++c.iter()){
                 (*current_direction)(c);
 
                 c.dphi_0() = BackendType::dot(N,c.p(),c.g());
+
                 //Not a descent direction...
                 if(c.dphi_0()>0){
                     //current_direction->reset(c);
@@ -169,10 +164,27 @@ namespace umintl{
                     return terminate(optimization_result::LINE_SEARCH_FAILED, res, N, c);
                 }
 
-//                BackendType::copy(c.N(), c.x(), search_res.best_x);
-//                BackendType::axpy(c.N(),0.0001,c.p(),search_res.best_x);
-
                 c.alpha() = search_res.best_alpha;
+
+                if(verbosity_level==2)
+                {
+                    std::cout << "," << c.alpha();
+//                    for(unsigned int i = 0 ; i < N ; ++i)
+//                        std::cout << "," << c.x()[i];
+//                    for(unsigned int i = 0 ; i < N ; ++i)
+//                        std::cout << "," << c.g()[i];
+                    std::cout << std::endl;
+                }
+
+//                if(verbosity_level==3)
+//                {
+//                    std::cout << "# iteration " << c.iter()
+//                              << "\t; cost: " << c.val()
+//                              << "\t; step: " << c.alpha()
+//                              << "\t; nfun: " << c.fun().n_value_computations()
+//                              << "; ngrad: " << c.fun().n_gradient_computations()
+//                              << std::endl;
+//                }
 
                 BackendType::copy(N,c.x(),c.xm1());
                 BackendType::copy(N,search_res.best_x,c.x());

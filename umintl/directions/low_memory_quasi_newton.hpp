@@ -98,7 +98,8 @@ public:
             BackendType::axpy(N_,-alphas[i],y(i),q_);
         }
         ScalarType scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
-
+        std::cout << scale;
+        scale = 1;
         //r_ = scale*q_;
         BackendType::copy(N_,q_,r_);
         BackendType::scale(N_,scale,r_);

@@ -5,15 +5,14 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_HELICAL_VALLEY_HPP_
-#define UMINTL_HELICAL_VALLEY_HPP_
+#ifndef UMINTL_MGHFUNS_HELICAL_VALLEY_HPP_
+#define UMINTL_MGHFUNS_HELICAL_VALLEY_HPP_
 
 #include <cmath>
 #include <vector>
 #include "sum_square.hpp"
 
 using namespace std;
-#define RES(i,j) base_type::get(res,i,j)
 
 template<class BackendType>
 class helical_valley : public sum_square<BackendType>{

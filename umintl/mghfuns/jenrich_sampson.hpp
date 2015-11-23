@@ -5,8 +5,8 @@
   License : MIT X11 - See the LICENSE file in the root folder
  * ===========================*/
 
-#ifndef UMINTL_JENRICH_SAMPSON_HPP_
-#define UMINTL_JENRICH_SAMPSON_HPP_
+#ifndef UMINTL_MGHFUNS_JENRICH_SAMPSON_HPP_
+#define UMINTL_MGHFUNS_JENRICH_SAMPSON_HPP_
 
 #include <cmath>
 #include <vector>
