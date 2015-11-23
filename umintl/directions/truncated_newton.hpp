@@ -112,13 +112,20 @@ struct truncated_newton : public direction<BackendType>{
       BackendType::scale(c.N(),-1,minus_g);
       BackendType::scale(c.N(),c.alpha(),c.p());
 
-
       typename linear::conjugate_gradient<BackendType>::optimization_result res = solver(c.N(),c.p(),minus_g,c.p());
       if(res.i==0 && res.ret == umintl::linear::conjugate_gradient<BackendType>::FAILURE_NON_POSITIVE_DEFINITE)
         BackendType::copy(c.N(),minus_g,c.p());
-      //std::cout << res.ret << " " << res.i << std::endl;
 
       BackendType::delete_if_dynamically_allocated(minus_g);
+    }
+
+    ScalarType step_size(optimization_context<BackendType> &) {
+        return 1;
+    }
+
+    void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const{
+        c1 = 1e-4;
+        c2 = 0.1;
     }
 
     std::size_t max_iter;

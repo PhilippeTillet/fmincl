@@ -36,8 +36,7 @@ private:
         VectorType y;
     };
 
-    VectorType & s(std::size_t i) { return vecs_[i].s; }
-    VectorType & y(std::size_t i) { return vecs_[i].y; }
+
 
 public:
 
@@ -66,6 +65,10 @@ public:
     virtual std::string info() const{
         return "Low memory quasi-newton";
     }
+
+    VectorType & s(std::size_t i) { return vecs_[i].s; }
+
+    VectorType & y(std::size_t i) { return vecs_[i].y; }
 
     void operator()(optimization_context<BackendType> & c){
         std::vector<ScalarType> rhos(m);
@@ -97,12 +100,11 @@ public:
             //q_ = q - alphas[i]*y(i);
             BackendType::axpy(N_,-alphas[i],y(i),q_);
         }
-        ScalarType scale = BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
-        std::cout << scale;
-        scale = 1;
-        //r_ = scale*q_;
+
+        //r_ = (s'y/y'y)*q_;
         BackendType::copy(N_,q_,r_);
-        BackendType::scale(N_,scale,r_);
+        ScalarType scale = 1*BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
+//        BackendType::scale(N_,scale,r_);
 
         --i;
         for(; i >=0 ; --i){
@@ -114,6 +116,16 @@ public:
         //p = -r_;
         BackendType::copy(N_,r_,c.p());
         BackendType::scale(N_,-1,c.p());
+    }
+
+    ScalarType step_size(optimization_context<BackendType> &) {
+        return 1;
+    }
+
+    void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const
+    {
+        c1 = 1e-4;
+        c2 = 0.1;
     }
 
 private:

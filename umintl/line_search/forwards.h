@@ -66,7 +66,7 @@ namespace umintl{
       virtual ~line_search(){ }
       virtual void init(optimization_context<BackendType> &){ }
       virtual void clean(optimization_context<BackendType> &){ }
-      virtual void operator()(line_search_result<BackendType> & res,umintl::direction<BackendType> * direction, optimization_context<BackendType> & context) = 0;
+      virtual void operator()(line_search_result<BackendType> & res, optimization_context<BackendType> & c, ScalarType alpha, ScalarType c1, ScalarType c2) = 0;
   protected:
       unsigned int max_evals;
   };

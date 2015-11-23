@@ -103,6 +103,15 @@ struct quasi_newton : public direction<BackendType>{
           reinitialize_=false;
     }
 
+    ScalarType step_size(optimization_context<BackendType> &) {
+        return 1;
+    }
+
+    void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const{
+        c1 = 1e-4;
+        c2 = 0.9;
+    }
+
 private:
 
     std::size_t N_;

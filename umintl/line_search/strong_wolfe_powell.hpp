@@ -141,17 +141,10 @@ public:
     * @param direction the descent direction procedure used for the line search
     * @param c corresponding optimization context
     */
-    void operator()(line_search_result<BackendType> & res, umintl::direction<BackendType> * direction, optimization_context<BackendType> & c) {
-        ScalarType alpha;
-        c1_ = 1e-4;
-        if(dynamic_cast<conjugate_gradient<BackendType>* >(direction) || dynamic_cast<steepest_descent<BackendType>* >(direction)){
-            c2_ = 0.2;
-            alpha = std::min((ScalarType)(1.0),1/BackendType::asum(c.N(),c.g()));
-        }
-        else{
-            c2_ = 0.001;
-            alpha = 1;
-        }
+    void operator()(line_search_result<BackendType> & res, optimization_context<BackendType> & c, ScalarType alpha, ScalarType c1, ScalarType c2)
+    {
+        c1_ = c1;
+        c2_ = c2;
 
         ScalarType alpham1 = 0;
         ScalarType phi_0 = c.val();
