@@ -21,8 +21,10 @@ def log_likelihood(theta, s_k, y_k, a_k):
     #Predicted mean
     mu_k = dot(s_k, dot(W, y_k))/dot(y_k, y_k)
     #Likelihood
-    f = -_lambda*log(mu_k) - _lambda*a_k/mu_k
-    dtheta = np.ravel((-_lambda/mu_k + _lambda*a_k/(mu_k**2))*np.outer(s_k,y_k)/np.dot(y_k,y_k))
+    x = .5*(a_k - mu_k)**2/(mu_k**2*a_k)
+    f = .5*log(_lambda) - _lambda*x
+    #Gradient
+    dtheta =  _lambda*(a_k - mu_k)/(a_k*dot(y_k,y_k)) * (1/mu_k**2 + (a_k - mu_k)/(mu_k**3)) * np.ravel(outer(s_k, y_k))
     return f, theta*dtheta
 
 def check_likelihood():
@@ -46,7 +48,7 @@ y = gradients[1:,:] - gradients[:-1,:]
 alpha = D[1:,0]
 
 #ADAM
-theta = np.maximum(1e-4, np.ravel(1*np.eye(N)))
+theta = np.maximum(1e-4, np.ravel(.8*np.eye(N)))
 theta = np.log(theta)
 predicted, baseline = [], []
 
