@@ -1,0 +1,187 @@
+digraph G {
+
+    rankdir=LR
+    splines=line
+    nodesep=.05;
+    node [label=""];
+        
+    subgraph cluster_0 {
+		color=white;
+        node [style=solid,color=blue4, shape=circle];
+		x1 [label = "..."] x2 x3;
+		label = "IN";
+	}
+
+	subgraph cluster_1 {
+		color=white;
+		node [style=solid,color=red2, shape=circle];
+		a12 a22 a32 a42 a52;
+		label = "H1";
+	}
+
+	subgraph cluster_2 {
+		color=white;
+		node [style=solid,color=red2, shape=circle];
+		a13 a23 a33 a43 a53;
+		label = "H2";
+	}
+
+	subgraph cluster_3 {
+		color=white;
+		node [style=solid,color=red2, shape=circle];
+		a14 a24 a34 a44 a54;
+		label = "H3";
+	}
+
+
+	subgraph cluster_4 {
+		color=white;
+		node [style=solid,color=seagreen2, shape=circle];
+		O1 O2 O3 O4 O5 O6 O7 O8 O9 O10;
+		label="OUT";
+	}
+
+        x1 -> a12;
+        x1 -> a22;
+        x1 -> a32;
+        x1 -> a42;
+        x1 -> a52;
+
+        x2 -> a12;
+        x2 -> a22;
+        x2 -> a32;
+        x2 -> a42;
+        x2 -> a52;
+ 
+        x3 -> a12;
+        x3 -> a22;
+        x3 -> a32;
+        x3 -> a42;
+        x3 -> a52;
+
+        //H1-H2
+        a12 -> a13
+        a22 -> a13
+        a32 -> a13
+        a42 -> a13
+        a52 -> a13
+
+        a12 -> a23
+        a22 -> a23
+        a32 -> a23
+        a42 -> a23
+        a52 -> a23
+
+        a12 -> a33
+        a22 -> a33
+        a32 -> a33
+        a42 -> a33
+        a52 -> a33
+
+        a12 -> a43
+        a22 -> a43
+        a32 -> a43
+        a42 -> a43
+        a52 -> a43
+
+        a12 -> a53
+        a22 -> a53
+        a32 -> a53
+        a42 -> a53
+        a52 -> a53
+
+        //H2-H3
+        a13 -> a14
+        a23 -> a14
+        a33 -> a14
+        a43 -> a14
+        a53 -> a14
+
+        a13 -> a24
+        a23 -> a24
+        a33 -> a24
+        a43 -> a24
+        a53 -> a24
+
+        a13 -> a34
+        a23 -> a34
+        a33 -> a34
+        a43 -> a34
+        a53 -> a34
+
+        a13 -> a44
+        a23 -> a44
+        a33 -> a44
+        a43 -> a44
+        a53 -> a44
+
+        a13 -> a54
+        a23 -> a54
+        a33 -> a54
+        a43 -> a54
+        a53 -> a54
+        
+        
+        //H3-OUT
+        a14 -> O1
+        a24 -> O1
+        a34 -> O1
+        a44 -> O1
+        a54 -> O1
+          
+        a14 -> O2
+        a24 -> O2
+        a34 -> O2
+        a44 -> O2
+        a54 -> O2
+          
+        a14 -> O3
+        a24 -> O3
+        a34 -> O3
+        a44 -> O3
+        a54 -> O3
+          
+        a14 -> O4
+        a24 -> O4
+        a34 -> O4
+        a44 -> O4
+        a54 -> O4
+          
+        a14 -> O5
+        a24 -> O5
+        a34 -> O5
+        a44 -> O5
+        a54 -> O5
+          
+        a14 -> O6
+        a24 -> O6
+        a34 -> O6
+        a44 -> O6
+        a54 -> O6
+          
+        a14 -> O7
+        a24 -> O7
+        a34 -> O7
+        a44 -> O7
+        a54 -> O7
+          
+        a14 -> O8
+        a24 -> O8
+        a34 -> O8
+        a44 -> O8
+        a54 -> O8
+          
+        a14 -> O9
+        a24 -> O9
+        a34 -> O9
+        a44 -> O9
+        a54 -> O9
+          
+        a14 -> O10
+        a24 -> O10
+        a34 -> O10
+        a44 -> O10
+        a54 -> O10
+
+
+}
