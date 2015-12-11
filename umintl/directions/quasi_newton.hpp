@@ -57,6 +57,8 @@ struct quasi_newton : public direction<BackendType>{
     }
 
     void operator()(optimization_context<BackendType> & c){
+
+
       //s = x - xm1;
       BackendType::copy(N_,c.x(),s_);
       BackendType::axpy(N_,-1,c.xm1(),s_);
@@ -67,25 +69,15 @@ struct quasi_newton : public direction<BackendType>{
 
       ScalarType ys = BackendType::dot(N_,s_,y_);
 
+
       if(reinitialize_)
-        BackendType::set_to_diagonal(N_,H_,1);
-
-      ScalarType gamma = 1;
-
       {
-          BackendType::symv(N_,1,H_,y_,0,Hy_);
-          ScalarType yHy = BackendType::dot(N_,y_,Hy_);
-          ScalarType sg = BackendType::dot(N_,s_,c.gm1());
-          ScalarType gHy = BackendType::dot(N_,c.gm1(),Hy_);
-          if(ys/yHy>1)
-            gamma = ys/yHy;
-          else if(sg/gHy<1)
-             gamma = sg/gHy;
-          else
-              gamma = 1;
+        ScalarType gamma = BackendType::dot(N_, s_, y_)/BackendType::dot(N_, y_, y_);
+        BackendType::set_to_diagonal(N_,H_,1);
+        BackendType::scale(N_, N_, gamma, H_);
       }
 
-      BackendType::scale(N_,N_,gamma,H_);
+//      BackendType::scale(N_,N_,(2*N_ + 3 - 2*c.alpha())/(2*N_ + 1),H_);
       BackendType::symv(N_,1,H_,y_,0,Hy_);
       ScalarType yHy = BackendType::dot(N_,y_,Hy_);
 
@@ -109,7 +101,7 @@ struct quasi_newton : public direction<BackendType>{
 
     void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const{
         c1 = 1e-4;
-        c2 = 0.9;
+        c2 = 0.2;
     }
 
 private:

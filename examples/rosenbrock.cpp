@@ -11,20 +11,14 @@
 
 #include "umintl/backends/cblas.hpp"
 #include "umintl/minimize.hpp"
+#include "umintl/mghfuns/powell_singular.hpp"
 
 typedef double ScalarType;
 typedef ScalarType* VectorType;
 typedef umintl::backend::cblas_types<ScalarType> BackendType;
 
-class custom_stop : public umintl::stopping_criterion<BackendType>{
-public:
-    bool operator()(umintl::optimization_context<BackendType> & context){
-        ScalarType * X = context.x(); //Obtain current iterate
-        return std::abs(X[0] - 1)<1e-6;
-    }
-};
-
-class rosenbrock{
+class rosenbrock
+{
 public:
     rosenbrock(std::size_t N) : N_(N){ }
 
@@ -48,94 +42,25 @@ private:
     std::size_t N_;
 };
 
-void print_vector(ScalarType * x, std::size_t N){
-    std::cout << "["; for(std::size_t i = 0 ; i < N ; ++i) std::cout << x[i] << ((i==N-1)?']':',') << std::flush;
-}
-
-void print_solution(umintl::optimization_result const & result, ScalarType * S, std::size_t D)
+int main()
 {
-    std::cout << "Optimization complete ! " << std::endl;
-    std::cout << "Solution : " << std::endl;
-    print_vector(S,D);
-    std::cout << std::endl;
-    std::cout << "Solution's value : " << result.f << std::endl;
-    std::cout << "Found in " << result.iteration << " iterations / " << result.n_functions_eval << " functions eval" << " / " << result.n_gradient_eval << " gradient eval " << std::endl;
-    std::cout << std::endl;
-}
-
-int main(){
     srand(0);
 
-    unsigned int D = 10;
-
-    std::cout << "====================" << std::endl;
-    std::cout << "Minimization of the generalized Rosenbrock function" << std::endl;
-    std::cout << "Dimension : " << D << std::endl;
-    std::cout << "====================" << std::endl;
+    unsigned int D = 100;
+    rosenbrock objective(D);
 
     ScalarType* X0 = new ScalarType[D];
     ScalarType* S = new ScalarType[D];
-
-    for(std::size_t i = 0 ; i < D ; ++i) X0[i] = 0;
-
-    std::cout << "Starting at : " << std::endl;
-    print_vector(X0,D);
-    std::cout << std::endl;
+    for(std::size_t i = 0 ; i < D ; ++i)
+        X0[i] = 2*(float)rand()/RAND_MAX - 1;
 
     umintl::minimizer<BackendType> minimizer;
-    rosenbrock objective(D);
-    minimizer.max_iter = 100000;
-    minimizer.verbosity_level=0;
-    umintl::optimization_result result;
-
-    std::cout << std::endl;
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Steepest descent" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::steepest_descent<BackendType>();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "CG [ beta = polak-ribiere , no restart ]" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::conjugate_gradient<BackendType>(umintl::tag::conjugate_gradient::UPDATE_POLAK_RIBIERE, umintl::tag::conjugate_gradient::NO_RESTART);
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "BFGS" << std::endl;
-    std::cout << "--------------------" << std::endl;
+    minimizer.max_iter = 10000;
+    minimizer.verbosity_level = 2;
+//    minimizer.direction = new umintl::low_memory_quasi_newton<BackendType>(5);
     minimizer.direction = new umintl::quasi_newton<BackendType>();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "L-BFGS [ memory = 5 ]" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::low_memory_quasi_newton<BackendType>(8);
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Truncated Newton" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.direction = new umintl::truncated_newton<BackendType>();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-    std::cout << std::endl;
-    std::cout << "--------------------" << std::endl;
-    std::cout << "Truncated Newton" << std::endl;
-    std::cout << "Custom Stopping criterion:" << std::endl;
-    std::cout << "Stops when the first dimension is close enough to optimal" << std::endl;
-    std::cout << "--------------------" << std::endl;
-    minimizer.stopping_criterion = new custom_stop();
-    result = minimizer(S,objective,X0,D);
-    print_solution(result,S,D);
-
-
+//    minimizer.direction = new umintl::conjugate_gradient<BackendType>();
+    minimizer(S,objective,X0,D);
 
     return EXIT_SUCCESS;
 }

@@ -185,12 +185,13 @@ namespace umintl{
 
                 if(verbosity_level==3)
                 {
-                    std::cout << "# iteration " << c.iter()
-                              << " ; cost: " << c.val()
-                              << " ; step: " << c.alpha()
-                              << " ; nfun: " << c.fun().n_value_computations()
-                              << " ; ngrad: " << c.fun().n_gradient_computations()
-                              << std::endl;
+                    std::cout << c.fun().n_value_computations() << "," << c.val() << std::endl;
+//                    std::cout << "# iteration " << c.iter()
+//                              << " ; cost: " << c.val()
+//                              << " ; step: " << c.alpha()
+//                              << " ; nfun: " << c.fun().n_value_computations()
+//                              << " ; ngrad: " << c.fun().n_gradient_computations()
+//                              << std::endl;
                 }
 
 

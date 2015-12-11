@@ -108,7 +108,7 @@ public:
 
     void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const{
          c1 = 1e-4;
-         c2 = 0.2;
+         c2 = 0.01;
     }
 
     tag::conjugate_gradient::update update;

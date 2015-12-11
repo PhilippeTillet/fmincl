@@ -104,7 +104,8 @@ public:
         //r_ = (s'y/y'y)*q_;
         BackendType::copy(N_,q_,r_);
         ScalarType scale = 1*BackendType::dot(N_,s(0),y(0))/BackendType::dot(N_,y(0),y(0));
-//        BackendType::scale(N_,scale,r_);
+        BackendType::scale(N_,scale,r_);
+//        BackendType::scale(N_,(N_ + 1 - 2*c.alpha())/(N_ - 1),r_);
 
         --i;
         for(; i >=0 ; --i){
@@ -116,16 +117,18 @@ public:
         //p = -r_;
         BackendType::copy(N_,r_,c.p());
         BackendType::scale(N_,-1,c.p());
+
     }
 
-    ScalarType step_size(optimization_context<BackendType> &) {
+    ScalarType step_size(optimization_context<BackendType> & c) {
+//        return (N_ + 1 - 2*c.alpha())/(N_ - 1);
         return 1;
     }
 
     void strong_wolfe_powell_parameters(ScalarType & c1, ScalarType & c2) const
     {
         c1 = 1e-4;
-        c2 = 0.1;
+        c2 = 0.9;
     }
 
 private:
